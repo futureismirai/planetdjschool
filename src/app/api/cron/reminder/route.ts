@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendMail } from "@/lib/mailer";
-import { buildReminderEmail } from "@/lib/emailTemplates";
+import { buildReminderEmail, buildTrialReminderEmail } from "@/lib/emailTemplates";
 import { getJstDayWindow } from "@/lib/date";
 
 const REMINDER_DAYS_BEFORE = 3;
@@ -57,13 +57,53 @@ async function runReminderBatch() {
   return { targetLessons: lessons.length, sent, failed };
 }
 
+async function runTrialReminderBatch() {
+  const { start, end } = getJstDayWindow(REMINDER_DAYS_BEFORE);
+
+  const trialSessions = await prisma.trialSession.findMany({
+    where: { datetime: { gte: start, lt: end } },
+    include: {
+      participants: { where: { reminderSentAt: null } },
+    },
+  });
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const trialSession of trialSessions) {
+    for (const participant of trialSession.participants) {
+      try {
+        const { subject, text, html } = buildTrialReminderEmail({
+          datetime: trialSession.datetime,
+          instructorName: trialSession.instructorName,
+          studentName: participant.studentName,
+        });
+        await sendMail({ to: participant.studentEmail, subject, text, html });
+        await prisma.trialParticipant.update({
+          where: { id: participant.id },
+          data: { reminderSentAt: new Date() },
+        });
+        sent += 1;
+      } catch (error) {
+        console.error(`体験会リマインドメール送信に失敗しました (participantId=${participant.id}):`, error);
+        failed += 1;
+      }
+    }
+  }
+
+  return { targetTrialSessions: trialSessions.length, sent, failed };
+}
+
 export async function GET(request: NextRequest) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await runReminderBatch();
-  return NextResponse.json(result);
+  const [lessonResult, trialResult] = await Promise.all([
+    runReminderBatch(),
+    runTrialReminderBatch(),
+  ]);
+  return NextResponse.json({ lessons: lessonResult, trialSessions: trialResult });
 }
 
 export async function POST(request: NextRequest) {

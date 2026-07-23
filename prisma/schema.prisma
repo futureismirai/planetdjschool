@@ -43,3 +43,29 @@ model Admin {
   passwordHash String
   createdAt    DateTime @default(now())
 }
+
+/// 体験会。生徒には非公開、管理者が参加者を把握するためだけのもの。
+model TrialSession {
+  id             String            @id @default(cuid())
+  datetime       DateTime
+  instructorName String
+  maxSlots       Int               @default(3)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  participants   TrialParticipant[]
+
+  @@index([datetime])
+}
+
+model TrialParticipant {
+  id             String       @id @default(cuid())
+  trialSessionId String
+  trialSession   TrialSession @relation(fields: [trialSessionId], references: [id], onDelete: Cascade)
+  studentName    String
+  studentEmail   String
+  note           String?
+  reminderSentAt DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([trialSessionId])
+}

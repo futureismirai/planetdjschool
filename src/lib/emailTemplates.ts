@@ -168,6 +168,90 @@ ${SCHOOL_NAME}`;
   return { subject, text, html };
 }
 
+export type TrialEmailInfo = {
+  datetime: Date;
+  instructorName: string;
+  studentName: string;
+};
+
+/**
+ * 体験会 参加登録完了メール。文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildTrialConfirmationEmail(info: TrialEmailInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const datetimeText = formatLessonDateTime(info.datetime);
+  const subject = `【${SCHOOL_NAME}】体験会お申し込み完了のお知らせ`;
+
+  const text = `${info.studentName} 様
+
+${SCHOOL_NAME}の体験会へのお申し込みが完了しました。
+以下の内容でお待ちしております。
+
+日時: ${datetimeText}
+担当講師: ${info.instructorName}
+
+当日はお気をつけてお越しください。
+ご不明な点がございましたら本メールへご返信ください。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">体験会のお申し込みが完了しました</h2>
+    <p>${escapeHtml(info.studentName)} 様</p>
+    <p>${SCHOOL_NAME}の体験会へのお申し込みが完了しました。以下の内容でお待ちしております。</p>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+      <tr><td style="padding:4px 0;color:#666;width:80px;">日時</td><td style="padding:4px 0;font-weight:bold;">${escapeHtml(datetimeText)}</td></tr>
+      <tr><td style="padding:4px 0;color:#666;">担当講師</td><td style="padding:4px 0;">${escapeHtml(info.instructorName)}</td></tr>
+    </table>
+    <p>当日はお気をつけてお越しください。ご不明な点がございましたら本メールへご返信ください。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
+/**
+ * 体験会 開催3日前リマインドメール。文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildTrialReminderEmail(info: TrialEmailInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const datetimeText = formatLessonDateTime(info.datetime);
+  const subject = `【${SCHOOL_NAME}】体験会開催3日前のリマインド`;
+
+  const text = `${info.studentName} 様
+
+お申し込みいただいている${SCHOOL_NAME}の体験会が3日後に迫りましたのでお知らせいたします。
+
+日時: ${datetimeText}
+担当講師: ${info.instructorName}
+
+当日はお気をつけてお越しください。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">体験会開催3日前のお知らせ</h2>
+    <p>${escapeHtml(info.studentName)} 様</p>
+    <p>お申し込みいただいている${SCHOOL_NAME}の体験会が3日後に迫りましたのでお知らせいたします。</p>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+      <tr><td style="padding:4px 0;color:#666;width:80px;">日時</td><td style="padding:4px 0;font-weight:bold;">${escapeHtml(datetimeText)}</td></tr>
+      <tr><td style="padding:4px 0;color:#666;">担当講師</td><td style="padding:4px 0;">${escapeHtml(info.instructorName)}</td></tr>
+    </table>
+    <p>当日はお気をつけてお越しください。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
 function escapeHtml(input: string): string {
   return input
     .replace(/&/g, "&amp;")

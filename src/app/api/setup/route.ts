@@ -46,6 +46,33 @@ const CREATE_TABLES_SQL = [
   END $$`,
   // 管理者が手動で予約を追加できるよう、既存DBのstudentEmailをNULL許可に変更(既にNULL許可なら何もしない)
   `ALTER TABLE "Booking" ALTER COLUMN "studentEmail" DROP NOT NULL`,
+  // 体験会(管理者専用の参加者管理)
+  `CREATE TABLE IF NOT EXISTS "TrialSession" (
+    "id" TEXT NOT NULL,
+    "datetime" TIMESTAMP(3) NOT NULL,
+    "instructorName" TEXT NOT NULL,
+    "maxSlots" INTEGER NOT NULL DEFAULT 3,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "TrialSession_pkey" PRIMARY KEY ("id")
+  )`,
+  `CREATE TABLE IF NOT EXISTS "TrialParticipant" (
+    "id" TEXT NOT NULL,
+    "trialSessionId" TEXT NOT NULL,
+    "studentName" TEXT NOT NULL,
+    "studentEmail" TEXT NOT NULL,
+    "note" TEXT,
+    "reminderSentAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "TrialParticipant_pkey" PRIMARY KEY ("id")
+  )`,
+  `CREATE INDEX IF NOT EXISTS "TrialSession_datetime_idx" ON "TrialSession"("datetime")`,
+  `CREATE INDEX IF NOT EXISTS "TrialParticipant_trialSessionId_idx" ON "TrialParticipant"("trialSessionId")`,
+  `DO $$ BEGIN
+    ALTER TABLE "TrialParticipant" ADD CONSTRAINT "TrialParticipant_trialSessionId_fkey"
+      FOREIGN KEY ("trialSessionId") REFERENCES "TrialSession"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END $$`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {
