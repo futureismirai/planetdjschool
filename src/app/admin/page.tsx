@@ -4,6 +4,7 @@ import { getCurrentAdmin } from "@/lib/auth";
 import { formatLessonDateTime } from "@/lib/date";
 import { LogoutButton } from "./LogoutButton";
 import { ManualBookingForm } from "./ManualBookingForm";
+import { DeleteBookingButton } from "./DeleteBookingButton";
 
 export const dynamic = "force-dynamic";
 
@@ -87,6 +88,7 @@ export default async function AdminDashboardPage() {
                         <th className="px-4 py-2 font-medium">メールアドレス</th>
                         <th className="px-4 py-2 font-medium">電話番号</th>
                         <th className="px-4 py-2 font-medium">予約日時</th>
+                        <th className="px-4 py-2 font-medium"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -97,6 +99,12 @@ export default async function AdminDashboardPage() {
                           <td className="px-4 py-2">{booking.studentPhone ?? "-"}</td>
                           <td className="px-4 py-2 text-slate-500">
                             {formatLessonDateTime(booking.createdAt)}
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            <DeleteBookingButton
+                              bookingId={booking.id}
+                              studentName={booking.studentName}
+                            />
                           </td>
                         </tr>
                       ))}
