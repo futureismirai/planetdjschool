@@ -44,28 +44,45 @@ function infoHtml(info: LessonEmailInfo): string {
     </table>`;
 }
 
+function cancelContactEmail(): string {
+  return process.env.GMAIL_USER ?? "";
+}
+
 function noticeText(datetime: Date): string {
   const gatheringTime = gatheringTimeText(datetime);
+  const contactEmail = cancelContactEmail();
+  const cancelContactLine = contactEmail
+    ? `レッスンをキャンセルする場合はこちらのGmailアドレス（${contactEmail}）にご連絡ください。`
+    : "レッスンをキャンセルする場合はこちらのGmailアドレスにご連絡ください。";
+
   return `【ご案内】
 集合: ${gatheringTime}に1階ロビーにお集まりください（開始10分前）
-キャンセル: レッスン当日の8日前まで可能です。7日以内のキャンセルはレッスン1回分10,000円を追加請求致します。
+キャンセル: レッスン当日の8日前まで可能です。7日以内のキャンセルはレッスン1回分10,000円を追加請求致します。${cancelContactLine}
 持ち物: ヘッドホン（お持ちの方。貸し出しもございます）／Lesson2以降の方はRekordboxをインストールした状態のPC
 緊急連絡: 当日の遅刻など緊急のお問い合わせは、担当講師のInstagramアカウントへDMをお願いします。`;
 }
 
 function noticeHtml(datetime: Date): string {
   const gatheringTime = gatheringTimeText(datetime);
+  const contactEmail = cancelContactEmail();
+  const cancelContactHtml = contactEmail
+    ? `レッスンをキャンセルする場合はこちらのGmailアドレス（<a href="mailto:${escapeHtml(contactEmail)}">${escapeHtml(contactEmail)}</a>）にご連絡ください。`
+    : "レッスンをキャンセルする場合はこちらのGmailアドレスにご連絡ください。";
+
   const rows: [string, string][] = [
     ["集合", `${gatheringTime}に1階ロビーにお集まりください（開始10分前）`],
-    ["キャンセル", "レッスン当日の8日前まで可能です。7日以内のキャンセルはレッスン1回分10,000円を追加請求致します。"],
+    [
+      "キャンセル",
+      `レッスン当日の8日前まで可能です。7日以内のキャンセルはレッスン1回分10,000円を追加請求致します。${cancelContactHtml}`,
+    ],
     ["持ち物", "ヘッドホン（お持ちの方。貸し出しもございます）／Lesson2以降の方はRekordboxをインストールした状態のPC"],
     ["緊急連絡", "当日の遅刻など緊急のお問い合わせは、担当講師のInstagramアカウントへDMをお願いします。"],
   ];
   const rowsHtml = rows
-    .map(
-      ([label, value]) =>
-        `<tr><td style="padding:6px 0;color:#666;width:80px;vertical-align:top;">${escapeHtml(label)}</td><td style="padding:6px 0;vertical-align:top;">${escapeHtml(value)}</td></tr>`
-    )
+    .map(([label, value]) => {
+      const isHtmlValue = label === "キャンセル";
+      return `<tr><td style="padding:6px 0;color:#666;width:80px;vertical-align:top;">${escapeHtml(label)}</td><td style="padding:6px 0;vertical-align:top;">${isHtmlValue ? value : escapeHtml(value)}</td></tr>`;
+    })
     .join("");
 
   return `
