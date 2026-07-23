@@ -23,7 +23,7 @@ const CREATE_TABLES_SQL = [
     "id" TEXT NOT NULL,
     "lessonId" TEXT NOT NULL,
     "studentName" TEXT NOT NULL,
-    "studentEmail" TEXT NOT NULL,
+    "studentEmail" TEXT,
     "studentPhone" TEXT,
     "reminderSentAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -44,6 +44,8 @@ const CREATE_TABLES_SQL = [
       FOREIGN KEY ("lessonId") REFERENCES "Lesson"("id") ON DELETE CASCADE ON UPDATE CASCADE;
   EXCEPTION WHEN duplicate_object THEN NULL;
   END $$`,
+  // 管理者が手動で予約を追加できるよう、既存DBのstudentEmailをNULL許可に変更(既にNULL許可なら何もしない)
+  `ALTER TABLE "Booking" ALTER COLUMN "studentEmail" DROP NOT NULL`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {

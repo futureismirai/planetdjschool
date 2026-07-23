@@ -23,7 +23,7 @@ async function runReminderBatch() {
   const lessons = await prisma.lesson.findMany({
     where: { datetime: { gte: start, lt: end } },
     include: {
-      bookings: { where: { reminderSentAt: null } },
+      bookings: { where: { reminderSentAt: null, studentEmail: { not: null } } },
     },
   });
 
@@ -32,6 +32,7 @@ async function runReminderBatch() {
 
   for (const lesson of lessons) {
     for (const booking of lesson.bookings) {
+      if (!booking.studentEmail) continue;
       try {
         const { subject, text, html } = buildReminderEmail({
           lessonName: lesson.name,

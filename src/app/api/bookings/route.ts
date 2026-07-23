@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         location: lesson.location,
         studentName: booking.studentName,
       });
-      await sendMail({ to: booking.studentEmail, subject, text, html });
+      await sendMail({ to: studentEmail.trim(), subject, text, html });
     } catch (mailError) {
       console.error("予約完了メールの送信に失敗しました:", mailError);
     }

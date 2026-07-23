@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
 import { formatLessonDateTime } from "@/lib/date";
 import { LogoutButton } from "./LogoutButton";
+import { ManualBookingForm } from "./ManualBookingForm";
 
 export const dynamic = "force-dynamic";
 
@@ -92,7 +93,7 @@ export default async function AdminDashboardPage() {
                       {lesson.bookings.map((booking) => (
                         <tr key={booking.id} className="border-b border-slate-50 last:border-0">
                           <td className="px-4 py-2">{booking.studentName}</td>
-                          <td className="px-4 py-2">{booking.studentEmail}</td>
+                          <td className="px-4 py-2">{booking.studentEmail ?? "-"}</td>
                           <td className="px-4 py-2">{booking.studentPhone ?? "-"}</td>
                           <td className="px-4 py-2 text-slate-500">
                             {formatLessonDateTime(booking.createdAt)}
@@ -103,6 +104,7 @@ export default async function AdminDashboardPage() {
                   </table>
                 </div>
               )}
+              <ManualBookingForm lessonId={lesson.id} />
             </section>
           );
         })}
