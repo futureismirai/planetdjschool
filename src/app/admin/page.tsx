@@ -59,7 +59,6 @@ export default async function AdminDashboardPage() {
                   </h2>
                   <p className="mt-1 text-sm text-slate-500">
                     {formatLessonDateTime(lesson.datetime)} ／ 講師: {lesson.instructorName}
-                    {lesson.location ? ` ／ 会場: ${lesson.location}` : ""}
                   </p>
                 </div>
                 <span className="shrink-0 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">

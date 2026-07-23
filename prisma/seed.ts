@@ -19,49 +19,51 @@ async function main() {
   const existingLessons = await prisma.lesson.count();
   if (existingLessons === 0) {
     const now = new Date();
-    const daysFromNow = (days: number, hour: number) => {
+    const daysFromNow = (days: number, hour: number, minute = 0) => {
       const d = new Date(now);
       d.setDate(d.getDate() + days);
-      d.setHours(hour, 0, 0, 0);
+      d.setHours(hour, minute, 0, 0);
       return d;
     };
 
+    // 実際のスケジュール表と同様、同じ日に複数コマが並ぶケースを含めている
     await prisma.lesson.createMany({
       data: [
         {
           name: "Lesson1",
-          datetime: daysFromNow(3, 19),
+          datetime: daysFromNow(3, 13, 0),
           instructorName: "DJ TARO",
           maxSlots: 3,
-          location: "Planet DJ School 渋谷校",
         },
         {
           name: "Lesson2",
-          datetime: daysFromNow(5, 20),
-          instructorName: "DJ HANA",
+          datetime: daysFromNow(3, 14, 30),
+          instructorName: "DJ TARO",
           maxSlots: 3,
-          location: "Planet DJ School 渋谷校",
         },
         {
           name: "Lesson3",
-          datetime: daysFromNow(7, 18),
-          instructorName: "DJ TARO",
+          datetime: daysFromNow(7, 18, 0),
+          instructorName: "DJ HANA",
           maxSlots: 3,
-          location: "Planet DJ School 新宿校",
         },
         {
-          name: "Lesson4",
-          datetime: daysFromNow(10, 19),
+          name: "Lesson1",
+          datetime: daysFromNow(10, 13, 0),
           instructorName: "DJ KEN",
           maxSlots: 3,
-          location: "Planet DJ School 渋谷校",
+        },
+        {
+          name: "Lesson2",
+          datetime: daysFromNow(10, 14, 30),
+          instructorName: "DJ KEN",
+          maxSlots: 3,
         },
         {
           name: "Lesson5",
-          datetime: daysFromNow(14, 20),
+          datetime: daysFromNow(14, 19, 0),
           instructorName: "DJ HANA",
           maxSlots: 3,
-          location: "Planet DJ School 新宿校",
         },
       ],
     });

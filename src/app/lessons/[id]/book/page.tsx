@@ -17,7 +17,6 @@ async function getLessonWithRemainingSlots(id: string) {
     name: lesson.name,
     datetime: lesson.datetime,
     instructorName: lesson.instructorName,
-    location: lesson.location,
     remainingSlots: lesson.maxSlots - lesson._count.bookings,
   };
 }
@@ -51,12 +50,6 @@ export default async function BookLessonPage({
             <dt className="w-14 text-slate-400">講師</dt>
             <dd>{lesson.instructorName}</dd>
           </div>
-          {lesson.location && (
-            <div className="flex gap-2">
-              <dt className="w-14 text-slate-400">会場</dt>
-              <dd>{lesson.location}</dd>
-            </div>
-          )}
           <div className="flex gap-2">
             <dt className="w-14 text-slate-400">残り枠</dt>
             <dd>{lesson.remainingSlots > 0 ? `${lesson.remainingSlots}枠` : "満席"}</dd>
