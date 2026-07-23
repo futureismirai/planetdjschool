@@ -19,29 +19,61 @@ function gatheringTimeText(datetime: Date): string {
   return formatTimeOnly(new Date(datetime.getTime() - GATHERING_MINUTES_BEFORE * 60 * 1000));
 }
 
+function infoText(info: LessonEmailInfo): string {
+  const lines = [
+    `レッスン: ${info.lessonName}`,
+    `日時: ${formatLessonDateTime(info.datetime)}`,
+    `講師: ${info.instructorName}`,
+  ];
+  if (info.location) {
+    lines.push(`場所: ${info.location}`);
+  }
+  return lines.join("\n");
+}
+
+function infoHtml(info: LessonEmailInfo): string {
+  const locationRow = info.location
+    ? `<tr><td style="padding:4px 0;color:#666;">場所</td><td style="padding:4px 0;">${escapeHtml(info.location)}</td></tr>`
+    : "";
+  return `
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+      <tr><td style="padding:4px 0;color:#666;width:80px;">レッスン</td><td style="padding:4px 0;font-weight:bold;">${escapeHtml(info.lessonName)}</td></tr>
+      <tr><td style="padding:4px 0;color:#666;">日時</td><td style="padding:4px 0;">${escapeHtml(formatLessonDateTime(info.datetime))}</td></tr>
+      <tr><td style="padding:4px 0;color:#666;">講師</td><td style="padding:4px 0;">${escapeHtml(info.instructorName)}</td></tr>
+      ${locationRow}
+    </table>`;
+}
+
 function noticeText(datetime: Date): string {
   const gatheringTime = gatheringTimeText(datetime);
-  return `場所
-
-○${gatheringTime}に1階ロビーに集合お願いします。
-
-○キャンセルはレッスン当日の8日前まで可能です。7日以内のキャンセルはレッスン1回分10000円を追加請求致します。
-
-・当日の遅刻などの緊急のお問い合わせは、その日の担当講師のInstagramアカウントにDMをお願いします。
-・当日はお持ちであればヘッドホンの持参をお願いします。貸し出しもございます。
-・Lesson 2以降の方はRekordboxをインストールした状態のPCをご持参下さい。`;
+  return `【ご案内】
+集合: ${gatheringTime}に1階ロビーにお集まりください（開始10分前）
+キャンセル: レッスン当日の8日前まで可能です。7日以内のキャンセルはレッスン1回分10,000円を追加請求致します。
+持ち物: ヘッドホン（お持ちの方。貸し出しもございます）／Lesson2以降の方はRekordboxをインストールした状態のPC
+緊急連絡: 当日の遅刻など緊急のお問い合わせは、担当講師のInstagramアカウントへDMをお願いします。`;
 }
 
 function noticeHtml(datetime: Date): string {
   const gatheringTime = gatheringTimeText(datetime);
+  const rows: [string, string][] = [
+    ["集合", `${gatheringTime}に1階ロビーにお集まりください（開始10分前）`],
+    ["キャンセル", "レッスン当日の8日前まで可能です。7日以内のキャンセルはレッスン1回分10,000円を追加請求致します。"],
+    ["持ち物", "ヘッドホン（お持ちの方。貸し出しもございます）／Lesson2以降の方はRekordboxをインストールした状態のPC"],
+    ["緊急連絡", "当日の遅刻など緊急のお問い合わせは、担当講師のInstagramアカウントへDMをお願いします。"],
+  ];
+  const rowsHtml = rows
+    .map(
+      ([label, value]) =>
+        `<tr><td style="padding:6px 0;color:#666;width:80px;vertical-align:top;">${escapeHtml(label)}</td><td style="padding:6px 0;vertical-align:top;">${escapeHtml(value)}</td></tr>`
+    )
+    .join("");
+
   return `
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb;">
-      <p style="font-weight:bold;margin:0 0 8px;">場所</p>
-      <p style="margin:0 0 12px;">${escapeHtml(gatheringTime)}に1階ロビーに集合お願いします。</p>
-      <p style="margin:0 0 12px;">キャンセルはレッスン当日の8日前まで可能です。7日以内のキャンセルはレッスン1回分10000円を追加請求致します。</p>
-      <p style="margin:0;">・当日の遅刻などの緊急のお問い合わせは、その日の担当講師のInstagramアカウントにDMをお願いします。</p>
-      <p style="margin:0;">・当日はお持ちであればヘッドホンの持参をお願いします。貸し出しもございます。</p>
-      <p style="margin:0;">・Lesson 2以降の方はRekordboxをインストールした状態のPCをご持参下さい。</p>
+    <div style="margin-top:20px;padding:12px 16px;background:#f8fafc;border-radius:8px;">
+      <p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">ご案内</p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        ${rowsHtml}
+      </table>
     </div>`;
 }
 
@@ -53,12 +85,6 @@ export function buildBookingConfirmationEmail(info: BookingEmailInfo): {
   text: string;
   html: string;
 } {
-  const datetimeText = formatLessonDateTime(info.datetime);
-  const locationLine = info.location ? `会場: ${info.location}\n` : "";
-  const locationHtml = info.location
-    ? `<tr><td style="padding:4px 0;color:#666;">会場</td><td style="padding:4px 0;">${escapeHtml(info.location)}</td></tr>`
-    : "";
-
   const subject = `【${SCHOOL_NAME}】ご予約完了のお知らせ（${info.lessonName}）`;
 
   const text = `${info.studentName} 様
@@ -66,14 +92,12 @@ export function buildBookingConfirmationEmail(info: BookingEmailInfo): {
 ${SCHOOL_NAME}のご予約が完了しました。
 以下の内容でお待ちしております。
 
-レッスン: ${info.lessonName}
-日時: ${datetimeText}
-講師: ${info.instructorName}
-${locationLine}
-当日はお気をつけてお越しください。
-ご不明な点がございましたら本メールへご返信ください。
+${infoText(info)}
 
 ${noticeText(info.datetime)}
+
+当日はお気をつけてお越しください。
+ご不明な点がございましたら本メールへご返信ください。
 
 ${SCHOOL_NAME}`;
 
@@ -82,14 +106,9 @@ ${SCHOOL_NAME}`;
     <h2 style="color:#0f172a;">ご予約が完了しました</h2>
     <p>${escapeHtml(info.studentName)} 様</p>
     <p>${SCHOOL_NAME}のご予約が完了しました。以下の内容でお待ちしております。</p>
-    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-      <tr><td style="padding:4px 0;color:#666;width:80px;">レッスン</td><td style="padding:4px 0;font-weight:bold;">${escapeHtml(info.lessonName)}</td></tr>
-      <tr><td style="padding:4px 0;color:#666;">日時</td><td style="padding:4px 0;">${escapeHtml(datetimeText)}</td></tr>
-      <tr><td style="padding:4px 0;color:#666;">講師</td><td style="padding:4px 0;">${escapeHtml(info.instructorName)}</td></tr>
-      ${locationHtml}
-    </table>
-    <p>当日はお気をつけてお越しください。ご不明な点がございましたら本メールへご返信ください。</p>
+    ${infoHtml(info)}
     ${noticeHtml(info.datetime)}
+    <p style="margin-top:20px;">当日はお気をつけてお越しください。ご不明な点がございましたら本メールへご返信ください。</p>
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;
 
@@ -104,25 +123,17 @@ export function buildReminderEmail(info: BookingEmailInfo): {
   text: string;
   html: string;
 } {
-  const datetimeText = formatLessonDateTime(info.datetime);
-  const locationLine = info.location ? `会場: ${info.location}\n` : "";
-  const locationHtml = info.location
-    ? `<tr><td style="padding:4px 0;color:#666;">会場</td><td style="padding:4px 0;">${escapeHtml(info.location)}</td></tr>`
-    : "";
-
   const subject = `【${SCHOOL_NAME}】レッスン開催3日前のリマインド（${info.lessonName}）`;
 
   const text = `${info.studentName} 様
 
 ご予約いただいている${SCHOOL_NAME}のレッスンが3日後に迫りましたのでお知らせいたします。
 
-レッスン: ${info.lessonName}
-日時: ${datetimeText}
-講師: ${info.instructorName}
-${locationLine}
-当日はお気をつけてお越しください。
+${infoText(info)}
 
 ${noticeText(info.datetime)}
+
+当日はお気をつけてお越しください。
 
 ${SCHOOL_NAME}`;
 
@@ -131,14 +142,9 @@ ${SCHOOL_NAME}`;
     <h2 style="color:#0f172a;">レッスン開催3日前のお知らせ</h2>
     <p>${escapeHtml(info.studentName)} 様</p>
     <p>ご予約いただいている${SCHOOL_NAME}のレッスンが3日後に迫りましたのでお知らせいたします。</p>
-    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-      <tr><td style="padding:4px 0;color:#666;width:80px;">レッスン</td><td style="padding:4px 0;font-weight:bold;">${escapeHtml(info.lessonName)}</td></tr>
-      <tr><td style="padding:4px 0;color:#666;">日時</td><td style="padding:4px 0;">${escapeHtml(datetimeText)}</td></tr>
-      <tr><td style="padding:4px 0;color:#666;">講師</td><td style="padding:4px 0;">${escapeHtml(info.instructorName)}</td></tr>
-      ${locationHtml}
-    </table>
-    <p>当日はお気をつけてお越しください。</p>
+    ${infoHtml(info)}
     ${noticeHtml(info.datetime)}
+    <p style="margin-top:20px;">当日はお気をつけてお越しください。</p>
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;
 
