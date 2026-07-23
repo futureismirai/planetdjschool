@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
 import { formatLessonDateTime } from "@/lib/date";
@@ -32,7 +33,15 @@ export default async function AdminDashboardPage() {
           <h1 className="text-xl font-bold text-slate-900">予約管理</h1>
           {admin && <p className="mt-0.5 text-xs text-slate-400">ログイン中: {admin.email}</p>}
         </div>
-        <LogoutButton />
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/lessons"
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+          >
+            レッスン管理
+          </Link>
+          <LogoutButton />
+        </div>
       </div>
 
       <div className="mt-6 space-y-6">
