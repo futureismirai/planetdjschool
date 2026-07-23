@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
+import { sendMail } from "@/lib/mailer";
+import { buildBookingConfirmationEmail } from "@/lib/emailTemplates";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -9,7 +11,9 @@ class LessonFullError extends Error {}
 
 /**
  * 管理者が電話・対面などで受け付けた予約を手動で登録するためのAPI。
- * 生徒名のみ必須で、メールアドレス・電話番号は任意(確認メールは送信しない)。
+ * 生徒名のみ必須で、メールアドレス・電話番号は任意。
+ * メールアドレスが入力されている場合は、通常の予約と同様に確認メールを送信する
+ * (3日前リマインドも、メールアドレスが登録されていれば自動的に対象となる)。
  */
 export async function POST(request: NextRequest) {
   const admin = await getCurrentAdmin();
@@ -47,7 +51,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const booking = await prisma.$transaction(async (tx) => {
+    const { booking, lesson } = await prisma.$transaction(async (tx) => {
       const lesson = await tx.lesson.findUnique({ where: { id: lessonId } });
       if (!lesson) {
         throw new LessonNotFoundError();
@@ -58,7 +62,7 @@ export async function POST(request: NextRequest) {
         throw new LessonFullError();
       }
 
-      return tx.booking.create({
+      const booking = await tx.booking.create({
         data: {
           lessonId,
           studentName: studentName.trim(),
@@ -66,7 +70,24 @@ export async function POST(request: NextRequest) {
           studentPhone: typeof studentPhone === "string" && studentPhone.trim() ? studentPhone.trim() : null,
         },
       });
+
+      return { booking, lesson };
     });
+
+    if (booking.studentEmail) {
+      try {
+        const { subject, text, html } = buildBookingConfirmationEmail({
+          lessonName: lesson.name,
+          datetime: lesson.datetime,
+          instructorName: lesson.instructorName,
+          location: lesson.location,
+          studentName: booking.studentName,
+        });
+        await sendMail({ to: booking.studentEmail, subject, text, html });
+      } catch (mailError) {
+        console.error("手動予約の確認メール送信に失敗しました:", mailError);
+      }
+    }
 
     return NextResponse.json({ booking }, { status: 201 });
   } catch (error) {
