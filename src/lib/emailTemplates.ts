@@ -1,4 +1,4 @@
-import { formatLessonDateTime } from "./date";
+import { formatLessonDateTime, formatTimeOnly } from "./date";
 
 export type LessonEmailInfo = {
   lessonName: string;
@@ -12,6 +12,38 @@ export type BookingEmailInfo = LessonEmailInfo & {
 };
 
 const SCHOOL_NAME = "Planet DJ School";
+const GATHERING_MINUTES_BEFORE = 10;
+
+/** レッスン開始○分前の集合時刻(JST) */
+function gatheringTimeText(datetime: Date): string {
+  return formatTimeOnly(new Date(datetime.getTime() - GATHERING_MINUTES_BEFORE * 60 * 1000));
+}
+
+function noticeText(datetime: Date): string {
+  const gatheringTime = gatheringTimeText(datetime);
+  return `場所
+
+○${gatheringTime}に1階ロビーに集合お願いします。
+
+○キャンセルはレッスン当日の8日前まで可能です。7日以内のキャンセルはレッスン1回分10000円を追加請求致します。
+
+・当日の遅刻などの緊急のお問い合わせは、その日の担当講師のInstagramアカウントにDMをお願いします。
+・当日はお持ちであればヘッドホンの持参をお願いします。貸し出しもございます。
+・Lesson 2以降の方はRekordboxをインストールした状態のPCをご持参下さい。`;
+}
+
+function noticeHtml(datetime: Date): string {
+  const gatheringTime = gatheringTimeText(datetime);
+  return `
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb;">
+      <p style="font-weight:bold;margin:0 0 8px;">場所</p>
+      <p style="margin:0 0 12px;">${escapeHtml(gatheringTime)}に1階ロビーに集合お願いします。</p>
+      <p style="margin:0 0 12px;">キャンセルはレッスン当日の8日前まで可能です。7日以内のキャンセルはレッスン1回分10000円を追加請求致します。</p>
+      <p style="margin:0;">・当日の遅刻などの緊急のお問い合わせは、その日の担当講師のInstagramアカウントにDMをお願いします。</p>
+      <p style="margin:0;">・当日はお持ちであればヘッドホンの持参をお願いします。貸し出しもございます。</p>
+      <p style="margin:0;">・Lesson 2以降の方はRekordboxをインストールした状態のPCをご持参下さい。</p>
+    </div>`;
+}
 
 /**
  * 予約完了メール。文面を変更したい場合はこの関数を編集してください。
@@ -41,6 +73,8 @@ ${locationLine}
 当日はお気をつけてお越しください。
 ご不明な点がございましたら本メールへご返信ください。
 
+${noticeText(info.datetime)}
+
 ${SCHOOL_NAME}`;
 
   const html = `
@@ -55,6 +89,7 @@ ${SCHOOL_NAME}`;
       ${locationHtml}
     </table>
     <p>当日はお気をつけてお越しください。ご不明な点がございましたら本メールへご返信ください。</p>
+    ${noticeHtml(info.datetime)}
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;
 
@@ -87,6 +122,8 @@ export function buildReminderEmail(info: BookingEmailInfo): {
 ${locationLine}
 当日はお気をつけてお越しください。
 
+${noticeText(info.datetime)}
+
 ${SCHOOL_NAME}`;
 
   const html = `
@@ -101,6 +138,7 @@ ${SCHOOL_NAME}`;
       ${locationHtml}
     </table>
     <p>当日はお気をつけてお越しください。</p>
+    ${noticeHtml(info.datetime)}
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;
 
