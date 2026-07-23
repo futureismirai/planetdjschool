@@ -4,12 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatLessonDateTime } from "@/lib/date";
 
+export const DEFAULT_LOCATION = "ゲートウェイスタジオ渋谷道玄坂店　3階　5st";
+
 export type LessonItem = {
   id: string;
   name: string;
   datetime: string; // ISO文字列
   instructorName: string;
   maxSlots: number;
+  location: string | null;
   bookingCount: number;
 };
 
@@ -18,6 +21,7 @@ type FormValues = {
   datetime: string; // datetime-local用の文字列
   instructorName: string;
   maxSlots: string;
+  location: string;
 };
 
 function toDatetimeLocalValue(iso: string): string {
@@ -27,7 +31,7 @@ function toDatetimeLocalValue(iso: string): string {
 }
 
 function emptyForm(): FormValues {
-  return { name: "", datetime: "", instructorName: "", maxSlots: "3" };
+  return { name: "", datetime: "", instructorName: "", maxSlots: "3", location: DEFAULT_LOCATION };
 }
 
 function lessonToForm(lesson: LessonItem): FormValues {
@@ -36,6 +40,7 @@ function lessonToForm(lesson: LessonItem): FormValues {
     datetime: toDatetimeLocalValue(lesson.datetime),
     instructorName: lesson.instructorName,
     maxSlots: String(lesson.maxSlots),
+    location: lesson.location ?? DEFAULT_LOCATION,
   };
 }
 
@@ -104,6 +109,16 @@ function LessonForm({
           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
       </div>
+      <div className="sm:col-span-2">
+        <label className="block text-xs font-medium text-slate-500">場所</label>
+        <input
+          type="text"
+          value={values.location}
+          onChange={(e) => setValues({ ...values, location: e.target.value })}
+          placeholder={DEFAULT_LOCATION}
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+      </div>
       <div className="flex items-end gap-2 sm:col-span-2">
         <button
           type="submit"
@@ -146,6 +161,7 @@ export function LessonManager({ lessons }: { lessons: LessonItem[] }) {
           datetime: new Date(values.datetime).toISOString(),
           instructorName: values.instructorName,
           maxSlots: Number(values.maxSlots),
+          location: values.location,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -174,6 +190,7 @@ export function LessonManager({ lessons }: { lessons: LessonItem[] }) {
           datetime: new Date(values.datetime).toISOString(),
           instructorName: values.instructorName,
           maxSlots: Number(values.maxSlots),
+          location: values.location,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -281,6 +298,9 @@ export function LessonManager({ lessons }: { lessons: LessonItem[] }) {
                 <p className="mt-1 text-sm text-slate-500">
                   {formatLessonDateTime(new Date(lesson.datetime))} ／ 講師: {lesson.instructorName}{" "}
                   ／ 定員: {lesson.maxSlots} ／ 予約: {lesson.bookingCount}件
+                </p>
+                <p className="mt-0.5 text-sm text-slate-500">
+                  場所: {lesson.location ?? DEFAULT_LOCATION}
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">

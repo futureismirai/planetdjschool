@@ -16,6 +16,7 @@ async function getLessonsWithBookingCount() {
     datetime: lesson.datetime.toISOString(),
     instructorName: lesson.instructorName,
     maxSlots: lesson.maxSlots,
+    location: lesson.location,
     bookingCount: lesson._count.bookings,
   }));
 }
