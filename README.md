@@ -5,7 +5,7 @@ Planet DJ School のレッスン予約をExcel管理からWebアプリに置き�
 ## 技術構成
 
 - Next.js (App Router) + TypeScript
-- Prisma + SQLite（本番はPostgreSQLへ移行しやすい設計）
+- Prisma + PostgreSQL
 - 管理者ログイン（シンプルなメール/パスワード認証、JWTセッションCookie）
 - メール送信: Nodemailer + Gmailアプリパスワード
 - リマインドメール: `/api/cron/reminder` を Vercel Cron から日次実行
@@ -60,7 +60,7 @@ cp .env.example .env
 
 | 変数名 | 説明 |
 | --- | --- |
-| `DATABASE_URL` | DB接続情報。ローカルは `file:./dev.db`（SQLite） |
+| `DATABASE_URL` | PostgreSQLの接続文字列（後述の手順で取得） |
 | `GMAIL_USER` | 送信元Gmailアドレス |
 | `GMAIL_APP_PASSWORD` | Gmailアプリパスワード（後述） |
 | `MAIL_FROM_NAME` | メール送信者表示名 |
@@ -83,8 +83,12 @@ cp .env.example .env
 
 ### 3. データベースの作成・初期データ投入
 
+PostgreSQLのデータベースが必要です（本番用に作成する場合は次章「Vercelへのデプロイ手順」を先に見てください。同じデータベースをローカル開発でもそのまま使えます）。
+
+`.env` の `DATABASE_URL` を設定したら、以下を実行してテーブルと初期データを作成します。
+
 ```bash
-npx prisma migrate dev --name init
+npx prisma db push
 npm run prisma:seed
 ```
 
@@ -100,41 +104,53 @@ npm run dev
 
 ## Vercelへのデプロイ手順
 
-### 1. データベースについて（重要）
+### 1. データベースを用意する（必須）
 
-Vercelのサーバーレス環境ではファイルシステムが実行ごとにリセットされるため、SQLiteファイルは本番運用に使用できません。本番では以下のいずれかを推奨します。
+Vercelは実行のたびにファイルシステムがリセットされるため、SQLiteのようなファイル保存型のデータベースは使えません。**必ずPostgreSQLのデータベースを用意してください。**
 
-- [Vercel Postgres](https://vercel.com/storage/postgres) / [Neon](https://neon.tech) / [Supabase](https://supabase.com) など、PostgreSQLのホスティングサービスを利用する
+一番手軽なのは、Vercelのダッシュボードから数クリックで作れる方法です。
 
-移行手順:
+1. Vercelの対象プロジェクトを開く
+2. 上部メニューの「Storage」タブを開く
+3. 「Create Database」→「Postgres」（Neon提供）を選択して作成する
+4. 作成後、「Connect Project」でこのプロジェクトに接続する（自動で環境変数が追加されます）
+5. 追加された環境変数の中に `DATABASE_URL` という名前のものがあるか確認する
+   - もし `POSTGRES_URL` など別名でしか追加されない場合は、「Environment Variables」の画面でその値をコピーし、`DATABASE_URL` という名前の変数としても追加してください（このアプリは `DATABASE_URL` という名前しか見ません）
 
-1. `prisma/schema.prisma` の `datasource db` を以下のように変更する
+Neon / Supabase など他のPostgreSQLサービスを既にお持ちの場合は、その接続文字列を `DATABASE_URL` に設定するだけでも構いません。
 
-   ```prisma
-   datasource db {
-     provider = "postgresql"
-     url      = env("DATABASE_URL")
-   }
-   ```
+### 2. Vercelプロジェクトの環境変数を設定する
 
-2. `DATABASE_URL` にPostgreSQLの接続文字列を設定する
-3. `npx prisma migrate deploy` で本番DBにマイグレーションを適用する
+「Settings」→「Environment Variables」で、以下をすべて設定してください（`DATABASE_URL` は上の手順で設定済みのはずです）。
 
-（データモデル自体はSQLite/PostgreSQL間で変更不要です）
+| 変数名 | 設定する値 |
+| --- | --- |
+| `DATABASE_URL` | 上の手順1で用意したPostgreSQLの接続文字列 |
+| `GMAIL_USER` | 送信に使うGmailアドレス |
+| `GMAIL_APP_PASSWORD` | Gmailアプリパスワード（このREADME内「Gmailアプリパスワードの取得方法」を参照） |
+| `MAIL_FROM_NAME` | メール送信者名（例: `Planet DJ School`） |
+| `AUTH_SECRET` | ランダムな文字列（32文字以上。パスワード生成ツールなどで作成） |
+| `ADMIN_INITIAL_EMAIL` | 管理者ログインに使うメールアドレス |
+| `ADMIN_INITIAL_PASSWORD` | 管理者ログインに使うパスワード |
+| `CRON_SECRET` | ランダムな文字列（リマインドバッチ保護用） |
+| `NEXT_PUBLIC_BASE_URL` | 例: `https://your-domain.vercel.app` |
 
-### 2. Vercelプロジェクトの作成
+設定後、「Deployments」から再デプロイしてください。
 
-1. GitHubリポジトリをVercelにインポートする
-2. 「Environment Variables」に `.env.example` に記載の変数（`DATABASE_URL`, `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `MAIL_FROM_NAME`, `AUTH_SECRET`, `ADMIN_INITIAL_EMAIL`, `ADMIN_INITIAL_PASSWORD`, `CRON_SECRET`, `NEXT_PUBLIC_BASE_URL`）をすべて設定する
-3. デプロイを実行する
-4. デプロイ後、ローカルから本番DBに対して以下を1回だけ実行し、マイグレーションと初期管理者アカウントを作成する
+### 3. データベースの初期化（1回だけ必要）
 
-   ```bash
-   DATABASE_URL="<本番のURL>" npx prisma migrate deploy
-   DATABASE_URL="<本番のURL>" npm run prisma:seed
-   ```
+環境変数を設定しただけではデータベースの中身（テーブル）が空のままなので、1回だけ初期化のコマンドを実行する必要があります。この手順は少し技術的なので、やり方が分からない場合は接続文字列（`DATABASE_URL` の値）を教えていただければこちらで代行できます。
 
-### 3. Vercel Cronの設定（リマインドメール）
+ご自身で実行する場合は、パソコンでこのリポジトリを開いて以下を実行してください。
+
+```bash
+DATABASE_URL="<手順1でコピーした接続文字列>" npx prisma db push
+DATABASE_URL="<手順1でコピーした接続文字列>" npm run prisma:seed
+```
+
+これでテーブルが作成され、初期管理者アカウントとサンプルレッスンが登録されます。
+
+### 4. Vercel Cronの設定（リマインドメール）
 
 このリポジトリの `vercel.json` に、毎日 UTC 0:00（日本時間 朝9:00）に `/api/cron/reminder` を呼び出す設定を含めています。
 

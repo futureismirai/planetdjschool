@@ -1,12 +1,12 @@
 // Planet DJ School - lesson booking data model
-// Uses SQLite for local/dev; swap `provider`/`url` to "postgresql" for production.
+// PostgreSQL を使用(Vercelなどのサーバーレス環境ではSQLiteが利用できないため)。
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
