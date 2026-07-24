@@ -28,6 +28,27 @@ export function getJstDateKey(date: Date): string {
   return formatInTimeZone(date, TIME_ZONE, "yyyy-MM-dd");
 }
 
+/** 現在の日本時間の年・月(月は1〜12)を返す。カレンダーの初期表示に使用する。 */
+export function getJstNowYearMonth(now: Date = new Date()): { year: number; month: number } {
+  const [year, month] = formatInTimeZone(now, TIME_ZONE, "yyyy-M").split("-").map(Number);
+  return { year, month };
+}
+
+/**
+ * 指定した日本時間の年月(1日00:00〜翌月1日00:00)のUTC範囲を返す。
+ * カレンダー表示に使用する。
+ */
+export function getJstMonthRange(year: number, month: number): { start: Date; end: Date } {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const nextYear = month === 12 ? year + 1 : year;
+  const nextMonth = month === 12 ? 1 : month + 1;
+
+  return {
+    start: fromZonedTime(`${year}-${pad(month)}-01 00:00:00`, TIME_ZONE),
+    end: fromZonedTime(`${nextYear}-${pad(nextMonth)}-01 00:00:00`, TIME_ZONE),
+  };
+}
+
 /**
  * 日本時間で「今日からdaysFromNow日後」の1日分(00:00〜翌日00:00)のUTC範囲を返す。
  * リマインドメール送信対象日の判定に使用する。

@@ -298,7 +298,8 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
           return (
             <section
               key={lesson.id}
-              className="rounded-lg border border-slate-200 bg-white shadow-sm"
+              id={`lesson-${lesson.id}`}
+              className="scroll-mt-4 rounded-lg border border-slate-200 bg-white shadow-sm"
             >
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-4">
                 <div>
