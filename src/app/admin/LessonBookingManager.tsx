@@ -3,8 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatLessonDateTime } from "@/lib/date";
+import { ManualBookingForm } from "./ManualBookingForm";
+import { DeleteBookingButton } from "./DeleteBookingButton";
 
 export const DEFAULT_LOCATION = "ゲートウェイスタジオ渋谷道玄坂店　3階　5st";
+
+export type BookingItem = {
+  id: string;
+  studentName: string;
+  studentEmail: string | null;
+  studentPhone: string | null;
+  createdAt: string;
+};
 
 export type LessonItem = {
   id: string;
@@ -13,7 +23,7 @@ export type LessonItem = {
   instructorName: string;
   maxSlots: number;
   location: string | null;
-  bookingCount: number;
+  bookings: BookingItem[];
 };
 
 type FormValues = {
@@ -141,7 +151,7 @@ function LessonForm({
   );
 }
 
-export function LessonManager({ lessons }: { lessons: LessonItem[] }) {
+export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
   const router = useRouter();
   const [showNewForm, setShowNewForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -209,8 +219,8 @@ export function LessonManager({ lessons }: { lessons: LessonItem[] }) {
 
   async function handleDelete(lesson: LessonItem) {
     const message =
-      lesson.bookingCount > 0
-        ? `「${lesson.name}」には${lesson.bookingCount}件の予約が入っています。削除すると予約データも一緒に削除されます。本当に削除しますか？`
+      lesson.bookings.length > 0
+        ? `「${lesson.name}」には${lesson.bookings.length}件の予約が入っています。削除すると予約データも一緒に削除されます。本当に削除しますか？`
         : `「${lesson.name}」を削除しますか？`;
     if (!window.confirm(message)) return;
 
@@ -259,12 +269,15 @@ export function LessonManager({ lessons }: { lessons: LessonItem[] }) {
         )}
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {lessons.length === 0 && (
           <p className="text-sm text-slate-500">レッスンが登録されていません。</p>
         )}
+
         {lessons.map((lesson) => {
           const isPast = new Date(lesson.datetime) < now;
+          const remainingSlots = lesson.maxSlots - lesson.bookings.length;
+
           if (editingId === lesson.id) {
             return (
               <div
@@ -281,45 +294,87 @@ export function LessonManager({ lessons }: { lessons: LessonItem[] }) {
               </div>
             );
           }
+
           return (
-            <div
+            <section
               key={lesson.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+              className="rounded-lg border border-slate-200 bg-white shadow-sm"
             >
-              <div>
-                <p className="flex items-center gap-2 font-bold text-slate-900">
-                  {lesson.name}
-                  {isPast && (
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-normal text-slate-500">
-                      終了
-                    </span>
-                  )}
-                </p>
-                <p className="mt-1 text-sm text-slate-500">
-                  {formatLessonDateTime(new Date(lesson.datetime))} ／ 講師: {lesson.instructorName}{" "}
-                  ／ 定員: {lesson.maxSlots} ／ 予約: {lesson.bookingCount}件
-                </p>
-                <p className="mt-0.5 text-sm text-slate-500">
-                  場所: {lesson.location ?? DEFAULT_LOCATION}
-                </p>
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-4">
+                <div>
+                  <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
+                    {lesson.name}
+                    {isPast && (
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-normal text-slate-500">
+                        終了
+                      </span>
+                    )}
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {formatLessonDateTime(new Date(lesson.datetime))} ／ 講師: {lesson.instructorName}
+                  </p>
+                  <p className="mt-0.5 text-sm text-slate-500">
+                    場所: {lesson.location ?? DEFAULT_LOCATION}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+                    予約 {lesson.bookings.length} / {lesson.maxSlots}（残り{Math.max(remainingSlots, 0)}）
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setEditingId(lesson.id)}
+                    className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+                  >
+                    編集
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(lesson)}
+                    className="rounded-md border border-rose-200 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50"
+                  >
+                    削除
+                  </button>
+                </div>
               </div>
-              <div className="flex shrink-0 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEditingId(lesson.id)}
-                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-                >
-                  編集
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(lesson)}
-                  className="rounded-md border border-rose-200 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50"
-                >
-                  削除
-                </button>
-              </div>
-            </div>
+
+              {lesson.bookings.length === 0 ? (
+                <p className="p-4 text-sm text-slate-400">予約はまだありません。</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[480px] text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-100 text-xs text-slate-400">
+                        <th className="px-4 py-2 font-medium">生徒名</th>
+                        <th className="px-4 py-2 font-medium">メールアドレス</th>
+                        <th className="px-4 py-2 font-medium">電話番号</th>
+                        <th className="px-4 py-2 font-medium">予約日時</th>
+                        <th className="px-4 py-2 font-medium"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lesson.bookings.map((booking) => (
+                        <tr key={booking.id} className="border-b border-slate-50 last:border-0">
+                          <td className="px-4 py-2">{booking.studentName}</td>
+                          <td className="px-4 py-2">{booking.studentEmail ?? "-"}</td>
+                          <td className="px-4 py-2">{booking.studentPhone ?? "-"}</td>
+                          <td className="px-4 py-2 text-slate-500">
+                            {formatLessonDateTime(new Date(booking.createdAt))}
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            <DeleteBookingButton
+                              bookingId={booking.id}
+                              studentName={booking.studentName}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <ManualBookingForm lessonId={lesson.id} />
+            </section>
           );
         })}
       </div>
