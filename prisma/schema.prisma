@@ -69,3 +69,29 @@ model TrialParticipant {
 
   @@index([trialSessionId])
 }
+
+/// 個別レッスン。生徒には非公開、管理者が把握するためだけのもの。1回あたり1名まで。
+model IndividualLesson {
+  id             String                  @id @default(cuid())
+  name           String
+  datetime       DateTime
+  instructorName String
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  participants   IndividualParticipant[]
+
+  @@index([datetime])
+}
+
+model IndividualParticipant {
+  id                 String           @id @default(cuid())
+  individualLessonId String
+  individualLesson   IndividualLesson @relation(fields: [individualLessonId], references: [id], onDelete: Cascade)
+  studentName        String
+  studentEmail       String
+  note               String?
+  reminderSentAt     DateTime?
+  createdAt          DateTime         @default(now())
+
+  @@index([individualLessonId])
+}

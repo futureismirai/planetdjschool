@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendMail } from "@/lib/mailer";
-import { buildReminderEmail, buildTrialReminderEmail } from "@/lib/emailTemplates";
+import {
+  buildIndividualLessonReminderEmail,
+  buildReminderEmail,
+  buildTrialReminderEmail,
+} from "@/lib/emailTemplates";
 import { getJstDayWindow } from "@/lib/date";
 
 const REMINDER_DAYS_BEFORE = 3;
@@ -94,16 +98,59 @@ async function runTrialReminderBatch() {
   return { targetTrialSessions: trialSessions.length, sent, failed };
 }
 
+async function runIndividualLessonReminderBatch() {
+  const { start, end } = getJstDayWindow(REMINDER_DAYS_BEFORE);
+
+  const individualLessons = await prisma.individualLesson.findMany({
+    where: { datetime: { gte: start, lt: end } },
+    include: {
+      participants: { where: { reminderSentAt: null } },
+    },
+  });
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const individualLesson of individualLessons) {
+    for (const participant of individualLesson.participants) {
+      try {
+        const { subject, text, html } = buildIndividualLessonReminderEmail({
+          lessonName: individualLesson.name,
+          datetime: individualLesson.datetime,
+          instructorName: individualLesson.instructorName,
+          studentName: participant.studentName,
+        });
+        await sendMail({ to: participant.studentEmail, subject, text, html });
+        await prisma.individualParticipant.update({
+          where: { id: participant.id },
+          data: { reminderSentAt: new Date() },
+        });
+        sent += 1;
+      } catch (error) {
+        console.error(`個別レッスンリマインドメール送信に失敗しました (participantId=${participant.id}):`, error);
+        failed += 1;
+      }
+    }
+  }
+
+  return { targetIndividualLessons: individualLessons.length, sent, failed };
+}
+
 export async function GET(request: NextRequest) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [lessonResult, trialResult] = await Promise.all([
+  const [lessonResult, trialResult, individualResult] = await Promise.all([
     runReminderBatch(),
     runTrialReminderBatch(),
+    runIndividualLessonReminderBatch(),
   ]);
-  return NextResponse.json({ lessons: lessonResult, trialSessions: trialResult });
+  return NextResponse.json({
+    lessons: lessonResult,
+    trialSessions: trialResult,
+    individualLessons: individualResult,
+  });
 }
 
 export async function POST(request: NextRequest) {

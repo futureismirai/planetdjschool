@@ -73,6 +73,33 @@ const CREATE_TABLES_SQL = [
       FOREIGN KEY ("trialSessionId") REFERENCES "TrialSession"("id") ON DELETE CASCADE ON UPDATE CASCADE;
   EXCEPTION WHEN duplicate_object THEN NULL;
   END $$`,
+  // 個別レッスン(管理者専用、1回1名まで)
+  `CREATE TABLE IF NOT EXISTS "IndividualLesson" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "datetime" TIMESTAMP(3) NOT NULL,
+    "instructorName" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "IndividualLesson_pkey" PRIMARY KEY ("id")
+  )`,
+  `CREATE TABLE IF NOT EXISTS "IndividualParticipant" (
+    "id" TEXT NOT NULL,
+    "individualLessonId" TEXT NOT NULL,
+    "studentName" TEXT NOT NULL,
+    "studentEmail" TEXT NOT NULL,
+    "note" TEXT,
+    "reminderSentAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "IndividualParticipant_pkey" PRIMARY KEY ("id")
+  )`,
+  `CREATE INDEX IF NOT EXISTS "IndividualLesson_datetime_idx" ON "IndividualLesson"("datetime")`,
+  `CREATE INDEX IF NOT EXISTS "IndividualParticipant_individualLessonId_idx" ON "IndividualParticipant"("individualLessonId")`,
+  `DO $$ BEGIN
+    ALTER TABLE "IndividualParticipant" ADD CONSTRAINT "IndividualParticipant_individualLessonId_fkey"
+      FOREIGN KEY ("individualLessonId") REFERENCES "IndividualLesson"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END $$`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {

@@ -43,18 +43,28 @@ type CalendarEvent = {
   time: string;
   label: string;
   href: string;
-  kind: "lesson" | "trial";
+  kind: "lesson" | "trial" | "individual";
+};
+
+const EVENT_STYLES: Record<CalendarEvent["kind"], string> = {
+  lesson: "bg-sky-100 text-sky-700",
+  trial: "bg-amber-100 text-amber-700",
+  individual: "bg-emerald-100 text-emerald-700",
 };
 
 async function getCalendarEvents(year: number, month: number) {
   const { start, end } = getJstMonthRange(year, month);
 
-  const [lessons, trialSessions] = await Promise.all([
+  const [lessons, trialSessions, individualLessons] = await Promise.all([
     prisma.lesson.findMany({
       where: { datetime: { gte: start, lt: end } },
       orderBy: { datetime: "asc" },
     }),
     prisma.trialSession.findMany({
+      where: { datetime: { gte: start, lt: end } },
+      orderBy: { datetime: "asc" },
+    }),
+    prisma.individualLesson.findMany({
       where: { datetime: { gte: start, lt: end } },
       orderBy: { datetime: "asc" },
     }),
@@ -84,6 +94,15 @@ async function getCalendarEvents(year: number, month: number) {
       label: "体験会",
       href: `/admin/trial#trial-${trialSession.id}`,
       kind: "trial",
+    });
+  }
+  for (const individualLesson of individualLessons) {
+    push(getJstDateKey(individualLesson.datetime), {
+      id: individualLesson.id,
+      time: formatTimeOnly(individualLesson.datetime),
+      label: individualLesson.name,
+      href: `/admin/individual#individual-${individualLesson.id}`,
+      kind: "individual",
     });
   }
 
@@ -123,30 +142,36 @@ export default async function AdminCalendarPage({
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-4xl px-3 py-6 sm:px-4 sm:py-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900">カレンダー</h1>
           {admin && <p className="mt-0.5 text-xs text-slate-400">ログイン中: {admin.email}</p>}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Link
             href="/admin/lessons"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
           >
-            予約・レッスン管理
+            グループレッスン
           </Link>
           <Link
             href="/admin/trial"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
           >
-            体験会管理
+            体験会
+          </Link>
+          <Link
+            href="/admin/individual"
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+          >
+            個別レッスン
           </Link>
           <LogoutButton />
         </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 text-sm">
           <Link
             href={`/admin?ym=${prevYm}`}
@@ -182,14 +207,14 @@ export default async function AdminCalendarPage({
       </div>
 
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[560px] table-fixed border-collapse overflow-hidden rounded-lg border border-slate-200 bg-white text-sm">
+        <table className="w-full min-w-[420px] table-fixed border-collapse overflow-hidden rounded-lg border border-slate-200 bg-white text-sm">
           <thead>
             <tr>
               {WEEKDAY_LABELS.map((label, i) => (
                 <th
                   key={label}
                   className={
-                    "border-b border-slate-100 px-2 py-2 text-xs font-medium " +
+                    "border-b border-slate-100 px-1 py-1.5 text-[11px] font-medium sm:px-2 sm:py-2 sm:text-xs " +
                     (i === 0 ? "text-rose-500" : i === 6 ? "text-sky-600" : "text-slate-400")
                   }
                 >
@@ -206,7 +231,7 @@ export default async function AdminCalendarPage({
                     return (
                       <td
                         key={dayIndex}
-                        className="h-24 border border-slate-100 bg-slate-50 align-top"
+                        className="h-16 border border-slate-100 bg-slate-50 align-top sm:h-24"
                       />
                     );
                   }
@@ -216,28 +241,26 @@ export default async function AdminCalendarPage({
                     <td
                       key={dayIndex}
                       className={
-                        "h-24 border border-slate-100 p-1 align-top " +
+                        "h-16 border border-slate-100 p-0.5 align-top sm:h-24 sm:p-1 " +
                         (isToday ? "bg-sky-50" : "")
                       }
                     >
                       <p
                         className={
-                          "px-1 text-xs font-semibold " +
+                          "px-0.5 text-[10px] font-semibold sm:px-1 sm:text-xs " +
                           (isToday ? "text-sky-700" : "text-slate-500")
                         }
                       >
                         {cell.day}
                       </p>
-                      <div className="mt-1 space-y-0.5">
+                      <div className="mt-0.5 space-y-0.5 sm:mt-1">
                         {events.map((event) => (
                           <Link
                             key={`${event.kind}-${event.id}`}
                             href={event.href}
                             className={
-                              "block truncate rounded px-1 py-0.5 text-[11px] leading-tight hover:opacity-80 " +
-                              (event.kind === "lesson"
-                                ? "bg-sky-100 text-sky-700"
-                                : "bg-amber-100 text-amber-700")
+                              "block truncate rounded px-0.5 py-0.5 text-[9px] leading-tight hover:opacity-80 sm:px-1 sm:text-[11px] " +
+                              EVENT_STYLES[event.kind]
                             }
                           >
                             {event.time} {event.label}
@@ -253,14 +276,18 @@ export default async function AdminCalendarPage({
         </table>
       </div>
 
-      <div className="mt-3 flex gap-4 text-xs text-slate-500">
+      <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 sm:gap-4">
         <span className="flex items-center gap-1">
           <span className="inline-block h-3 w-3 rounded bg-sky-100" />
-          レッスン
+          グループレッスン
         </span>
         <span className="flex items-center gap-1">
           <span className="inline-block h-3 w-3 rounded bg-amber-100" />
           体験会
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-3 w-3 rounded bg-emerald-100" />
+          個別レッスン
         </span>
       </div>
     </div>

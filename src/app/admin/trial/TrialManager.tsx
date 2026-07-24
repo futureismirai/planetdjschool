@@ -437,22 +437,24 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
                 <p className="p-4 text-sm text-slate-400">参加登録はまだありません。</p>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[520px] text-left text-sm">
+                  <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="border-b border-slate-100 text-xs text-slate-400">
-                        <th className="px-4 py-2 font-medium">生徒名</th>
-                        <th className="px-4 py-2 font-medium">メールアドレス</th>
-                        <th className="px-4 py-2 font-medium">備考</th>
-                        <th className="px-4 py-2 font-medium"></th>
+                        <th className="px-2 py-2 font-medium sm:px-4">生徒名</th>
+                        <th className="px-2 py-2 font-medium sm:px-4">メールアドレス</th>
+                        <th className="hidden px-4 py-2 font-medium sm:table-cell">備考</th>
+                        <th className="px-2 py-2 font-medium sm:px-4"></th>
                       </tr>
                     </thead>
                     <tbody>
                       {session.participants.map((participant) => (
                         <tr key={participant.id} className="border-b border-slate-50 last:border-0">
-                          <td className="px-4 py-2">{participant.studentName}</td>
-                          <td className="px-4 py-2">{participant.studentEmail}</td>
-                          <td className="px-4 py-2 text-slate-500">{participant.note ?? "-"}</td>
-                          <td className="px-4 py-2 text-right">
+                          <td className="px-2 py-2 sm:px-4">{participant.studentName}</td>
+                          <td className="px-2 py-2 sm:px-4">{participant.studentEmail}</td>
+                          <td className="hidden px-4 py-2 text-slate-500 sm:table-cell">
+                            {participant.note ?? "-"}
+                          </td>
+                          <td className="px-2 py-2 text-right sm:px-4">
                             <DeleteParticipantButton
                               participantId={participant.id}
                               studentName={participant.studentName}

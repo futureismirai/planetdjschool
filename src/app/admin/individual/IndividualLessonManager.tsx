@@ -3,35 +3,27 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatLessonDateTime } from "@/lib/date";
-import { ManualBookingForm } from "./ManualBookingForm";
-import { DeleteBookingButton } from "./DeleteBookingButton";
 
-export const DEFAULT_LOCATION = "ゲートウェイスタジオ渋谷道玄坂店　3階　5st";
-
-export type BookingItem = {
+export type IndividualParticipantItem = {
   id: string;
   studentName: string;
-  studentEmail: string | null;
-  studentPhone: string | null;
+  studentEmail: string;
+  note: string | null;
   createdAt: string;
 };
 
-export type LessonItem = {
+export type IndividualLessonItem = {
   id: string;
   name: string;
   datetime: string; // ISO文字列
   instructorName: string;
-  maxSlots: number;
-  location: string | null;
-  bookings: BookingItem[];
+  participants: IndividualParticipantItem[];
 };
 
-type FormValues = {
+type LessonFormValues = {
   name: string;
   datetime: string; // datetime-local用の文字列
   instructorName: string;
-  maxSlots: string;
-  location: string;
 };
 
 function toDatetimeLocalValue(iso: string): string {
@@ -40,17 +32,15 @@ function toDatetimeLocalValue(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function emptyForm(): FormValues {
-  return { name: "", datetime: "", instructorName: "", maxSlots: "3", location: DEFAULT_LOCATION };
+function emptyLessonForm(): LessonFormValues {
+  return { name: "", datetime: "", instructorName: "" };
 }
 
-function lessonToForm(lesson: LessonItem): FormValues {
+function lessonToForm(lesson: IndividualLessonItem): LessonFormValues {
   return {
     name: lesson.name,
     datetime: toDatetimeLocalValue(lesson.datetime),
     instructorName: lesson.instructorName,
-    maxSlots: String(lesson.maxSlots),
-    location: lesson.location ?? DEFAULT_LOCATION,
   };
 }
 
@@ -61,10 +51,10 @@ function LessonForm({
   onSubmit,
   submitting,
 }: {
-  initial: FormValues;
+  initial: LessonFormValues;
   submitLabel: string;
   onCancel?: () => void;
-  onSubmit: (values: FormValues) => void;
+  onSubmit: (values: LessonFormValues) => void;
   submitting: boolean;
 }) {
   const [values, setValues] = useState(initial);
@@ -75,7 +65,7 @@ function LessonForm({
         e.preventDefault();
         onSubmit(values);
       }}
-      className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+      className="grid grid-cols-1 gap-3 sm:grid-cols-3"
     >
       <div>
         <label className="block text-xs font-medium text-slate-500">レッスン名</label>
@@ -84,7 +74,7 @@ function LessonForm({
           required
           value={values.name}
           onChange={(e) => setValues({ ...values, name: e.target.value })}
-          placeholder="Lesson1"
+          placeholder="レッスン1"
           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
       </div>
@@ -108,28 +98,7 @@ function LessonForm({
           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
       </div>
-      <div>
-        <label className="block text-xs font-medium text-slate-500">定員</label>
-        <input
-          type="number"
-          min={1}
-          required
-          value={values.maxSlots}
-          onChange={(e) => setValues({ ...values, maxSlots: e.target.value })}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-        />
-      </div>
-      <div className="sm:col-span-2">
-        <label className="block text-xs font-medium text-slate-500">場所</label>
-        <input
-          type="text"
-          value={values.location}
-          onChange={(e) => setValues({ ...values, location: e.target.value })}
-          placeholder={DEFAULT_LOCATION}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-        />
-      </div>
-      <div className="flex items-end gap-2 sm:col-span-2">
+      <div className="flex items-end gap-2 sm:col-span-3">
         <button
           type="submit"
           disabled={submitting}
@@ -151,27 +120,160 @@ function LessonForm({
   );
 }
 
-export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
+function ParticipantForm({
+  individualLessonId,
+  onDone,
+}: {
+  individualLessonId: string;
+  onDone: () => void;
+}) {
+  const router = useRouter();
+  const [studentName, setStudentName] = useState("");
+  const [studentEmail, setStudentEmail] = useState("");
+  const [note, setNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/individual-participants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ individualLessonId, studentName, studentEmail, note }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "登録に失敗しました。");
+        return;
+      }
+      setStudentName("");
+      setStudentEmail("");
+      setNote("");
+      router.refresh();
+      onDone();
+    } catch {
+      setError("通信エラーが発生しました。");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="grid grid-cols-1 gap-2 border-t border-slate-100 p-3 sm:grid-cols-[1fr_1fr_1fr_auto_auto]"
+    >
+      <input
+        type="text"
+        required
+        placeholder="生徒名(必須)"
+        value={studentName}
+        onChange={(e) => setStudentName(e.target.value)}
+        className="rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+      />
+      <input
+        type="email"
+        required
+        placeholder="メールアドレス(必須)"
+        value={studentEmail}
+        onChange={(e) => setStudentEmail(e.target.value)}
+        className="rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+      />
+      <input
+        type="text"
+        placeholder="備考(任意)"
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        className="rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+      />
+      <button
+        type="submit"
+        disabled={submitting}
+        className="rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {submitting ? "追加中..." : "追加する"}
+      </button>
+      <button
+        type="button"
+        onClick={onDone}
+        className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
+      >
+        キャンセル
+      </button>
+      {error && (
+        <p className="col-span-full rounded-md bg-rose-50 p-2 text-sm text-rose-600" role="alert">
+          {error}
+        </p>
+      )}
+    </form>
+  );
+}
+
+function DeleteParticipantButton({
+  participantId,
+  studentName,
+}: {
+  participantId: string;
+  studentName: string;
+}) {
+  const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!window.confirm(`「${studentName}」さんの登録を本当に削除しますか？`)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/individual-participants/${participantId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        window.alert(data.error ?? "削除に失敗しました。");
+        return;
+      }
+      router.refresh();
+    } catch {
+      window.alert("通信エラーが発生しました。");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleDelete}
+      disabled={deleting}
+      className="text-xs font-medium text-rose-600 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {deleting ? "削除中..." : "削除"}
+    </button>
+  );
+}
+
+export function IndividualLessonManager({ lessons }: { lessons: IndividualLessonItem[] }) {
   const router = useRouter();
   const [showNewForm, setShowNewForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
+  const [addingParticipantFor, setAddingParticipantFor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const now = new Date();
 
-  async function handleCreate(values: FormValues) {
+  async function handleCreateLesson(values: LessonFormValues) {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/lessons", {
+      const res = await fetch("/api/admin/individual-lessons", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: values.name,
           datetime: new Date(values.datetime).toISOString(),
           instructorName: values.instructorName,
-          maxSlots: Number(values.maxSlots),
-          location: values.location,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -188,19 +290,17 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
     }
   }
 
-  async function handleUpdate(id: string, values: FormValues) {
+  async function handleUpdateLesson(id: string, values: LessonFormValues) {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/lessons/${id}`, {
+      const res = await fetch(`/api/admin/individual-lessons/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: values.name,
           datetime: new Date(values.datetime).toISOString(),
           instructorName: values.instructorName,
-          maxSlots: Number(values.maxSlots),
-          location: values.location,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -208,7 +308,7 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
         setError(data.error ?? "更新に失敗しました。");
         return;
       }
-      setEditingId(null);
+      setEditingLessonId(null);
       router.refresh();
     } catch {
       setError("通信エラーが発生しました。");
@@ -217,17 +317,17 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
     }
   }
 
-  async function handleDelete(lesson: LessonItem) {
+  async function handleDeleteLesson(lesson: IndividualLessonItem) {
     const message =
-      lesson.bookings.length > 0
-        ? `「${lesson.name}」には${lesson.bookings.length}件の予約が入っています。削除すると予約データも一緒に削除されます。本当に削除しますか？`
+      lesson.participants.length > 0
+        ? `「${lesson.name}」には登録済みの生徒がいます。削除すると一緒に削除されます。本当に削除しますか？`
         : `「${lesson.name}」を削除しますか？`;
     if (!window.confirm(message)) return;
 
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch(`/api/admin/lessons/${lesson.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/individual-lessons/${lesson.id}`, { method: "DELETE" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error ?? "削除に失敗しました。");
@@ -252,11 +352,11 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
       <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
         {showNewForm ? (
           <LessonForm
-            initial={emptyForm()}
+            initial={emptyLessonForm()}
             submitLabel="登録する"
             submitting={submitting}
             onCancel={() => setShowNewForm(false)}
-            onSubmit={handleCreate}
+            onSubmit={handleCreateLesson}
           />
         ) : (
           <button
@@ -264,21 +364,21 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
             onClick={() => setShowNewForm(true)}
             className="rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700"
           >
-            ＋ 新しいレッスンを追加
+            ＋ 新しい個別レッスンを追加
           </button>
         )}
       </div>
 
       <div className="space-y-4">
         {lessons.length === 0 && (
-          <p className="text-sm text-slate-500">レッスンが登録されていません。</p>
+          <p className="text-sm text-slate-500">個別レッスンが登録されていません。</p>
         )}
 
         {lessons.map((lesson) => {
           const isPast = new Date(lesson.datetime) < now;
-          const remainingSlots = lesson.maxSlots - lesson.bookings.length;
+          const isFull = lesson.participants.length >= 1;
 
-          if (editingId === lesson.id) {
+          if (editingLessonId === lesson.id) {
             return (
               <div
                 key={lesson.id}
@@ -288,8 +388,8 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
                   initial={lessonToForm(lesson)}
                   submitLabel="更新する"
                   submitting={submitting}
-                  onCancel={() => setEditingId(null)}
-                  onSubmit={(values) => handleUpdate(lesson.id, values)}
+                  onCancel={() => setEditingLessonId(null)}
+                  onSubmit={(values) => handleUpdateLesson(lesson.id, values)}
                 />
               </div>
             );
@@ -298,40 +398,42 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
           return (
             <section
               key={lesson.id}
-              id={`lesson-${lesson.id}`}
+              id={`individual-${lesson.id}`}
               className="scroll-mt-4 rounded-lg border border-slate-200 bg-white shadow-sm"
             >
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-4">
                 <div>
-                  <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
+                  <p className="flex items-center gap-2 font-bold text-slate-900">
                     {lesson.name}
                     {isPast && (
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-normal text-slate-500">
                         終了
                       </span>
                     )}
-                  </h2>
+                  </p>
                   <p className="mt-1 text-sm text-slate-500">
                     {formatLessonDateTime(new Date(lesson.datetime))} ／ 講師: {lesson.instructorName}
                   </p>
-                  <p className="mt-0.5 text-sm text-slate-500">
-                    場所: {lesson.location ?? DEFAULT_LOCATION}
-                  </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
-                    予約 {lesson.bookings.length} / {lesson.maxSlots}（残り{Math.max(remainingSlots, 0)}）
+                  <span
+                    className={
+                      "rounded-full px-3 py-1 text-xs font-semibold " +
+                      (isFull ? "bg-slate-100 text-slate-500" : "bg-sky-100 text-sky-700")
+                    }
+                  >
+                    {isFull ? "登録済み" : "空きあり"}
                   </span>
                   <button
                     type="button"
-                    onClick={() => setEditingId(lesson.id)}
+                    onClick={() => setEditingLessonId(lesson.id)}
                     className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
                   >
                     編集
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDelete(lesson)}
+                    onClick={() => handleDeleteLesson(lesson)}
                     className="rounded-md border border-rose-200 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50"
                   >
                     削除
@@ -339,8 +441,8 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
                 </div>
               </div>
 
-              {lesson.bookings.length === 0 ? (
-                <p className="p-4 text-sm text-slate-400">予約はまだありません。</p>
+              {lesson.participants.length === 0 ? (
+                <p className="p-4 text-sm text-slate-400">生徒はまだ登録されていません。</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
@@ -348,26 +450,22 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
                       <tr className="border-b border-slate-100 text-xs text-slate-400">
                         <th className="px-2 py-2 font-medium sm:px-4">生徒名</th>
                         <th className="px-2 py-2 font-medium sm:px-4">メールアドレス</th>
-                        <th className="hidden px-4 py-2 font-medium sm:table-cell">電話番号</th>
-                        <th className="hidden px-4 py-2 font-medium sm:table-cell">予約日時</th>
+                        <th className="hidden px-4 py-2 font-medium sm:table-cell">備考</th>
                         <th className="px-2 py-2 font-medium sm:px-4"></th>
                       </tr>
                     </thead>
                     <tbody>
-                      {lesson.bookings.map((booking) => (
-                        <tr key={booking.id} className="border-b border-slate-50 last:border-0">
-                          <td className="px-2 py-2 sm:px-4">{booking.studentName}</td>
-                          <td className="px-2 py-2 sm:px-4">{booking.studentEmail ?? "-"}</td>
-                          <td className="hidden px-4 py-2 sm:table-cell">
-                            {booking.studentPhone ?? "-"}
-                          </td>
+                      {lesson.participants.map((participant) => (
+                        <tr key={participant.id} className="border-b border-slate-50 last:border-0">
+                          <td className="px-2 py-2 sm:px-4">{participant.studentName}</td>
+                          <td className="px-2 py-2 sm:px-4">{participant.studentEmail}</td>
                           <td className="hidden px-4 py-2 text-slate-500 sm:table-cell">
-                            {formatLessonDateTime(new Date(booking.createdAt))}
+                            {participant.note ?? "-"}
                           </td>
                           <td className="px-2 py-2 text-right sm:px-4">
-                            <DeleteBookingButton
-                              bookingId={booking.id}
-                              studentName={booking.studentName}
+                            <DeleteParticipantButton
+                              participantId={participant.id}
+                              studentName={participant.studentName}
                             />
                           </td>
                         </tr>
@@ -376,7 +474,24 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
                   </table>
                 </div>
               )}
-              <ManualBookingForm lessonId={lesson.id} />
+
+              {!isFull &&
+                (addingParticipantFor === lesson.id ? (
+                  <ParticipantForm
+                    individualLessonId={lesson.id}
+                    onDone={() => setAddingParticipantFor(null)}
+                  />
+                ) : (
+                  <div className="border-t border-slate-100 p-3">
+                    <button
+                      type="button"
+                      onClick={() => setAddingParticipantFor(lesson.id)}
+                      className="text-sm font-medium text-sky-600 hover:text-sky-700"
+                    >
+                      ＋ 生徒を追加
+                    </button>
+                  </div>
+                ))}
             </section>
           );
         })}

@@ -37,13 +37,13 @@ export default async function AdminLessonsPage() {
   const [admin, lessons] = await Promise.all([getCurrentAdmin(), getAllLessonsWithBookings()]);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-4xl px-3 py-6 sm:px-4 sm:py-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">予約・レッスン管理</h1>
+          <h1 className="text-xl font-bold text-slate-900">グループレッスン</h1>
           {admin && <p className="mt-0.5 text-xs text-slate-400">ログイン中: {admin.email}</p>}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Link
             href="/admin"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
@@ -54,7 +54,13 @@ export default async function AdminLessonsPage() {
             href="/admin/trial"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
           >
-            体験会管理
+            体験会
+          </Link>
+          <Link
+            href="/admin/individual"
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+          >
+            個別レッスン
           </Link>
           <LogoutButton />
         </div>
