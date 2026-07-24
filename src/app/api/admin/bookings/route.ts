@@ -11,9 +11,8 @@ class LessonFullError extends Error {}
 
 /**
  * 管理者が電話・対面などで受け付けた予約を手動で登録するためのAPI。
- * 生徒名のみ必須で、メールアドレス・電話番号は任意。
- * メールアドレスが入力されている場合は、通常の予約と同様に確認メールを送信する
- * (3日前リマインドも、メールアドレスが登録されていれば自動的に対象となる)。
+ * 生徒名・メールアドレスは必須、電話番号・備考は任意。
+ * 登録時に確認メールを送信する(3日前リマインドも自動的に対象となる)。
  */
 export async function POST(request: NextRequest) {
   const admin = await getCurrentAdmin();
@@ -28,7 +27,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "リクエストの形式が正しくありません。" }, { status: 400 });
   }
 
-  const { lessonId, studentName, studentEmail, studentPhone } = (body ?? {}) as Record<
+  const { lessonId, studentName, studentEmail, studentPhone, note } = (body ?? {}) as Record<
     string,
     unknown
   >;
@@ -37,17 +36,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "生徒名を入力してください。" }, { status: 400 });
   }
 
-  if (
-    studentEmail !== undefined &&
-    studentEmail !== null &&
-    studentEmail !== "" &&
-    (typeof studentEmail !== "string" || !EMAIL_RE.test(studentEmail.trim()))
-  ) {
-    return NextResponse.json({ error: "メールアドレスの形式が正しくありません。" }, { status: 400 });
+  if (typeof studentEmail !== "string" || !EMAIL_RE.test(studentEmail.trim())) {
+    return NextResponse.json({ error: "メールアドレスを正しく入力してください。" }, { status: 400 });
   }
 
   if (studentPhone !== undefined && studentPhone !== null && typeof studentPhone !== "string") {
     return NextResponse.json({ error: "電話番号の形式が正しくありません。" }, { status: 400 });
+  }
+
+  if (note !== undefined && note !== null && typeof note !== "string") {
+    return NextResponse.json({ error: "備考の形式が正しくありません。" }, { status: 400 });
   }
 
   try {
@@ -66,27 +64,26 @@ export async function POST(request: NextRequest) {
         data: {
           lessonId,
           studentName: studentName.trim(),
-          studentEmail: typeof studentEmail === "string" && studentEmail.trim() ? studentEmail.trim() : null,
+          studentEmail: studentEmail.trim(),
           studentPhone: typeof studentPhone === "string" && studentPhone.trim() ? studentPhone.trim() : null,
+          note: typeof note === "string" && note.trim() ? note.trim() : null,
         },
       });
 
       return { booking, lesson };
     });
 
-    if (booking.studentEmail) {
-      try {
-        const { subject, text, html } = buildBookingConfirmationEmail({
-          lessonName: lesson.name,
-          datetime: lesson.datetime,
-          instructorName: lesson.instructorName,
-          location: lesson.location,
-          studentName: booking.studentName,
-        });
-        await sendMail({ to: booking.studentEmail, subject, text, html });
-      } catch (mailError) {
-        console.error("手動予約の確認メール送信に失敗しました:", mailError);
-      }
+    try {
+      const { subject, text, html } = buildBookingConfirmationEmail({
+        lessonName: lesson.name,
+        datetime: lesson.datetime,
+        instructorName: lesson.instructorName,
+        location: lesson.location,
+        studentName: booking.studentName,
+      });
+      await sendMail({ to: studentEmail.trim(), subject, text, html });
+    } catch (mailError) {
+      console.error("手動予約の確認メール送信に失敗しました:", mailError);
     }
 
     return NextResponse.json({ booking }, { status: 201 });

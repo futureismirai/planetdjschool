@@ -9,6 +9,7 @@ export function ManualBookingForm({ lessonId }: { lessonId: string }) {
   const [studentName, setStudentName] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
   const [studentPhone, setStudentPhone] = useState("");
+  const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,7 +21,7 @@ export function ManualBookingForm({ lessonId }: { lessonId: string }) {
       const res = await fetch("/api/admin/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lessonId, studentName, studentEmail, studentPhone }),
+        body: JSON.stringify({ lessonId, studentName, studentEmail, studentPhone, note }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -30,6 +31,7 @@ export function ManualBookingForm({ lessonId }: { lessonId: string }) {
       setStudentName("");
       setStudentEmail("");
       setStudentPhone("");
+      setNote("");
       setOpen(false);
       router.refresh();
     } catch {
@@ -56,7 +58,7 @@ export function ManualBookingForm({ lessonId }: { lessonId: string }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="grid grid-cols-1 gap-2 border-t border-slate-100 p-3 sm:grid-cols-[1fr_1fr_1fr_auto_auto]"
+      className="grid grid-cols-1 gap-2 border-t border-slate-100 p-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto_auto]"
     >
       <input
         type="text"
@@ -68,7 +70,8 @@ export function ManualBookingForm({ lessonId }: { lessonId: string }) {
       />
       <input
         type="email"
-        placeholder="メールアドレス(任意)"
+        required
+        placeholder="メールアドレス(必須)"
         value={studentEmail}
         onChange={(e) => setStudentEmail(e.target.value)}
         className="rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
@@ -78,6 +81,13 @@ export function ManualBookingForm({ lessonId }: { lessonId: string }) {
         placeholder="電話番号(任意)"
         value={studentPhone}
         onChange={(e) => setStudentPhone(e.target.value)}
+        className="rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+      />
+      <input
+        type="text"
+        placeholder="備考(任意)"
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
         className="rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
       />
       <button

@@ -31,6 +31,7 @@ model Booking {
   studentName    String
   studentEmail   String?
   studentPhone   String?
+  note           String?
   reminderSentAt DateTime?
   createdAt      DateTime  @default(now())
 

@@ -28,6 +28,7 @@ async function getAllLessonsWithBookings() {
       studentName: b.studentName,
       studentEmail: b.studentEmail,
       studentPhone: b.studentPhone,
+      note: b.note,
       createdAt: b.createdAt.toISOString(),
     })),
   }));

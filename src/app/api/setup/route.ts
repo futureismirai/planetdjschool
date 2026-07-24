@@ -25,6 +25,7 @@ const CREATE_TABLES_SQL = [
     "studentName" TEXT NOT NULL,
     "studentEmail" TEXT,
     "studentPhone" TEXT,
+    "note" TEXT,
     "reminderSentAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Booking_pkey" PRIMARY KEY ("id")
@@ -46,6 +47,8 @@ const CREATE_TABLES_SQL = [
   END $$`,
   // 管理者が手動で予約を追加できるよう、既存DBのstudentEmailをNULL許可に変更(既にNULL許可なら何もしない)
   `ALTER TABLE "Booking" ALTER COLUMN "studentEmail" DROP NOT NULL`,
+  // 既存DBに備考欄を追加(グループレッスンの予約にも体験会・個別レッスンと同様の備考欄を持たせる)
+  `ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "note" TEXT`,
   // 体験会(管理者専用の参加者管理)
   `CREATE TABLE IF NOT EXISTS "TrialSession" (
     "id" TEXT NOT NULL,

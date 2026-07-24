@@ -13,6 +13,7 @@ export type BookingItem = {
   studentName: string;
   studentEmail: string | null;
   studentPhone: string | null;
+  note: string | null;
   createdAt: string;
 };
 
@@ -349,6 +350,7 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
                         <th className="px-2 py-2 font-medium sm:px-4">生徒名</th>
                         <th className="px-2 py-2 font-medium sm:px-4">メールアドレス</th>
                         <th className="hidden px-4 py-2 font-medium sm:table-cell">電話番号</th>
+                        <th className="hidden px-4 py-2 font-medium sm:table-cell">備考</th>
                         <th className="hidden px-4 py-2 font-medium sm:table-cell">予約日時</th>
                         <th className="px-2 py-2 font-medium sm:px-4"></th>
                       </tr>
@@ -360,6 +362,9 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
                           <td className="px-2 py-2 sm:px-4">{booking.studentEmail ?? "-"}</td>
                           <td className="hidden px-4 py-2 sm:table-cell">
                             {booking.studentPhone ?? "-"}
+                          </td>
+                          <td className="hidden px-4 py-2 text-slate-500 sm:table-cell">
+                            {booking.note ?? "-"}
                           </td>
                           <td className="hidden px-4 py-2 text-slate-500 sm:table-cell">
                             {formatLessonDateTime(new Date(booking.createdAt))}
