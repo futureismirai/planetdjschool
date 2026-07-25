@@ -51,6 +51,7 @@ model TrialSession {
   datetime       DateTime
   instructorName String
   maxSlots       Int               @default(3)
+  location       String?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   participants   TrialParticipant[]
@@ -77,6 +78,7 @@ model IndividualLesson {
   name           String
   datetime       DateTime
   instructorName String
+  location       String?
   createdAt      DateTime                @default(now())
   updatedAt      DateTime                @updatedAt
   participants   IndividualParticipant[]

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatLessonDateTime } from "@/lib/date";
+import { DEFAULT_LOCATION } from "../LessonBookingManager";
 
 export type TrialParticipantItem = {
   id: string;
@@ -17,6 +18,7 @@ export type TrialSessionItem = {
   datetime: string; // ISO文字列
   instructorName: string;
   maxSlots: number;
+  location: string | null;
   participants: TrialParticipantItem[];
 };
 
@@ -24,6 +26,7 @@ type SessionFormValues = {
   datetime: string; // datetime-local用の文字列
   instructorName: string;
   maxSlots: string;
+  location: string;
 };
 
 function toDatetimeLocalValue(iso: string): string {
@@ -33,7 +36,7 @@ function toDatetimeLocalValue(iso: string): string {
 }
 
 function emptySessionForm(): SessionFormValues {
-  return { datetime: "", instructorName: "", maxSlots: "3" };
+  return { datetime: "", instructorName: "", maxSlots: "3", location: DEFAULT_LOCATION };
 }
 
 function sessionToForm(session: TrialSessionItem): SessionFormValues {
@@ -41,6 +44,7 @@ function sessionToForm(session: TrialSessionItem): SessionFormValues {
     datetime: toDatetimeLocalValue(session.datetime),
     instructorName: session.instructorName,
     maxSlots: String(session.maxSlots),
+    location: session.location ?? DEFAULT_LOCATION,
   };
 }
 
@@ -95,6 +99,16 @@ function SessionForm({
           required
           value={values.maxSlots}
           onChange={(e) => setValues({ ...values, maxSlots: e.target.value })}
+          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+      </div>
+      <div className="sm:col-span-3">
+        <label className="block text-xs font-medium text-slate-500">場所</label>
+        <input
+          type="text"
+          value={values.location}
+          onChange={(e) => setValues({ ...values, location: e.target.value })}
+          placeholder={DEFAULT_LOCATION}
           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
       </div>
@@ -274,6 +288,7 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
           datetime: new Date(values.datetime).toISOString(),
           instructorName: values.instructorName,
           maxSlots: Number(values.maxSlots),
+          location: values.location,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -301,6 +316,7 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
           datetime: new Date(values.datetime).toISOString(),
           instructorName: values.instructorName,
           maxSlots: Number(values.maxSlots),
+          location: values.location,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -413,6 +429,9 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
                   <p className="mt-1 text-sm text-slate-500">
                     参加講師: {session.instructorName} ／ 定員: {session.maxSlots} ／ 参加:{" "}
                     {session.participants.length}名
+                  </p>
+                  <p className="mt-0.5 text-sm text-slate-500">
+                    場所: {session.location ?? DEFAULT_LOCATION}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-2">

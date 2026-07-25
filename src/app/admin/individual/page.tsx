@@ -19,6 +19,7 @@ async function getIndividualLessonsWithParticipants() {
     name: lesson.name,
     datetime: lesson.datetime.toISOString(),
     instructorName: lesson.instructorName,
+    location: lesson.location,
     participants: lesson.participants.map((p) => ({
       id: p.id,
       studentName: p.studentName,

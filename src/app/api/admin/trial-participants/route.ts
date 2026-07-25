@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
       const { subject, text, html } = buildTrialConfirmationEmail({
         datetime: trialSession.datetime,
         instructorName: trialSession.instructorName,
+        location: trialSession.location,
         studentName: participant.studentName,
       });
       await sendMail({ to: participant.studentEmail, subject, text, html });

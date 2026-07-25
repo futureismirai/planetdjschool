@@ -55,6 +55,7 @@ const CREATE_TABLES_SQL = [
     "datetime" TIMESTAMP(3) NOT NULL,
     "instructorName" TEXT NOT NULL,
     "maxSlots" INTEGER NOT NULL DEFAULT 3,
+    "location" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "TrialSession_pkey" PRIMARY KEY ("id")
@@ -82,6 +83,7 @@ const CREATE_TABLES_SQL = [
     "name" TEXT NOT NULL,
     "datetime" TIMESTAMP(3) NOT NULL,
     "instructorName" TEXT NOT NULL,
+    "location" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "IndividualLesson_pkey" PRIMARY KEY ("id")
@@ -103,6 +105,9 @@ const CREATE_TABLES_SQL = [
       FOREIGN KEY ("individualLessonId") REFERENCES "IndividualLesson"("id") ON DELETE CASCADE ON UPDATE CASCADE;
   EXCEPTION WHEN duplicate_object THEN NULL;
   END $$`,
+  // 既存DBに場所欄を追加(体験会・個別レッスンにもグループレッスンと同様の場所欄を持たせる)
+  `ALTER TABLE "TrialSession" ADD COLUMN IF NOT EXISTS "location" TEXT`,
+  `ALTER TABLE "IndividualLesson" ADD COLUMN IF NOT EXISTS "location" TEXT`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {

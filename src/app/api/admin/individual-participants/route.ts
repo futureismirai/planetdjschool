@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
         lessonName: individualLesson.name,
         datetime: individualLesson.datetime,
         instructorName: individualLesson.instructorName,
+        location: individualLesson.location,
         studentName: participant.studentName,
       });
       await sendMail({ to: participant.studentEmail, subject, text, html });

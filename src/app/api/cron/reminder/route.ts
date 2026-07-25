@@ -80,6 +80,7 @@ async function runTrialReminderBatch() {
         const { subject, text, html } = buildTrialReminderEmail({
           datetime: trialSession.datetime,
           instructorName: trialSession.instructorName,
+          location: trialSession.location,
           studentName: participant.studentName,
         });
         await sendMail({ to: participant.studentEmail, subject, text, html });
@@ -118,6 +119,7 @@ async function runIndividualLessonReminderBatch() {
           lessonName: individualLesson.name,
           datetime: individualLesson.datetime,
           instructorName: individualLesson.instructorName,
+          location: individualLesson.location,
           studentName: participant.studentName,
         });
         await sendMail({ to: participant.studentEmail, subject, text, html });

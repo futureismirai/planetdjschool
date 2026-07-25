@@ -19,6 +19,7 @@ async function getTrialSessionsWithParticipants() {
     datetime: session.datetime.toISOString(),
     instructorName: session.instructorName,
     maxSlots: session.maxSlots,
+    location: session.location,
     participants: session.participants.map((p) => ({
       id: p.id,
       studentName: p.studentName,

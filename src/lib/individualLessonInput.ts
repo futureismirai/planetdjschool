@@ -1,9 +1,11 @@
 export type IndividualLessonInputResult =
-  | { data: { name: string; instructorName: string; datetime: Date } }
+  | {
+      data: { name: string; instructorName: string; datetime: Date; location: string | null };
+    }
   | { error: string };
 
 export function parseIndividualLessonInput(body: unknown): IndividualLessonInputResult {
-  const { name, datetime, instructorName } = (body ?? {}) as Record<string, unknown>;
+  const { name, datetime, instructorName, location } = (body ?? {}) as Record<string, unknown>;
 
   if (typeof name !== "string" || !name.trim()) {
     return { error: "レッスン名を入力してください。" };
@@ -14,12 +16,16 @@ export function parseIndividualLessonInput(body: unknown): IndividualLessonInput
   if (typeof datetime !== "string" || Number.isNaN(new Date(datetime).getTime())) {
     return { error: "日時を正しく入力してください。" };
   }
+  if (location !== undefined && location !== null && typeof location !== "string") {
+    return { error: "場所の形式が正しくありません。" };
+  }
 
   return {
     data: {
       name: name.trim(),
       instructorName: instructorName.trim(),
       datetime: new Date(datetime),
+      location: typeof location === "string" && location.trim() ? location.trim() : null,
     },
   };
 }
