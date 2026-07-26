@@ -42,9 +42,14 @@ function buildInfoRows(rows: InfoRow[]): { text: string; html: string } {
 /**
  * 「ご案内」ブロック(集合・キャンセル・持ち物・緊急連絡)。
  * cancelFeeYen が null の場合はキャンセル料の記載を省略する(体験会向け)。
+ * participationFee を指定すると「参加費」の行を追加する(体験会向け)。
  * 文面を変更したい場合はこの関数を編集してください。
  */
-function buildNoticeSection(datetime: Date, cancelFeeYen: number | null): { text: string; html: string } {
+function buildNoticeSection(
+  datetime: Date,
+  cancelFeeYen: number | null,
+  participationFee?: string
+): { text: string; html: string } {
   const gatheringTime = gatheringTimeText(datetime);
   const contactEmail = cancelContactEmail();
   const contactSentence = contactEmail
@@ -64,6 +69,17 @@ function buildNoticeSection(datetime: Date, cancelFeeYen: number | null): { text
       text: `${gatheringTime}に1階ロビーにお集まりください（開始10分前）`,
       html: escapeHtml(`${gatheringTime}に1階ロビーにお集まりください（開始10分前）`),
     },
+  ];
+
+  if (participationFee) {
+    rows.push({
+      label: "参加費",
+      text: participationFee,
+      html: escapeHtml(participationFee),
+    });
+  }
+
+  rows.push(
     {
       label: "キャンセル",
       text: `レッスン当日の8日前まで可能です。${feeSentence}${contactSentence}`,
@@ -78,8 +94,8 @@ function buildNoticeSection(datetime: Date, cancelFeeYen: number | null): { text
       label: "緊急連絡",
       text: "当日の遅刻など緊急のお問い合わせは、担当講師のInstagramアカウントへDMをお願いします。",
       html: escapeHtml("当日の遅刻など緊急のお問い合わせは、担当講師のInstagramアカウントへDMをお願いします。"),
-    },
-  ];
+    }
+  );
 
   const text = `【ご案内】\n${rows.map((r) => `${r.label}: ${r.text}`).join("\n")}`;
   const html = `
@@ -222,7 +238,7 @@ export function buildTrialConfirmationEmail(info: TrialEmailInfo): {
 } {
   const subject = `【${SCHOOL_NAME}】体験会お申し込み完了のお知らせ`;
   const trial = trialInfo(info);
-  const notice = buildNoticeSection(info.datetime, null);
+  const notice = buildNoticeSection(info.datetime, null, "3,000円（現金のみ）");
 
   const text = `${info.studentName} 様
 
@@ -262,7 +278,7 @@ export function buildTrialReminderEmail(info: TrialEmailInfo): {
 } {
   const subject = `【${SCHOOL_NAME}】体験会開催3日前のリマインド`;
   const trial = trialInfo(info);
-  const notice = buildNoticeSection(info.datetime, null);
+  const notice = buildNoticeSection(info.datetime, null, "3,000円（現金のみ）");
 
   const text = `${info.studentName} 様
 
