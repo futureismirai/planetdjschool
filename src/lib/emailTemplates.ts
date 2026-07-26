@@ -43,12 +43,15 @@ function buildInfoRows(rows: InfoRow[]): { text: string; html: string } {
  * 「ご案内」ブロック(集合・キャンセル・持ち物・緊急連絡)。
  * cancelFeeYen が null の場合はキャンセル料の記載を省略する(体験会向け)。
  * participationFee を指定すると「参加費」の行を追加する(体験会向け)。
+ * includeRekordboxNote を true にすると、持ち物にRekordboxの案内を追加する
+ * (グループレッスン・個別レッスン向け。体験会には含めない)。
  * 文面を変更したい場合はこの関数を編集してください。
  */
 function buildNoticeSection(
   datetime: Date,
   cancelFeeYen: number | null,
-  participationFee?: string
+  participationFee?: string,
+  includeRekordboxNote?: boolean
 ): { text: string; html: string } {
   const gatheringTime = gatheringTimeText(datetime);
   const contactEmail = cancelContactEmail();
@@ -62,6 +65,9 @@ function buildNoticeSection(
     cancelFeeYen != null
       ? `7日以内のキャンセルはレッスン1回分${cancelFeeYen.toLocaleString()}円を追加請求致します。`
       : "";
+  const belongingsText = includeRekordboxNote
+    ? "ヘッドホン（お持ちの方。貸し出しもございます）／Lesson 2以降の方はRekordboxをインストールした状態のPC"
+    : "ヘッドホン（お持ちの方。貸し出しもございます）";
 
   const rows: { label: string; text: string; html: string }[] = [
     {
@@ -87,8 +93,8 @@ function buildNoticeSection(
     },
     {
       label: "持ち物",
-      text: "ヘッドホン（お持ちの方。貸し出しもございます）",
-      html: escapeHtml("ヘッドホン（お持ちの方。貸し出しもございます）"),
+      text: belongingsText,
+      html: escapeHtml(belongingsText),
     },
     {
       label: "緊急連絡",
@@ -142,7 +148,7 @@ export function buildBookingConfirmationEmail(info: BookingEmailInfo): {
 } {
   const subject = `【${SCHOOL_NAME}】ご予約完了のお知らせ（${info.lessonName}）`;
   const groupInfo = groupLessonInfo(info);
-  const notice = buildNoticeSection(info.datetime, 10000);
+  const notice = buildNoticeSection(info.datetime, 10000, undefined, true);
 
   const text = `${info.studentName} 様
 
@@ -182,7 +188,7 @@ export function buildReminderEmail(info: BookingEmailInfo): {
 } {
   const subject = `【${SCHOOL_NAME}】レッスン開催3日前のリマインド（${info.lessonName}）`;
   const groupInfo = groupLessonInfo(info);
-  const notice = buildNoticeSection(info.datetime, 10000);
+  const notice = buildNoticeSection(info.datetime, 10000, undefined, true);
 
   const text = `${info.studentName} 様
 
@@ -336,7 +342,7 @@ export function buildIndividualLessonConfirmationEmail(info: IndividualLessonEma
 } {
   const subject = `【${SCHOOL_NAME}】個別レッスンのご予約完了のお知らせ（${info.lessonName}）`;
   const individual = individualLessonInfo(info);
-  const notice = buildNoticeSection(info.datetime, 15000);
+  const notice = buildNoticeSection(info.datetime, 15000, undefined, true);
 
   const text = `${info.studentName} 様
 
@@ -376,7 +382,7 @@ export function buildIndividualLessonReminderEmail(info: IndividualLessonEmailIn
 } {
   const subject = `【${SCHOOL_NAME}】個別レッスン開催3日前のリマインド（${info.lessonName}）`;
   const individual = individualLessonInfo(info);
-  const notice = buildNoticeSection(info.datetime, 15000);
+  const notice = buildNoticeSection(info.datetime, 15000, undefined, true);
 
   const text = `${info.studentName} 様
 
