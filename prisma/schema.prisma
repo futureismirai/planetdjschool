@@ -32,6 +32,8 @@ model Booking {
   studentEmail   String?
   studentPhone   String?
   note           String?
+  /// 生徒別ページで管理者が記入する、このレッスンでの進捗コメント(noteとは別)
+  comment        String?
   reminderSentAt DateTime?
   createdAt      DateTime  @default(now())
 
@@ -93,6 +95,8 @@ model IndividualParticipant {
   studentName        String
   studentEmail       String
   note               String?
+  /// 生徒別ページで管理者が記入する、このレッスンでの進捗コメント(noteとは別)
+  comment            String?
   reminderSentAt     DateTime?
   createdAt          DateTime         @default(now())
 

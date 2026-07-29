@@ -65,6 +65,12 @@ export default async function AdminIndividualPage() {
           >
             体験会
           </Link>
+          <Link
+            href="/admin/students"
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+          >
+            生徒別進捗
+          </Link>
           <LogoutButton />
         </div>
       </div>
