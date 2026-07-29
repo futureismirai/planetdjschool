@@ -15,6 +15,7 @@ type Attendance = {
   type: "group" | "individual";
   lessonName: string;
   datetime: Date;
+  instructorName: string;
   comment: string | null;
 };
 
@@ -60,6 +61,7 @@ async function getStudents(): Promise<Student[]> {
         type: "group",
         lessonName: b.lesson.name,
         datetime: b.lesson.datetime,
+        instructorName: b.lesson.instructorName,
         comment: b.comment,
       },
     });
@@ -75,6 +77,7 @@ async function getStudents(): Promise<Student[]> {
         type: "individual",
         lessonName: p.individualLesson.name,
         datetime: p.individualLesson.datetime,
+        instructorName: p.individualLesson.instructorName,
         comment: p.comment,
       },
     });
@@ -180,6 +183,7 @@ export default async function AdminStudentsPage() {
                     <span className="text-xs text-slate-500">
                       {formatLessonDateTime(a.datetime)}
                     </span>
+                    <span className="text-xs text-slate-500">講師: {a.instructorName}</span>
                   </div>
                   <ProgressCommentField type={a.type} id={a.id} initialComment={a.comment} />
                 </li>
