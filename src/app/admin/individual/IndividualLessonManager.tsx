@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { formatLessonDateTime } from "@/lib/date";
 import { DEFAULT_LOCATION } from "../LessonBookingManager";
 
@@ -476,7 +477,14 @@ export function IndividualLessonManager({ lessons }: { lessons: IndividualLesson
                     <tbody>
                       {lesson.participants.map((participant) => (
                         <tr key={participant.id} className="border-b border-slate-50 last:border-0">
-                          <td className="px-2 py-2 sm:px-4">{participant.studentName}</td>
+                          <td className="px-2 py-2 sm:px-4">
+                            <Link
+                              href={`/admin/students/${encodeURIComponent(participant.studentEmail)}`}
+                              className="text-sky-700 underline-offset-2 hover:underline"
+                            >
+                              {participant.studentName}
+                            </Link>
+                          </td>
                           <td className="px-2 py-2 sm:px-4">{participant.studentEmail}</td>
                           <td className="hidden px-4 py-2 text-slate-500 sm:table-cell">
                             {participant.note ?? "-"}

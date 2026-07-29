@@ -34,6 +34,8 @@ model Booking {
   note           String?
   /// 生徒別ページで管理者が記入する、このレッスンでの進捗コメント(noteとは別)
   comment        String?
+  /// commentが最後に保存された日時。生徒一覧の並び替え(更新順)に使用する。
+  commentUpdatedAt DateTime?
   reminderSentAt DateTime?
   createdAt      DateTime  @default(now())
 
@@ -97,6 +99,8 @@ model IndividualParticipant {
   note               String?
   /// 生徒別ページで管理者が記入する、このレッスンでの進捗コメント(noteとは別)
   comment            String?
+  /// commentが最後に保存された日時。生徒一覧の並び替え(更新順)に使用する。
+  commentUpdatedAt   DateTime?
   reminderSentAt     DateTime?
   createdAt          DateTime         @default(now())
 

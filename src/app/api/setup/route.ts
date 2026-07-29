@@ -111,6 +111,9 @@ const CREATE_TABLES_SQL = [
   // 生徒別ページで管理者が記入する進捗コメント欄(グループレッスン・個別レッスンのみ、体験会は対象外)
   `ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "comment" TEXT`,
   `ALTER TABLE "IndividualParticipant" ADD COLUMN IF NOT EXISTS "comment" TEXT`,
+  // 生徒一覧をコメント更新順に並べ替えるためのタイムスタンプ
+  `ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "commentUpdatedAt" TIMESTAMP(3)`,
+  `ALTER TABLE "IndividualParticipant" ADD COLUMN IF NOT EXISTS "commentUpdatedAt" TIMESTAMP(3)`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {

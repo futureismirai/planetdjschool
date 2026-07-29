@@ -28,7 +28,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   try {
     const participant = await prisma.individualParticipant.update({
       where: { id },
-      data: { comment: typeof comment === "string" && comment.trim() ? comment.trim() : null },
+      data: {
+        comment: typeof comment === "string" && comment.trim() ? comment.trim() : null,
+        commentUpdatedAt: new Date(),
+      },
     });
     return NextResponse.json({ participant });
   } catch {
