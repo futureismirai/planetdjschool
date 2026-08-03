@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { formatDateHeading, formatTimeOnly, withDateGroupFlags } from "@/lib/date";
+import {
+  formatDateHeading,
+  formatTimeOnly,
+  sortForDateGroupedDisplay,
+  withDateGroupFlags,
+} from "@/lib/date";
 import { DEFAULT_LOCATION } from "../LessonBookingManager";
 
 export type IndividualParticipantItem = {
@@ -391,7 +396,10 @@ export function IndividualLessonManager({ lessons }: { lessons: IndividualLesson
           <p className="text-sm text-slate-500">個別レッスンが登録されていません。</p>
         )}
 
-        {withDateGroupFlags(lessons, (l) => new Date(l.datetime)).map(
+        {withDateGroupFlags(
+          sortForDateGroupedDisplay(lessons, (l) => new Date(l.datetime)),
+          (l) => new Date(l.datetime)
+        ).map(
           ({ item: lesson, isNewDate }, index) => {
             const isPast = new Date(lesson.datetime) < now;
             const isFull = lesson.participants.length >= 1;

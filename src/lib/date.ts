@@ -29,6 +29,19 @@ export function getJstDateKey(date: Date): string {
 }
 
 /**
+ * 管理画面の一覧表示用に並べ替える。日付は新しい順(降順)、同じ日の中では
+ * 開始時刻が早い順(昇順)になる。
+ */
+export function sortForDateGroupedDisplay<T>(items: T[], getDatetime: (item: T) => Date): T[] {
+  return [...items].sort((a, b) => {
+    const aKey = getJstDateKey(getDatetime(a));
+    const bKey = getJstDateKey(getDatetime(b));
+    if (aKey !== bKey) return aKey < bKey ? 1 : -1;
+    return getDatetime(a).getTime() - getDatetime(b).getTime();
+  });
+}
+
+/**
  * 日時順(基本的に降順/昇順どちらでも可)に並んだ一覧に対して、日付が切り替わった要素に
  * isNewDate=true を付与する。管理画面の一覧で日付ごとの区切りを表示する際に使用する。
  */

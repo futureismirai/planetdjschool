@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatDateHeading, formatTimeOnly, withDateGroupFlags } from "@/lib/date";
+import {
+  formatDateHeading,
+  formatTimeOnly,
+  sortForDateGroupedDisplay,
+  withDateGroupFlags,
+} from "@/lib/date";
 import { DEFAULT_LOCATION } from "../LessonBookingManager";
 
 export type TrialParticipantItem = {
@@ -390,7 +395,10 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
           <p className="text-sm text-slate-500">体験会が登録されていません。</p>
         )}
 
-        {withDateGroupFlags(sessions, (s) => new Date(s.datetime)).map(
+        {withDateGroupFlags(
+          sortForDateGroupedDisplay(sessions, (s) => new Date(s.datetime)),
+          (s) => new Date(s.datetime)
+        ).map(
           ({ item: session, isNewDate }, index) => {
             const isPast = new Date(session.datetime) < now;
             const dateHeader = isNewDate && (
