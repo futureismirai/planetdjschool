@@ -28,6 +28,23 @@ export function getJstDateKey(date: Date): string {
   return formatInTimeZone(date, TIME_ZONE, "yyyy-MM-dd");
 }
 
+/**
+ * 日時順(基本的に降順/昇順どちらでも可)に並んだ一覧に対して、日付が切り替わった要素に
+ * isNewDate=true を付与する。管理画面の一覧で日付ごとの区切りを表示する際に使用する。
+ */
+export function withDateGroupFlags<T>(
+  items: T[],
+  getDatetime: (item: T) => Date
+): { item: T; dateKey: string; isNewDate: boolean }[] {
+  let lastKey: string | null = null;
+  return items.map((item) => {
+    const dateKey = getJstDateKey(getDatetime(item));
+    const isNewDate = dateKey !== lastKey;
+    lastKey = dateKey;
+    return { item, dateKey, isNewDate };
+  });
+}
+
 /** 現在の日本時間の年・月(月は1〜12)を返す。カレンダーの初期表示に使用する。 */
 export function getJstNowYearMonth(now: Date = new Date()): { year: number; month: number } {
   const [year, month] = formatInTimeZone(now, TIME_ZONE, "yyyy-M").split("-").map(Number);

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { formatLessonDateTime } from "@/lib/date";
+import { formatDateHeading, formatLessonDateTime, formatTimeOnly, withDateGroupFlags } from "@/lib/date";
 import { ManualBookingForm } from "./ManualBookingForm";
 import { DeleteBookingButton } from "./DeleteBookingButton";
 
@@ -271,75 +271,91 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
         )}
       </div>
 
-      <div className="space-y-4">
+      <div>
         {lessons.length === 0 && (
           <p className="text-sm text-slate-500">レッスンが登録されていません。</p>
         )}
 
-        {lessons.map((lesson) => {
-          const isPast = new Date(lesson.datetime) < now;
-          const remainingSlots = lesson.maxSlots - lesson.bookings.length;
-
-          if (editingId === lesson.id) {
-            return (
-              <div
-                key={lesson.id}
-                className="rounded-lg border border-sky-300 bg-white p-4 shadow-sm"
-              >
-                <LessonForm
-                  initial={lessonToForm(lesson)}
-                  submitLabel="更新する"
-                  submitting={submitting}
-                  onCancel={() => setEditingId(null)}
-                  onSubmit={(values) => handleUpdate(lesson.id, values)}
-                />
+        {withDateGroupFlags(lessons, (l) => new Date(l.datetime)).map(
+          ({ item: lesson, isNewDate }, index) => {
+            const isPast = new Date(lesson.datetime) < now;
+            const remainingSlots = lesson.maxSlots - lesson.bookings.length;
+            const dateHeader = isNewDate && (
+              <div className="mb-2 flex items-center gap-2">
+                <span className="rounded-md bg-slate-800 px-3 py-1 text-sm font-bold text-white">
+                  {formatDateHeading(new Date(lesson.datetime))}
+                </span>
+                <span className="h-px flex-1 bg-slate-200" />
               </div>
             );
-          }
 
-          return (
-            <section
-              key={lesson.id}
-              id={`lesson-${lesson.id}`}
-              className="scroll-mt-4 rounded-lg border border-slate-200 bg-white shadow-sm"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-4">
-                <div>
-                  <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
-                    {lesson.name}
-                    {isPast && (
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-normal text-slate-500">
-                        終了
+            if (editingId === lesson.id) {
+              return (
+                <div key={lesson.id} className={index === 0 ? "" : isNewDate ? "mt-6" : "mt-3"}>
+                  {dateHeader}
+                  <div className="rounded-lg border border-sky-300 bg-white p-4 shadow-sm">
+                    <LessonForm
+                      initial={lessonToForm(lesson)}
+                      submitLabel="更新する"
+                      submitting={submitting}
+                      onCancel={() => setEditingId(null)}
+                      onSubmit={(values) => handleUpdate(lesson.id, values)}
+                    />
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div key={lesson.id} className={index === 0 ? "" : isNewDate ? "mt-6" : "mt-3"}>
+                {dateHeader}
+                <section
+                  id={`lesson-${lesson.id}`}
+                  className="scroll-mt-4 rounded-lg border border-slate-200 bg-white shadow-sm"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-4">
+                    <div>
+                      <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
+                        {lesson.name}
+                        {isPast && (
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-normal text-slate-500">
+                            終了
+                          </span>
+                        )}
+                      </h2>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <span className="text-sm text-slate-500">
+                          {formatTimeOnly(new Date(lesson.datetime))}〜
+                        </span>
+                        <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+                          講師: {lesson.instructorName}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-sm text-slate-500">
+                        場所: {lesson.location ?? DEFAULT_LOCATION}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+                        予約 {lesson.bookings.length} / {lesson.maxSlots}（残り
+                        {Math.max(remainingSlots, 0)}）
                       </span>
-                    )}
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {formatLessonDateTime(new Date(lesson.datetime))} ／ 講師: {lesson.instructorName}
-                  </p>
-                  <p className="mt-0.5 text-sm text-slate-500">
-                    場所: {lesson.location ?? DEFAULT_LOCATION}
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
-                    予約 {lesson.bookings.length} / {lesson.maxSlots}（残り{Math.max(remainingSlots, 0)}）
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setEditingId(lesson.id)}
-                    className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-                  >
-                    編集
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(lesson)}
-                    className="rounded-md border border-rose-200 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50"
-                  >
-                    削除
-                  </button>
-                </div>
-              </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingId(lesson.id)}
+                        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+                      >
+                        編集
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(lesson)}
+                        className="rounded-md border border-rose-200 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50"
+                      >
+                        削除
+                      </button>
+                    </div>
+                  </div>
 
               {lesson.bookings.length === 0 ? (
                 <p className="p-4 text-sm text-slate-400">予約はまだありません。</p>
@@ -393,10 +409,12 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
                   </table>
                 </div>
               )}
-              <ManualBookingForm lessonId={lesson.id} />
-            </section>
-          );
-        })}
+                  <ManualBookingForm lessonId={lesson.id} />
+                </section>
+              </div>
+            );
+          }
+        )}
       </div>
     </div>
   );
