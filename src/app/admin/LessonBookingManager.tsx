@@ -15,6 +15,15 @@ import { DeleteBookingButton } from "./DeleteBookingButton";
 
 export const DEFAULT_LOCATION = "ゲートウェイスタジオ渋谷道玄坂店　3階　5st";
 
+export const LESSON_NAME_OPTIONS = [
+  "Lesson 1",
+  "Lesson 2",
+  "Lesson 3",
+  "Lesson 4",
+  "Lesson 5",
+  "未定",
+] as const;
+
 export type BookingItem = {
   id: string;
   studentName: string;
@@ -87,14 +96,21 @@ function LessonForm({
     >
       <div>
         <label className="block text-xs font-medium text-slate-500">レッスン名</label>
-        <input
-          type="text"
+        <select
           required
           value={values.name}
           onChange={(e) => setValues({ ...values, name: e.target.value })}
-          placeholder="Lesson1"
           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-        />
+        >
+          <option value="" disabled>
+            選択してください
+          </option>
+          {LESSON_NAME_OPTIONS.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
       </div>
       <div>
         <label className="block text-xs font-medium text-slate-500">日時</label>

@@ -115,6 +115,47 @@ function buildNoticeSection(
   return { text, html };
 }
 
+/**
+ * Lesson 1登録時の予約完了メールにのみ追加する資料案内ブロック(3日前リマインドには含めない)。
+ * 文面・リンクを変更したい場合はこの関数を編集してください。
+ */
+function buildLesson1MaterialsSection(): { text: string; html: string } {
+  const text = `◯ レッスン資料
+
+Lesson 1
+https://drive.google.com/drive/folders/1byKYl8QwscqNNb5do5ZRACXuNyjU3DLt
+
+Lesson 2
+https://drive.google.com/drive/folders/1p4ctRcHqAH6dEfH6RbuvNSIGIn3r9reo
+
+Lesson 3
+https://drive.google.com/file/d/1ZW28MgIoSpfo7GBGjECfTjDnUQ7JjZVt/view?usp=drivesdk
+
+◯ レッスンに関する資料
+こちらは必ずお読み下さい。
+https://www.notion.so/3735fe86c92a8063825ffc77f552bc95?source=copy_link
+
+◯ 準備するもの（参考）
+【これからDJを始める方へ】DJに必要なもの3選
+https://note.com/ginza_member/n/n70d18564b1ef`;
+
+  const html = `
+    <div style="margin-top:20px;padding:12px 16px;background:#f8fafc;border-radius:8px;">
+      <p style="font-weight:bold;margin:0 0 8px;color:#0f172a;">レッスン資料</p>
+      <p style="margin:0 0 8px;">Lesson 1<br><a href="https://drive.google.com/drive/folders/1byKYl8QwscqNNb5do5ZRACXuNyjU3DLt">https://drive.google.com/drive/folders/1byKYl8QwscqNNb5do5ZRACXuNyjU3DLt</a></p>
+      <p style="margin:0 0 8px;">Lesson 2<br><a href="https://drive.google.com/drive/folders/1p4ctRcHqAH6dEfH6RbuvNSIGIn3r9reo">https://drive.google.com/drive/folders/1p4ctRcHqAH6dEfH6RbuvNSIGIn3r9reo</a></p>
+      <p style="margin:0 0 16px;">Lesson 3<br><a href="https://drive.google.com/file/d/1ZW28MgIoSpfo7GBGjECfTjDnUQ7JjZVt/view?usp=drivesdk">https://drive.google.com/file/d/1ZW28MgIoSpfo7GBGjECfTjDnUQ7JjZVt/view?usp=drivesdk</a></p>
+      <p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">レッスンに関する資料</p>
+      <p style="margin:0 0 4px;">こちらは必ずお読み下さい。</p>
+      <p style="margin:0 0 16px;"><a href="https://www.notion.so/3735fe86c92a8063825ffc77f552bc95?source=copy_link">https://www.notion.so/3735fe86c92a8063825ffc77f552bc95?source=copy_link</a></p>
+      <p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">準備するもの（参考）</p>
+      <p style="margin:0 0 4px;">【これからDJを始める方へ】DJに必要なもの3選</p>
+      <p style="margin:0;"><a href="https://note.com/ginza_member/n/n70d18564b1ef">https://note.com/ginza_member/n/n70d18564b1ef</a></p>
+    </div>`;
+
+  return { text, html };
+}
+
 export type LessonEmailInfo = {
   lessonName: string;
   datetime: Date;
@@ -149,6 +190,7 @@ export function buildBookingConfirmationEmail(info: BookingEmailInfo): {
   const subject = `【${SCHOOL_NAME}】ご予約完了のお知らせ（${info.lessonName}）`;
   const groupInfo = groupLessonInfo(info);
   const notice = buildNoticeSection(info.datetime, 10000, undefined, true);
+  const materials = info.lessonName === "Lesson 1" ? buildLesson1MaterialsSection() : null;
 
   const text = `${info.studentName} 様
 
@@ -157,7 +199,7 @@ ${SCHOOL_NAME}のご予約が完了しました。
 
 ${groupInfo.text}
 
-${notice.text}
+${notice.text}${materials ? `\n\n${materials.text}` : ""}
 
 当日はお気をつけてお越しください。
 ご不明な点がございましたら本メールへご返信ください。
@@ -171,6 +213,7 @@ ${SCHOOL_NAME}`;
     <p>${SCHOOL_NAME}のご予約が完了しました。以下の内容でお待ちしております。</p>
     ${groupInfo.html}
     ${notice.html}
+    ${materials ? materials.html : ""}
     <p style="margin-top:20px;">当日はお気をつけてお越しください。ご不明な点がございましたら本メールへご返信ください。</p>
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;
@@ -343,6 +386,7 @@ export function buildIndividualLessonConfirmationEmail(info: IndividualLessonEma
   const subject = `【${SCHOOL_NAME}】個別レッスンのご予約完了のお知らせ（${info.lessonName}）`;
   const individual = individualLessonInfo(info);
   const notice = buildNoticeSection(info.datetime, 15000, undefined, true);
+  const materials = info.lessonName === "Lesson 1" ? buildLesson1MaterialsSection() : null;
 
   const text = `${info.studentName} 様
 
@@ -351,7 +395,7 @@ ${SCHOOL_NAME}の個別レッスンのご予約が完了しました。
 
 ${individual.text}
 
-${notice.text}
+${notice.text}${materials ? `\n\n${materials.text}` : ""}
 
 当日はお気をつけてお越しください。
 ご不明な点がございましたら本メールへご返信ください。
@@ -365,6 +409,7 @@ ${SCHOOL_NAME}`;
     <p>${SCHOOL_NAME}の個別レッスンのご予約が完了しました。以下の内容でお待ちしております。</p>
     ${individual.html}
     ${notice.html}
+    ${materials ? materials.html : ""}
     <p style="margin-top:20px;">当日はお気をつけてお越しください。ご不明な点がございましたら本メールへご返信ください。</p>
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;
