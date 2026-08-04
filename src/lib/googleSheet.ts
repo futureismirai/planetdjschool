@@ -67,9 +67,19 @@ function findEmailColumnIndex(headers: string[]): number {
  * コードの変更なしに反映される。
  * スプレッドシート側は「リンクを知っている全員が閲覧可能」に共有しておく必要がある。
  */
+async function fetchCsv(url: string): Promise<Response> {
+  return fetch(url, { cache: "no-store" });
+}
+
 export async function fetchFormResponses(): Promise<FormResponse[]> {
-  const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
-  const res = await fetch(url, { cache: "no-store" });
+  const urlWithGid = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+  let res = await fetchCsv(urlWithGid);
+
+  // 指定したgidのタブが存在しない場合(400)は、gid指定なし(先頭のタブ)で再試行する。
+  if (!res.ok && res.status === 400) {
+    const urlWithoutGid = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv`;
+    res = await fetchCsv(urlWithoutGid);
+  }
 
   if (!res.ok) {
     throw new Error(
