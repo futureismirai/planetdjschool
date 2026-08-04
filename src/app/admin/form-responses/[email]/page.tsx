@@ -1,16 +1,10 @@
 import Link from "next/link";
 import { getCurrentAdmin } from "@/lib/auth";
 import { LogoutButton } from "../../LogoutButton";
-import { fetchFormResponses } from "@/lib/googleSheet";
+import { fetchFormResponses, guessDisplayNameFromFields } from "@/lib/googleSheet";
 import { getKnownStudentNames } from "@/lib/knownStudentNames";
 
 export const dynamic = "force-dynamic";
-
-function guessDisplayName(fields: { label: string; value: string }[]): string | null {
-  const match = fields.find((f) => f.label.includes("名前") || /name/i.test(f.label));
-  const value = match?.value.trim();
-  return value ? value : null;
-}
 
 export default async function AdminFormResponseDetailPage({
   params,
@@ -31,8 +25,8 @@ export default async function AdminFormResponseDetailPage({
       .filter((r) => r.email === decodedEmail)
       .sort((a, b) => b.rowIndex - a.rowIndex);
     displayName =
+      (responses.length > 0 ? guessDisplayNameFromFields(responses[0].fields) : null) ??
       knownNames.get(decodedEmail) ??
-      (responses.length > 0 ? guessDisplayName(responses[0].fields) : null) ??
       decodedEmail;
   } catch (e) {
     error = e instanceof Error ? e.message : "回答の取得に失敗しました。";

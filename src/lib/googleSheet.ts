@@ -61,6 +61,25 @@ function findEmailColumnIndex(headers: string[]): number {
   return headers.findIndex((h) => /mail/i.test(h) || h.includes("メール"));
 }
 
+// 名前の質問文として優先的に採用するキーワード(優先度順)。
+// 「氏名（フルネーム）」を最優先とし、質問文が変わった場合に備えて他の表現もフォールバックとして残す。
+const NAME_QUESTION_KEYWORDS = ["氏名", "お名前", "名前", "ニックネーム"];
+
+/**
+ * 回答の列見出しの中から名前を尋ねている質問を探し、その回答を返す。
+ * フォームの質問文が変更された場合にも対応できるよう、キーワードの部分一致で判定する。
+ */
+export function guessDisplayNameFromFields(fields: FormResponseField[]): string | null {
+  for (const keyword of NAME_QUESTION_KEYWORDS) {
+    const match = fields.find((f) => f.label.includes(keyword));
+    const value = match?.value.trim();
+    if (value) return value;
+  }
+  const englishMatch = fields.find((f) => /name/i.test(f.label));
+  const englishValue = englishMatch?.value.trim();
+  return englishValue ? englishValue : null;
+}
+
 /**
  * Googleフォームの回答スプレッドシートをCSVとして取得しパースする。
  * 列見出し(質問文)をそのままラベルとして扱うため、フォームの質問内容が変更されても

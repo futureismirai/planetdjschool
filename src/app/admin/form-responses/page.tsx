@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getCurrentAdmin } from "@/lib/auth";
 import { LogoutButton } from "../LogoutButton";
-import { fetchFormResponses, type FormResponse, type FormResponseField } from "@/lib/googleSheet";
+import { fetchFormResponses, guessDisplayNameFromFields, type FormResponse } from "@/lib/googleSheet";
 import { getKnownStudentNames } from "@/lib/knownStudentNames";
 
 export const dynamic = "force-dynamic";
@@ -11,12 +11,6 @@ type GroupedResponse = {
   displayName: string;
   responses: FormResponse[];
 };
-
-function guessDisplayName(fields: FormResponseField[]): string | null {
-  const match = fields.find((f) => f.label.includes("名前") || /name/i.test(f.label));
-  const value = match?.value.trim();
-  return value ? value : null;
-}
 
 function groupByEmail(
   responses: FormResponse[],
@@ -42,7 +36,7 @@ function groupByEmail(
     const sorted = [...list].sort((a, b) => b.rowIndex - a.rowIndex);
     return {
       email,
-      displayName: knownNames.get(email) ?? guessDisplayName(sorted[0].fields) ?? email,
+      displayName: guessDisplayNameFromFields(sorted[0].fields) ?? knownNames.get(email) ?? email,
       responses: sorted,
     };
   });
