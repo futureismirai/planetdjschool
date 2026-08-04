@@ -30,7 +30,7 @@ export default async function AdminFormResponseDetailPage({
     <div className="mx-auto max-w-3xl px-3 py-6 sm:px-4 sm:py-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">フォーム回答</h1>
+          <h1 className="text-xl font-bold text-slate-900">アンケート結果</h1>
           <p className="mt-0.5 text-xs text-slate-400">{decodedEmail}</p>
           {admin && <p className="mt-0.5 text-xs text-slate-400">ログイン中: {admin.email}</p>}
         </div>
@@ -53,7 +53,7 @@ export default async function AdminFormResponseDetailPage({
 
       {!error && responses.length === 0 && (
         <p className="mt-6 text-sm text-slate-500">
-          このメールアドレスに一致するフォーム回答が見つかりませんでした。
+          このメールアドレスに一致するアンケート結果が見つかりませんでした。
         </p>
       )}
 

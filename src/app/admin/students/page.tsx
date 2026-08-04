@@ -22,7 +22,7 @@ export default async function AdminStudentsPage() {
     <div className="mx-auto max-w-3xl px-3 py-6 sm:px-4 sm:py-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">生徒別進捗</h1>
+          <h1 className="text-xl font-bold text-slate-900">進捗状況</h1>
           {admin && <p className="mt-0.5 text-xs text-slate-400">ログイン中: {admin.email}</p>}
           <p className="mt-1 text-sm text-slate-500">
             グループレッスン・個別レッスンの生徒ごとに進捗コメントを記入できます(体験会は対象外)。名前をタップすると詳細に移動します。
@@ -57,7 +57,7 @@ export default async function AdminStudentsPage() {
             href="/admin/form-responses"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
           >
-            フォーム回答
+            アンケート結果
           </Link>
           <LogoutButton />
         </div>

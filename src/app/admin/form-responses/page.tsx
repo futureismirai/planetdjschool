@@ -66,7 +66,7 @@ export default async function AdminFormResponsesPage() {
     <div className="mx-auto max-w-3xl px-3 py-6 sm:px-4 sm:py-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">フォーム回答</h1>
+          <h1 className="text-xl font-bold text-slate-900">アンケート結果</h1>
           {admin && <p className="mt-0.5 text-xs text-slate-400">ログイン中: {admin.email}</p>}
           <p className="mt-1 text-sm text-slate-500">
             Googleフォームの回答一覧です。体験会の参加者名からも該当する回答に遷移できます。
@@ -101,7 +101,7 @@ export default async function AdminFormResponsesPage() {
             href="/admin/students"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
           >
-            生徒別進捗
+            進捗状況
           </Link>
           <LogoutButton />
         </div>
