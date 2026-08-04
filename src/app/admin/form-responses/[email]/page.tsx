@@ -2,8 +2,15 @@ import Link from "next/link";
 import { getCurrentAdmin } from "@/lib/auth";
 import { LogoutButton } from "../../LogoutButton";
 import { fetchFormResponses } from "@/lib/googleSheet";
+import { getKnownStudentNames } from "@/lib/knownStudentNames";
 
 export const dynamic = "force-dynamic";
+
+function guessDisplayName(fields: { label: string; value: string }[]): string | null {
+  const match = fields.find((f) => f.label.includes("名前") || /name/i.test(f.label));
+  const value = match?.value.trim();
+  return value ? value : null;
+}
 
 export default async function AdminFormResponseDetailPage({
   params,
@@ -13,15 +20,20 @@ export default async function AdminFormResponseDetailPage({
   const { email } = await params;
   const decodedEmail = decodeURIComponent(email).trim().toLowerCase();
 
-  const [admin] = await Promise.all([getCurrentAdmin()]);
+  const admin = await getCurrentAdmin();
 
   let responses: Awaited<ReturnType<typeof fetchFormResponses>> = [];
+  let displayName: string = decodedEmail;
   let error: string | null = null;
   try {
-    const all = await fetchFormResponses();
+    const [all, knownNames] = await Promise.all([fetchFormResponses(), getKnownStudentNames()]);
     responses = all
       .filter((r) => r.email === decodedEmail)
       .sort((a, b) => b.rowIndex - a.rowIndex);
+    displayName =
+      knownNames.get(decodedEmail) ??
+      (responses.length > 0 ? guessDisplayName(responses[0].fields) : null) ??
+      decodedEmail;
   } catch (e) {
     error = e instanceof Error ? e.message : "回答の取得に失敗しました。";
   }
@@ -30,7 +42,7 @@ export default async function AdminFormResponseDetailPage({
     <div className="mx-auto max-w-3xl px-3 py-6 sm:px-4 sm:py-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">アンケート結果</h1>
+          <h1 className="text-xl font-bold text-slate-900">{displayName}</h1>
           <p className="mt-0.5 text-xs text-slate-400">{decodedEmail}</p>
           {admin && <p className="mt-0.5 text-xs text-slate-400">ログイン中: {admin.email}</p>}
         </div>

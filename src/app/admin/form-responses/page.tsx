@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getCurrentAdmin } from "@/lib/auth";
 import { LogoutButton } from "../LogoutButton";
 import { fetchFormResponses, type FormResponse, type FormResponseField } from "@/lib/googleSheet";
+import { getKnownStudentNames } from "@/lib/knownStudentNames";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,10 @@ function guessDisplayName(fields: FormResponseField[]): string | null {
   return value ? value : null;
 }
 
-function groupByEmail(responses: FormResponse[]): {
+function groupByEmail(
+  responses: FormResponse[],
+  knownNames: Map<string, string>
+): {
   groups: GroupedResponse[];
   unmatchedCount: number;
 } {
@@ -38,7 +42,7 @@ function groupByEmail(responses: FormResponse[]): {
     const sorted = [...list].sort((a, b) => b.rowIndex - a.rowIndex);
     return {
       email,
-      displayName: guessDisplayName(sorted[0].fields) ?? email,
+      displayName: knownNames.get(email) ?? guessDisplayName(sorted[0].fields) ?? email,
       responses: sorted,
     };
   });
@@ -54,8 +58,11 @@ export default async function AdminFormResponsesPage() {
   let unmatchedCount = 0;
   let error: string | null = null;
   try {
-    const responses = await fetchFormResponses();
-    const result = groupByEmail(responses);
+    const [responses, knownNames] = await Promise.all([
+      fetchFormResponses(),
+      getKnownStudentNames(),
+    ]);
+    const result = groupByEmail(responses, knownNames);
     groups = result.groups;
     unmatchedCount = result.unmatchedCount;
   } catch (e) {
