@@ -7,6 +7,7 @@ import {
   buildTrialReminderEmail,
 } from "@/lib/emailTemplates";
 import { getJstDayWindow } from "@/lib/date";
+import { DEFAULT_LOCATION } from "@/lib/constants";
 
 const REMINDER_DAYS_BEFORE = 3;
 
@@ -42,7 +43,7 @@ async function runReminderBatch() {
           lessonName: lesson.name,
           datetime: lesson.datetime,
           instructorName: lesson.instructorName,
-          location: lesson.location,
+          location: lesson.location ?? DEFAULT_LOCATION,
           studentName: booking.studentName,
         });
         await sendMail({ to: booking.studentEmail, subject, text, html });
@@ -80,7 +81,7 @@ async function runTrialReminderBatch() {
         const { subject, text, html } = buildTrialReminderEmail({
           datetime: trialSession.datetime,
           instructorName: trialSession.instructorName,
-          location: trialSession.location,
+          location: trialSession.location ?? DEFAULT_LOCATION,
           studentName: participant.studentName,
         });
         await sendMail({ to: participant.studentEmail, subject, text, html });
@@ -119,7 +120,7 @@ async function runIndividualLessonReminderBatch() {
           lessonName: individualLesson.name,
           datetime: individualLesson.datetime,
           instructorName: individualLesson.instructorName,
-          location: individualLesson.location,
+          location: individualLesson.location ?? DEFAULT_LOCATION,
           studentName: participant.studentName,
         });
         await sendMail({ to: participant.studentEmail, subject, text, html });

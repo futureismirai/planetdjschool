@@ -12,8 +12,9 @@ import {
 } from "@/lib/date";
 import { ManualBookingForm } from "./ManualBookingForm";
 import { DeleteBookingButton } from "./DeleteBookingButton";
+import { DEFAULT_LOCATION } from "@/lib/constants";
 
-export const DEFAULT_LOCATION = "ゲートウェイスタジオ渋谷道玄坂店　3階　5st";
+export { DEFAULT_LOCATION };
 
 export const LESSON_NAME_OPTIONS = [
   "Lesson 1",

@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sendMail } from "@/lib/mailer";
 import { buildBookingConfirmationEmail } from "@/lib/emailTemplates";
+import { DEFAULT_LOCATION } from "@/lib/constants";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
         lessonName: lesson.name,
         datetime: lesson.datetime,
         instructorName: lesson.instructorName,
-        location: lesson.location,
+        location: lesson.location ?? DEFAULT_LOCATION,
         studentName: booking.studentName,
       });
       await sendMail({ to: studentEmail.trim(), subject, text, html });

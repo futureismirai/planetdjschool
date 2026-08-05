@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
 import { sendMail } from "@/lib/mailer";
 import { buildTrialConfirmationEmail } from "@/lib/emailTemplates";
+import { DEFAULT_LOCATION } from "@/lib/constants";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
       const { subject, text, html } = buildTrialConfirmationEmail({
         datetime: trialSession.datetime,
         instructorName: trialSession.instructorName,
-        location: trialSession.location,
+        location: trialSession.location ?? DEFAULT_LOCATION,
         studentName: participant.studentName,
       });
       await sendMail({ to: participant.studentEmail, subject, text, html });

@@ -1,6 +1,8 @@
+import { DEFAULT_LOCATION } from "./constants";
+
 export type IndividualLessonInputResult =
   | {
-      data: { name: string; instructorName: string; datetime: Date; location: string | null };
+      data: { name: string; instructorName: string; datetime: Date; location: string };
     }
   | { error: string };
 
@@ -25,7 +27,7 @@ export function parseIndividualLessonInput(body: unknown): IndividualLessonInput
       name: name.trim(),
       instructorName: instructorName.trim(),
       datetime: new Date(datetime),
-      location: typeof location === "string" && location.trim() ? location.trim() : null,
+      location: typeof location === "string" && location.trim() ? location.trim() : DEFAULT_LOCATION,
     },
   };
 }

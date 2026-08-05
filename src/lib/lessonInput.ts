@@ -1,3 +1,5 @@
+import { DEFAULT_LOCATION } from "./constants";
+
 export type LessonInputResult =
   | {
       data: {
@@ -5,7 +7,7 @@ export type LessonInputResult =
         instructorName: string;
         datetime: Date;
         maxSlots: number;
-        location: string | null;
+        location: string;
       };
     }
   | { error: string };
@@ -39,7 +41,7 @@ export function parseLessonInput(body: unknown): LessonInputResult {
       instructorName: instructorName.trim(),
       datetime: new Date(datetime),
       maxSlots: maxSlotsNum,
-      location: typeof location === "string" && location.trim() ? location.trim() : null,
+      location: typeof location === "string" && location.trim() ? location.trim() : DEFAULT_LOCATION,
     },
   };
 }

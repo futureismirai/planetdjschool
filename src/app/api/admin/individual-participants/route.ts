@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
 import { sendMail } from "@/lib/mailer";
 import { buildIndividualLessonConfirmationEmail } from "@/lib/emailTemplates";
+import { DEFAULT_LOCATION } from "@/lib/constants";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_PARTICIPANTS = 1;
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
         lessonName: individualLesson.name,
         datetime: individualLesson.datetime,
         instructorName: individualLesson.instructorName,
-        location: individualLesson.location,
+        location: individualLesson.location ?? DEFAULT_LOCATION,
         studentName: participant.studentName,
       });
       await sendMail({ to: participant.studentEmail, subject, text, html });
