@@ -12,7 +12,14 @@ import {
 } from "@/lib/date";
 import { ManualBookingForm } from "./ManualBookingForm";
 import { DeleteBookingButton } from "./DeleteBookingButton";
+import { NextLessonEmailButton } from "./NextLessonEmailButton";
 import { DEFAULT_LOCATION } from "@/lib/constants";
+
+// このレッスンを終了した生徒に、どのレッスンの受講を勧めるかの対応表。
+const NEXT_LESSON_NAME: Record<string, string> = {
+  "Lesson 1": "Lesson 2",
+  "Lesson 2": "Lesson 3",
+};
 
 export { DEFAULT_LOCATION };
 
@@ -399,7 +406,9 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {lesson.bookings.map((booking) => (
+                      {lesson.bookings.map((booking) => {
+                        const nextLessonName = NEXT_LESSON_NAME[lesson.name];
+                        return (
                         <tr key={booking.id} className="border-b border-slate-50 last:border-0">
                           <td className="px-2 py-2 sm:px-4">
                             {booking.studentEmail ? (
@@ -411,6 +420,15 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
                               </Link>
                             ) : (
                               booking.studentName
+                            )}
+                            {isPast && nextLessonName && booking.studentEmail && (
+                              <div className="mt-1">
+                                <NextLessonEmailButton
+                                  bookingId={booking.id}
+                                  studentName={booking.studentName}
+                                  nextLessonName={nextLessonName}
+                                />
+                              </div>
                             )}
                           </td>
                           <td className="px-2 py-2 sm:px-4">{booking.studentEmail ?? "-"}</td>
@@ -430,7 +448,8 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
                             />
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

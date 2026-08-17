@@ -455,6 +455,82 @@ ${SCHOOL_NAME}`;
   return { subject, text, html };
 }
 
+export type NextLessonInviteEmailInfo = {
+  studentName: string;
+  currentLessonName: string;
+  nextLessonName: string;
+  nextLessonDatetime: Date;
+  nextLessonHasNoBookings: boolean;
+};
+
+function bookingSiteUrl(): string {
+  return process.env.NEXT_PUBLIC_BASE_URL || "https://planetdjschool.vercel.app";
+}
+
+/**
+ * グループレッスン終了者へ次のレッスンの受講を促す案内メール。
+ * 管理者が「グループレッスン」画面から手動で送信する(自動送信ではない)。
+ * 文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildNextLessonInviteEmail(info: NextLessonInviteEmailInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】${info.nextLessonName}のご案内`;
+  const dateTimeText = formatDateTimeRange(info.nextLessonDatetime, GROUP_LESSON_DURATION_MINUTES);
+  const url = bookingSiteUrl();
+
+  const scheduleNoteText = info.nextLessonHasNoBookings
+    ? "\n※現在このレッスンへのご予約がまだ入っていないため、開催日時が予告なく変更になる場合があります。"
+    : "";
+  const scheduleNoteHtml = info.nextLessonHasNoBookings
+    ? `<p style="margin:8px 0 0;color:#b45309;font-size:13px;">※現在このレッスンへのご予約がまだ入っていないため、開催日時が予告なく変更になる場合があります。</p>`
+    : "";
+
+  const text = `${info.studentName} 様
+
+${SCHOOL_NAME}の${info.currentLessonName}をご受講いただきありがとうございました。
+着実にステップアップしていただくために、続けて${info.nextLessonName}の受講をおすすめしております。
+
+【次回レッスンのご案内】
+レッスン: ${info.nextLessonName}
+日時: ${dateTimeText}${scheduleNoteText}
+
+ぜひこの機会にご予約ください。
+
+▼ご予約はこちら
+${url}
+
+ご不明な点がございましたら本メールへご返信ください。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">${escapeHtml(info.nextLessonName)}のご案内</h2>
+    <p>${escapeHtml(info.studentName)} 様</p>
+    <p>${SCHOOL_NAME}の${escapeHtml(info.currentLessonName)}をご受講いただきありがとうございました。<br>
+    着実にステップアップしていただくために、続けて${escapeHtml(info.nextLessonName)}の受講をおすすめしております。</p>
+    <div style="margin-top:16px;padding:12px 16px;background:#f8fafc;border-radius:8px;">
+      <p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">次回レッスンのご案内</p>
+      <table style="width:100%;border-collapse:collapse;margin:0;">
+        <tr><td style="padding:4px 0;color:#666;width:80px;">レッスン</td><td style="padding:4px 0;font-weight:bold;">${escapeHtml(info.nextLessonName)}</td></tr>
+        <tr><td style="padding:4px 0;color:#666;">日時</td><td style="padding:4px 0;">${escapeHtml(dateTimeText)}</td></tr>
+      </table>
+      ${scheduleNoteHtml}
+    </div>
+    <p style="margin-top:20px;">ぜひこの機会にご予約ください。</p>
+    <p style="margin-top:16px;text-align:center;">
+      <a href="${escapeHtml(url)}" style="display:inline-block;background:#0369a1;color:#fff;text-decoration:none;padding:10px 24px;border-radius:6px;font-weight:bold;">ご予約はこちら</a>
+    </p>
+    <p style="margin-top:20px;">ご不明な点がございましたら本メールへご返信ください。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
 function escapeHtml(input: string): string {
   return input
     .replace(/&/g, "&amp;")
