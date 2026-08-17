@@ -21,6 +21,20 @@ const NEXT_LESSON_NAME: Record<string, string> = {
   "Lesson 2": "Lesson 3",
 };
 
+/** 指定したメールアドレスの生徒が、指定した名前のレッスンにすでに予約済みかどうか。 */
+function hasBookingForLessonName(
+  lessons: LessonItem[],
+  studentEmail: string,
+  lessonName: string
+): boolean {
+  const target = studentEmail.trim().toLowerCase();
+  return lessons.some(
+    (l) =>
+      l.name === lessonName &&
+      l.bookings.some((b) => b.studentEmail?.trim().toLowerCase() === target)
+  );
+}
+
 export { DEFAULT_LOCATION };
 
 export const LESSON_NAME_OPTIONS = [
@@ -38,6 +52,7 @@ export type BookingItem = {
   studentEmail: string | null;
   studentPhone: string | null;
   note: string | null;
+  nextLessonEmailSentAt: string | null;
   createdAt: string;
 };
 
@@ -408,6 +423,10 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
                     <tbody>
                       {lesson.bookings.map((booking) => {
                         const nextLessonName = NEXT_LESSON_NAME[lesson.name];
+                        const alreadyBookedNext =
+                          nextLessonName && booking.studentEmail
+                            ? hasBookingForLessonName(lessons, booking.studentEmail, nextLessonName)
+                            : false;
                         return (
                         <tr key={booking.id} className="border-b border-slate-50 last:border-0">
                           <td className="px-2 py-2 sm:px-4">
@@ -421,12 +440,13 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
                             ) : (
                               booking.studentName
                             )}
-                            {isPast && nextLessonName && booking.studentEmail && (
+                            {isPast && nextLessonName && booking.studentEmail && !alreadyBookedNext && (
                               <div className="mt-1">
                                 <NextLessonEmailButton
                                   bookingId={booking.id}
                                   studentName={booking.studentName}
                                   nextLessonName={nextLessonName}
+                                  alreadySent={!!booking.nextLessonEmailSentAt}
                                 />
                               </div>
                             )}

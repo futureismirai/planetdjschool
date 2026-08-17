@@ -114,6 +114,8 @@ const CREATE_TABLES_SQL = [
   // 生徒一覧をコメント更新順に並べ替えるためのタイムスタンプ
   `ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "commentUpdatedAt" TIMESTAMP(3)`,
   `ALTER TABLE "IndividualParticipant" ADD COLUMN IF NOT EXISTS "commentUpdatedAt" TIMESTAMP(3)`,
+  // 次のレッスン案内メールを送信済みかどうかの記録
+  `ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "nextLessonEmailSentAt" TIMESTAMP(3)`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {

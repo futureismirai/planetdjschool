@@ -53,6 +53,19 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
     );
   }
 
+  const alreadyBookedNextLesson = await prisma.booking.findFirst({
+    where: {
+      studentEmail: { equals: booking.studentEmail, mode: "insensitive" },
+      lesson: { name: nextLessonName },
+    },
+  });
+  if (alreadyBookedNextLesson) {
+    return NextResponse.json(
+      { error: `この生徒はすでに${nextLessonName}に登録済みです。` },
+      { status: 409 }
+    );
+  }
+
   try {
     const { subject, text, html } = buildNextLessonInviteEmail({
       studentName: booking.studentName,
@@ -66,6 +79,11 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
     console.error("次のレッスン案内メールの送信に失敗しました:", mailError);
     return NextResponse.json({ error: "メールの送信に失敗しました。" }, { status: 500 });
   }
+
+  await prisma.booking.update({
+    where: { id: booking.id },
+    data: { nextLessonEmailSentAt: new Date() },
+  });
 
   return NextResponse.json({ ok: true });
 }

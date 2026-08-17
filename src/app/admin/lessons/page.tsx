@@ -29,6 +29,7 @@ async function getAllLessonsWithBookings() {
       studentEmail: b.studentEmail,
       studentPhone: b.studentPhone,
       note: b.note,
+      nextLessonEmailSentAt: b.nextLessonEmailSentAt ? b.nextLessonEmailSentAt.toISOString() : null,
       createdAt: b.createdAt.toISOString(),
     })),
   }));
