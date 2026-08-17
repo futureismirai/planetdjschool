@@ -467,6 +467,12 @@ function bookingSiteUrl(): string {
   return process.env.NEXT_PUBLIC_BASE_URL || "https://planetdjschool.vercel.app";
 }
 
+// 次のレッスンごとのステップアップを促す一言。
+const NEXT_LESSON_STEP_MESSAGE: Record<string, string> = {
+  "Lesson 2": "次はLesson 2です。着実なステップアップを目指しましょう。",
+  "Lesson 3": "デビューまであと少しです。一緒に最後まで頑張りましょう！",
+};
+
 /**
  * グループレッスン終了者へ次のレッスンの受講を促す案内メール。
  * 管理者が「グループレッスン」画面から手動で送信する(自動送信ではない)。
@@ -487,17 +493,19 @@ export function buildNextLessonInviteEmail(info: NextLessonInviteEmailInfo): {
   const scheduleNoteHtml = info.nextLessonHasNoBookings
     ? `<p style="margin:8px 0 0;color:#b45309;font-size:13px;">※現在このレッスンへのご予約がまだ入っていないため、開催日時が予告なく変更になる場合があります。</p>`
     : "";
+  const stepMessage = NEXT_LESSON_STEP_MESSAGE[info.nextLessonName] ?? "";
 
   const text = `${info.studentName} 様
 
 ${SCHOOL_NAME}の${info.currentLessonName}をご受講いただきありがとうございました。
-着実にステップアップしていただくために、続けて${info.nextLessonName}の受講をおすすめしております。
+${stepMessage}
+以下の日程でレッスンを予定しておりますが、ご都合いかがでしょうか？
 
 【次回レッスンのご案内】
 レッスン: ${info.nextLessonName}
 日時: ${dateTimeText}${scheduleNoteText}
 
-ぜひこの機会にご予約ください。
+予約の際は以下のボタンからお願いします。
 
 ▼ご予約はこちら
 ${url}
@@ -511,7 +519,8 @@ ${SCHOOL_NAME}`;
     <h2 style="color:#0f172a;">${escapeHtml(info.nextLessonName)}のご案内</h2>
     <p>${escapeHtml(info.studentName)} 様</p>
     <p>${SCHOOL_NAME}の${escapeHtml(info.currentLessonName)}をご受講いただきありがとうございました。<br>
-    着実にステップアップしていただくために、続けて${escapeHtml(info.nextLessonName)}の受講をおすすめしております。</p>
+    ${escapeHtml(stepMessage)}<br>
+    以下の日程でレッスンを予定しておりますが、ご都合いかがでしょうか？</p>
     <div style="margin-top:16px;padding:12px 16px;background:#f8fafc;border-radius:8px;">
       <p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">次回レッスンのご案内</p>
       <table style="width:100%;border-collapse:collapse;margin:0;">
@@ -520,7 +529,7 @@ ${SCHOOL_NAME}`;
       </table>
       ${scheduleNoteHtml}
     </div>
-    <p style="margin-top:20px;">ぜひこの機会にご予約ください。</p>
+    <p style="margin-top:20px;">予約の際は以下のボタンからお願いします。</p>
     <p style="margin-top:16px;text-align:center;">
       <a href="${escapeHtml(url)}" style="display:inline-block;background:#0369a1;color:#fff;text-decoration:none;padding:10px 24px;border-radius:6px;font-weight:bold;">ご予約はこちら</a>
     </p>
