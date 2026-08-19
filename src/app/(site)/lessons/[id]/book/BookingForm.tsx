@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import styles from "../../../site.module.css";
 
 export function BookingForm({ lessonId }: { lessonId: string }) {
   const router = useRouter();
@@ -44,18 +45,18 @@ export function BookingForm({ lessonId }: { lessonId: string }) {
 
   if (done) {
     return (
-      <div className="rounded-md bg-emerald-50 p-4 text-center text-sm text-emerald-700">
-        <p className="font-semibold">ご予約ありがとうございました。</p>
-        <p className="mt-1">確認メールをお送りしましたのでご確認ください。</p>
+      <div className={styles.bookSuccess}>
+        <p className={styles.bookSuccessTitle}>ご予約ありがとうございました。</p>
+        <p className={styles.bookSuccessBody}>確認メールをお送りしましたのでご確認ください。</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="studentName" className="block text-sm font-medium text-slate-700">
-          お名前 <span className="text-rose-500">*</span>
+    <form onSubmit={handleSubmit} className={styles.form}>
+      <div className={styles.formField}>
+        <label htmlFor="studentName" className={`${styles.monoLabel} ${styles.formLabel}`}>
+          お名前<span className={styles.formRequired}>*</span>
         </label>
         <input
           id="studentName"
@@ -63,14 +64,14 @@ export function BookingForm({ lessonId }: { lessonId: string }) {
           required
           value={studentName}
           onChange={(e) => setStudentName(e.target.value)}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          className={styles.formInput}
           placeholder="山田 太郎"
         />
       </div>
 
-      <div>
-        <label htmlFor="studentEmail" className="block text-sm font-medium text-slate-700">
-          メールアドレス <span className="text-rose-500">*</span>
+      <div className={styles.formField}>
+        <label htmlFor="studentEmail" className={`${styles.monoLabel} ${styles.formLabel}`}>
+          メールアドレス<span className={styles.formRequired}>*</span>
         </label>
         <input
           id="studentEmail"
@@ -78,13 +79,13 @@ export function BookingForm({ lessonId }: { lessonId: string }) {
           required
           value={studentEmail}
           onChange={(e) => setStudentEmail(e.target.value)}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          className={styles.formInput}
           placeholder="example@gmail.com"
         />
       </div>
 
-      <div>
-        <label htmlFor="studentPhone" className="block text-sm font-medium text-slate-700">
+      <div className={styles.formField}>
+        <label htmlFor="studentPhone" className={`${styles.monoLabel} ${styles.formLabel}`}>
           電話番号（任意）
         </label>
         <input
@@ -92,22 +93,18 @@ export function BookingForm({ lessonId }: { lessonId: string }) {
           type="tel"
           value={studentPhone}
           onChange={(e) => setStudentPhone(e.target.value)}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          className={styles.formInput}
           placeholder="090-1234-5678"
         />
       </div>
 
       {error && (
-        <p className="rounded-md bg-rose-50 p-3 text-sm text-rose-600" role="alert">
+        <p className={styles.formError} role="alert">
           {error}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="w-full rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
-      >
+      <button type="submit" disabled={submitting} className={styles.formSubmit}>
         {submitting ? "送信中..." : "この内容で予約する"}
       </button>
     </form>
