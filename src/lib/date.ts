@@ -28,6 +28,20 @@ export function getJstDateKey(date: Date): string {
   return formatInTimeZone(date, TIME_ZONE, "yyyy-MM-dd");
 }
 
+/** 日付をグラフィック要素として表示する際に、月・日・曜日・年を個別に取得する。 */
+export function getJstDateParts(date: Date): {
+  year: number;
+  month: number;
+  day: number;
+  weekday: string;
+} {
+  const [year, month, day] = formatInTimeZone(date, TIME_ZONE, "yyyy-M-d")
+    .split("-")
+    .map(Number);
+  const weekday = formatInTimeZone(date, TIME_ZONE, "E", { locale: ja });
+  return { year, month, day, weekday };
+}
+
 /**
  * 管理画面の一覧表示用に並べ替える。日付は新しい順(降順)、同じ日の中では
  * 開始時刻が早い順(昇順)になる。
