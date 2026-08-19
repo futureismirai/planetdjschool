@@ -51,6 +51,25 @@ export default async function HomePage() {
         受講したいレッスンを選んで予約してください。
       </p>
 
+      <div className="mt-4 flex flex-col gap-1 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm sm:flex-row sm:gap-6">
+        <a
+          href="https://www.notion.so/3735fe86c92a8063825ffc77f552bc95?source=copy_link"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-sky-700 underline-offset-2 hover:underline"
+        >
+          レッスンに関する注意点
+        </a>
+        <a
+          href="https://note.com/ginza_member"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-sky-700 underline-offset-2 hover:underline"
+        >
+          DJお役立ちnote
+        </a>
+      </div>
+
       {dateGroups.length === 0 ? (
         <p className="mt-10 text-center text-sm text-slate-500">
           現在予約可能なレッスンはありません。
