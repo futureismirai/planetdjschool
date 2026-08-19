@@ -25,6 +25,7 @@ async function getTrialSessionsWithParticipants() {
       studentName: p.studentName,
       studentEmail: p.studentEmail,
       note: p.note,
+      thankYouEmailSentAt: p.thankYouEmailSentAt ? p.thankYouEmailSentAt.toISOString() : null,
       createdAt: p.createdAt.toISOString(),
     })),
   }));

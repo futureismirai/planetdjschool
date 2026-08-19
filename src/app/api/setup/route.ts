@@ -116,6 +116,8 @@ const CREATE_TABLES_SQL = [
   `ALTER TABLE "IndividualParticipant" ADD COLUMN IF NOT EXISTS "commentUpdatedAt" TIMESTAMP(3)`,
   // 次のレッスン案内メールを送信済みかどうかの記録
   `ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "nextLessonEmailSentAt" TIMESTAMP(3)`,
+  // 体験会受講後のお礼メールを送信済みかどうかの記録
+  `ALTER TABLE "TrialParticipant" ADD COLUMN IF NOT EXISTS "thankYouEmailSentAt" TIMESTAMP(3)`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {

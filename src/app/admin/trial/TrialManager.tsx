@@ -16,6 +16,7 @@ export type TrialParticipantItem = {
   studentName: string;
   studentEmail: string;
   note: string | null;
+  thankYouEmailSentAt: string | null;
   createdAt: string;
 };
 
@@ -498,6 +499,16 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
                             >
                               {participant.studentName}
                             </Link>
+                            {!participant.thankYouEmailSentAt && (
+                              <div className="mt-1">
+                                <Link
+                                  href={`/admin/trial/${participant.id}/message`}
+                                  className="text-xs font-medium text-sky-600 hover:text-sky-700"
+                                >
+                                  お礼メールを送信
+                                </Link>
+                              </div>
+                            )}
                           </td>
                           <td className="px-2 py-2 sm:px-4">{participant.studentEmail}</td>
                           <td className="hidden px-4 py-2 text-slate-500 sm:table-cell">

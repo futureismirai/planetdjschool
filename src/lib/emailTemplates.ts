@@ -540,6 +540,40 @@ ${SCHOOL_NAME}`;
   return { subject, text, html };
 }
 
+/**
+ * 体験会受講後のお礼メールの初期文面(管理者が編集する前提のテンプレート)。
+ * 文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildTrialThankYouDefaultText(studentName: string, instructorName: string): string {
+  return `${studentName} 様
+
+先日はDJ体験会を受講いただきありがとうございました。講師の${instructorName}です。
+
+
+
+本レッスンをご希望の際はこちらのメールの方に再度ご連絡下さい。
+ご質問等もお気軽に承っております。
+またお会いできることを楽しみにしております。
+
+${instructorName}`;
+}
+
+/**
+ * 体験会受講後のお礼メール。管理者が編集した本文をそのまま送信する
+ * (buildTrialThankYouDefaultTextは編集画面の初期表示にのみ使用する)。
+ */
+export function buildTrialThankYouEmail(text: string): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】体験会受講のお礼`;
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;white-space:pre-wrap;">${escapeHtml(text)}</div>`;
+
+  return { subject, text, html };
+}
+
 function escapeHtml(input: string): string {
   return input
     .replace(/&/g, "&amp;")
