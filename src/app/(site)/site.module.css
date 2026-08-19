@@ -102,10 +102,6 @@
   align-items: baseline;
 }
 
-.heroEyebrow {
-  color: var(--lavender-deep);
-}
-
 .heroTitle {
   font-family: var(--expanded);
   font-weight: 700;
@@ -391,6 +387,10 @@
 }
 .bookBack:hover {
   color: var(--lavender-deep);
+}
+.bookBack:focus-visible {
+  outline: none;
+  text-decoration: underline;
 }
 .bookBackArrow {
   font-family: var(--grotesk);

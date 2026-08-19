@@ -54,9 +54,6 @@ export default async function HomePage() {
     <>
       <section className={styles.hero}>
         <div>
-          <p className={`${styles.monoLabel} ${styles.heroEyebrow}`}>
-            Planet DJ School / Reservation
-          </p>
           <h1 className={styles.heroTitle}>
             LESSON
             <br />
