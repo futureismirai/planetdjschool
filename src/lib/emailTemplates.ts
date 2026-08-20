@@ -23,7 +23,28 @@ function cancelContactEmail(): string {
   return process.env.GMAIL_USER ?? "";
 }
 
-type InfoRow = { label: string; value: string };
+// 講師名 → Instagramアカウント。ここに追加/変更すればメール本文に反映される。
+const INSTRUCTOR_INSTAGRAM: Record<string, { handle: string; url: string }> = {
+  FUTURE: { handle: "nsirmrtf", url: "https://www.instagram.com/nsirmrtf/" },
+  Erykah: { handle: "djerykah", url: "https://www.instagram.com/djerykah/" },
+  "Ryuga Nomoto": { handle: "nomoto.r", url: "https://www.instagram.com/nomoto.r/" },
+  tuzuRa: { handle: "tuzura_dj", url: "https://www.instagram.com/tuzura_dj/" },
+  wargh: { handle: "wargh", url: "https://www.instagram.com/wargh/" },
+};
+
+/** 講師名の横にInstagramアカウント(@ハンドル)を添える。該当が無ければ名前のみ。 */
+function instructorNameWithInstagram(instructorName: string): { text: string; html: string } {
+  const ig = INSTRUCTOR_INSTAGRAM[instructorName.trim()];
+  if (!ig) {
+    return { text: instructorName, html: escapeHtml(instructorName) };
+  }
+  return {
+    text: `${instructorName}（@${ig.handle}）`,
+    html: `${escapeHtml(instructorName)}（<a href="${escapeHtml(ig.url)}" target="_blank" rel="noopener noreferrer" style="color:#0369a1;text-decoration:none;">@${escapeHtml(ig.handle)}</a>）`,
+  };
+}
+
+type InfoRow = { label: string; value: string; valueHtml?: string };
 
 function buildInfoRows(rows: InfoRow[]): { text: string; html: string } {
   const text = rows.map((row) => `${row.label}: ${row.value}`).join("\n");
@@ -32,7 +53,7 @@ function buildInfoRows(rows: InfoRow[]): { text: string; html: string } {
       ${rows
         .map(
           (row, i) =>
-            `<tr><td style="padding:4px 0;color:#666;${i === 0 ? "width:80px;" : ""}">${escapeHtml(row.label)}</td><td style="padding:4px 0;${i === 0 ? "font-weight:bold;" : ""}">${escapeHtml(row.value)}</td></tr>`
+            `<tr><td style="padding:4px 0;color:#666;${i === 0 ? "width:80px;" : ""}">${escapeHtml(row.label)}</td><td style="padding:4px 0;${i === 0 ? "font-weight:bold;" : ""}">${row.valueHtml ?? escapeHtml(row.value)}</td></tr>`
         )
         .join("")}
     </table>`;
@@ -168,10 +189,11 @@ export type BookingEmailInfo = LessonEmailInfo & {
 };
 
 function groupLessonInfo(info: LessonEmailInfo) {
+  const instructor = instructorNameWithInstagram(info.instructorName);
   const rows: InfoRow[] = [
     { label: "レッスン", value: info.lessonName },
     { label: "日時", value: formatDateTimeRange(info.datetime, GROUP_LESSON_DURATION_MINUTES) },
-    { label: "講師", value: info.instructorName },
+    { label: "講師", value: instructor.text, valueHtml: instructor.html },
   ];
   if (info.location) {
     rows.push({ label: "場所", value: info.location });
@@ -267,9 +289,10 @@ export type TrialEmailInfo = {
 };
 
 function trialInfo(info: TrialEmailInfo) {
+  const instructor = instructorNameWithInstagram(info.instructorName);
   const rows: InfoRow[] = [
     { label: "日時", value: formatDateTimeRange(info.datetime, TRIAL_DURATION_MINUTES) },
-    { label: "担当講師", value: info.instructorName },
+    { label: "担当講師", value: instructor.text, valueHtml: instructor.html },
   ];
   if (info.location) {
     rows.push({ label: "場所", value: info.location });
@@ -364,10 +387,11 @@ export type IndividualLessonEmailInfo = {
 };
 
 function individualLessonInfo(info: IndividualLessonEmailInfo) {
+  const instructor = instructorNameWithInstagram(info.instructorName);
   const rows: InfoRow[] = [
     { label: "レッスン", value: info.lessonName },
     { label: "日時", value: formatDateTimeRange(info.datetime, INDIVIDUAL_LESSON_DURATION_MINUTES) },
-    { label: "講師", value: info.instructorName },
+    { label: "講師", value: instructor.text, valueHtml: instructor.html },
   ];
   if (info.location) {
     rows.push({ label: "場所", value: info.location });
@@ -545,9 +569,12 @@ ${SCHOOL_NAME}`;
  * 文面を変更したい場合はこの関数を編集してください。
  */
 export function buildTrialThankYouDefaultText(studentName: string, instructorName: string): string {
+  const ig = INSTRUCTOR_INSTAGRAM[instructorName.trim()];
+  const igLine = ig ? `\nInstagram: @${ig.handle}（${ig.url}）` : "";
+
   return `${studentName} 様
 
-先日はDJ体験会を受講いただきありがとうございました。講師の${instructorName}です。
+先日はDJ体験会を受講いただきありがとうございました。講師の${instructorName}です。${igLine}
 
 
 
