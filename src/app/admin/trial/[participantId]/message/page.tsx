@@ -54,11 +54,17 @@ export default async function TrialThankYouMessagePage({
       </div>
 
       <div className="mt-6">
-        <TrialThankYouMessageForm
-          participantId={participant.id}
-          studentName={participant.studentName}
-          defaultText={defaultText}
-        />
+        {participant.thankYouEmailSentAt ? (
+          <p className="rounded-md bg-slate-100 p-4 text-sm text-slate-500">
+            このお礼メールは既に送信済みです。
+          </p>
+        ) : (
+          <TrialThankYouMessageForm
+            participantId={participant.id}
+            studentName={participant.studentName}
+            defaultText={defaultText}
+          />
+        )}
       </div>
     </div>
   );

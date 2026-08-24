@@ -31,6 +31,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!participant) {
     return NextResponse.json({ error: "参加者が見つかりません。" }, { status: 404 });
   }
+  if (participant.thankYouEmailSentAt) {
+    return NextResponse.json({ error: "お礼メールは既に送信済みです。" }, { status: 409 });
+  }
 
   try {
     const { subject, text: mailText, html } = buildTrialThankYouEmail(text);
