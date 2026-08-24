@@ -18,6 +18,8 @@ export type Student = {
   displayName: string;
   attendances: Attendance[];
   lastCommentUpdatedAt: Date | null;
+  lastLessonDatetime: Date | null;
+  hasMissingComment: boolean;
 };
 
 /**
@@ -89,7 +91,14 @@ export async function getStudents(): Promise<Student[]> {
 
     let student = studentsByEmail.get(key);
     if (!student) {
-      student = { email: key, displayName: r.studentName, attendances: [], lastCommentUpdatedAt: null };
+      student = {
+        email: key,
+        displayName: r.studentName,
+        attendances: [],
+        lastCommentUpdatedAt: null,
+        lastLessonDatetime: null,
+        hasMissingComment: false,
+      };
       studentsByEmail.set(key, student);
     }
     student.attendances.push(r.attendance);
@@ -103,6 +112,8 @@ export async function getStudents(): Promise<Student[]> {
       if (!latest || a.commentUpdatedAt > latest) return a.commentUpdatedAt;
       return latest;
     }, null);
+    student.lastLessonDatetime = student.attendances[0]?.datetime ?? null;
+    student.hasMissingComment = student.attendances.some((a) => !a.comment || !a.comment.trim());
   }
 
   return students;

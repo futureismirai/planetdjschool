@@ -10,11 +10,11 @@ export default async function AdminStudentsPage() {
   const [admin, students] = await Promise.all([getCurrentAdmin(), getStudents()]);
 
   const sorted = [...students].sort((a, b) => {
-    if (a.lastCommentUpdatedAt && b.lastCommentUpdatedAt) {
-      return b.lastCommentUpdatedAt.getTime() - a.lastCommentUpdatedAt.getTime();
+    if (a.lastLessonDatetime && b.lastLessonDatetime) {
+      return b.lastLessonDatetime.getTime() - a.lastLessonDatetime.getTime();
     }
-    if (a.lastCommentUpdatedAt) return -1;
-    if (b.lastCommentUpdatedAt) return 1;
+    if (a.lastLessonDatetime) return -1;
+    if (b.lastLessonDatetime) return 1;
     return a.displayName.localeCompare(b.displayName, "ja");
   });
 
@@ -75,13 +75,23 @@ export default async function AdminStudentsPage() {
                 className="flex flex-col gap-0.5 px-4 py-3 hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
-                  <p className="text-sm font-medium text-slate-900">{student.displayName}</p>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="text-sm font-medium text-slate-900">{student.displayName}</p>
+                    {student.hasMissingComment && (
+                      <span
+                        title="コメント未記入のレッスンがあります"
+                        className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700"
+                      >
+                        ⚠ 未記入あり
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-slate-400">{student.email}</p>
                 </div>
                 <p className="text-xs text-slate-400">
-                  {student.lastCommentUpdatedAt
-                    ? `最終更新: ${formatLessonDateTime(student.lastCommentUpdatedAt)}`
-                    : "コメント未記入"}
+                  {student.lastLessonDatetime
+                    ? `最新レッスン: ${formatLessonDateTime(student.lastLessonDatetime)}`
+                    : ""}
                 </p>
               </Link>
             </li>
