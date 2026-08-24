@@ -69,6 +69,10 @@ export async function POST(request: NextRequest) {
       return { participant, trialSession };
     });
 
+    console.log(
+      `[trial-participant] created id=${participant.id} trialSessionId=${trialSessionId} email=${participant.studentEmail} name=${participant.studentName} by=${admin.email}`
+    );
+
     try {
       const { subject, text, html } = buildTrialConfirmationEmail({
         datetime: trialSession.datetime,
@@ -77,6 +81,9 @@ export async function POST(request: NextRequest) {
         studentName: participant.studentName,
       });
       await sendMail({ to: participant.studentEmail, subject, text, html });
+      console.log(
+        `[trial-participant] confirmation email sent participantId=${participant.id} email=${participant.studentEmail}`
+      );
     } catch (mailError) {
       console.error("体験会確認メールの送信に失敗しました:", mailError);
     }

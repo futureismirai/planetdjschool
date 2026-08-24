@@ -11,7 +11,10 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
   const { id } = await params;
 
   try {
-    await prisma.trialParticipant.delete({ where: { id } });
+    const deleted = await prisma.trialParticipant.delete({ where: { id } });
+    console.log(
+      `[trial-participant] deleted id=${deleted.id} trialSessionId=${deleted.trialSessionId} email=${deleted.studentEmail} name=${deleted.studentName} by=${admin.email}`
+    );
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "参加者が見つかりません。" }, { status: 404 });
