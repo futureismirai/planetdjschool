@@ -569,12 +569,9 @@ ${SCHOOL_NAME}`;
  * 文面を変更したい場合はこの関数を編集してください。
  */
 export function buildTrialThankYouDefaultText(studentName: string, instructorName: string): string {
-  const ig = INSTRUCTOR_INSTAGRAM[instructorName.trim()];
-  const igLine = ig ? `\nInstagram: @${ig.handle}（${ig.url}）` : "";
-
   return `${studentName} 様
 
-先日はDJ体験会を受講いただきありがとうございました。講師の${instructorName}です。${igLine}
+先日はDJ体験会を受講いただきありがとうございました。講師の${instructorName}です。
 
 
 
