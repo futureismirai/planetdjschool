@@ -19,7 +19,7 @@ export type Student = {
   attendances: Attendance[];
   lastCommentUpdatedAt: Date | null;
   lastLessonDatetime: Date | null;
-  hasMissingComment: boolean;
+  missingCommentInstructors: string[];
 };
 
 /**
@@ -97,12 +97,14 @@ export async function getStudents(): Promise<Student[]> {
         attendances: [],
         lastCommentUpdatedAt: null,
         lastLessonDatetime: null,
-        hasMissingComment: false,
+        missingCommentInstructors: [],
       };
       studentsByEmail.set(key, student);
     }
     student.attendances.push(r.attendance);
   }
+
+  const now = new Date();
 
   const students = Array.from(studentsByEmail.values());
   for (const student of students) {
@@ -113,7 +115,15 @@ export async function getStudents(): Promise<Student[]> {
       return latest;
     }, null);
     student.lastLessonDatetime = student.attendances[0]?.datetime ?? null;
-    student.hasMissingComment = student.attendances.some((a) => !a.comment || !a.comment.trim());
+
+    // レッスン終了後、コメントが未記入のものだけを対象にする(未来のレッスンは除外)
+    const missingInstructors = new Set<string>();
+    for (const a of student.attendances) {
+      if (a.datetime > now) continue;
+      if (a.comment && a.comment.trim()) continue;
+      missingInstructors.add(a.instructorName);
+    }
+    student.missingCommentInstructors = Array.from(missingInstructors);
   }
 
   return students;

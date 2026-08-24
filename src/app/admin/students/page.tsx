@@ -77,12 +77,12 @@ export default async function AdminStudentsPage() {
                 <div>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <p className="text-sm font-medium text-slate-900">{student.displayName}</p>
-                    {student.hasMissingComment && (
+                    {student.missingCommentInstructors.length > 0 && (
                       <span
-                        title="コメント未記入のレッスンがあります"
+                        title={`コメント未記入: ${student.missingCommentInstructors.join("、")}`}
                         className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700"
                       >
-                        ⚠ 未記入あり
+                        ⚠ 未記入: {student.missingCommentInstructors.join("、")}
                       </span>
                     )}
                   </div>
