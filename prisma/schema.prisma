@@ -110,3 +110,94 @@ model IndividualParticipant {
 
   @@index([individualLessonId])
 }
+
+/// イベントオーガナイザーツール: イベント（複数日・複数フロア開催に対応）
+model Event {
+  id        String     @id @default(cuid())
+  name      String
+  memo      String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  days      EventDay[]
+}
+
+/// イベントの開催日（1イベントに複数日を追加可能）
+model EventDay {
+  id        String       @id @default(cuid())
+  eventId   String
+  event     Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  date      DateTime     @db.Date
+  label     String?
+  order     Int          @default(0)
+  createdAt DateTime     @default(now())
+  floors    EventFloor[]
+
+  @@index([eventId])
+}
+
+/// 開催日ごとのフロア（1日に複数フロアを追加可能）。フロアごとにタイムテーブルを作成する
+model EventFloor {
+  id         String          @id @default(cuid())
+  eventDayId String
+  eventDay   EventDay        @relation(fields: [eventDayId], references: [id], onDelete: Cascade)
+  name       String
+  /// フロア全体の開始・終了時刻("HH:mm"形式)。終了が開始以前の場合は日をまたぐものとして扱う
+  startTime  String
+  endTime    String
+  order      Int             @default(0)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  slots      TimetableSlot[]
+
+  @@index([eventDayId])
+}
+
+/// タイムテーブルの各出演枠
+model TimetableSlot {
+  id            String     @id @default(cuid())
+  eventFloorId  String
+  eventFloor    EventFloor @relation(fields: [eventFloorId], references: [id], onDelete: Cascade)
+  performerName String
+  /// InstagramなどSNSのアカウント名（任意、@は含めない）
+  snsHandle     String?
+  startTime     String
+  endTime       String
+  /// 自動作成時に時間を固定して配置した出演者かどうか
+  isFixed       Boolean    @default(false)
+  order         Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([eventFloorId])
+}
+
+/// イベントオーガナイザーツール: 会場情報の保存・リスト化
+model Venue {
+  id         String       @id @default(cuid())
+  name       String
+  address    String?
+  access     String?
+  /// 開催条件
+  conditions String?
+  /// 機材情報
+  equipment  String?
+  /// 場所の注意事項
+  notes      String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  photos     VenuePhoto[]
+}
+
+/// 会場の宣材写真
+model VenuePhoto {
+  id        String   @id @default(cuid())
+  venueId   String
+  venue     Venue    @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  /// base64エンコードされた画像データ(data URL)
+  dataUrl   String   @db.Text
+  caption   String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([venueId])
+}

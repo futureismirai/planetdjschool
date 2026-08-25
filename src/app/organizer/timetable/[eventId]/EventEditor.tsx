@@ -1,0 +1,304 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { FloorEditor, type FloorData } from "./FloorEditor";
+
+export type DayData = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  label: string | null;
+  floors: FloorData[];
+};
+
+export type EventData = {
+  id: string;
+  name: string;
+  memo: string | null;
+  days: DayData[];
+};
+
+function formatDateJa(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  const weekday = ["日", "月", "火", "水", "木", "金", "土"][date.getUTCDay()];
+  return `${y}/${m}/${d}（${weekday}）`;
+}
+
+function AddDayForm({ eventId }: { eventId: string }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [date, setDate] = useState("");
+  const [label, setLabel] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="rounded-md border border-dashed border-slate-300 px-3 py-1.5 text-sm text-slate-500 hover:border-sky-400 hover:text-sky-700"
+      >
+        ＋ 開催日を追加
+      </button>
+    );
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/organizer/events/${eventId}/days`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, label }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "追加に失敗しました。");
+        return;
+      }
+      setOpen(false);
+      setDate("");
+      setLabel("");
+      router.refresh();
+    } catch {
+      setError("通信エラーが発生しました。");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+      {error && <p className="w-full text-sm text-rose-600">{error}</p>}
+      <div>
+        <label className="block text-xs font-medium text-slate-500">日付</label>
+        <input
+          type="date"
+          required
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-slate-500">ラベル（任意 例: 1日目）</label>
+        <input
+          type="text"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+      </div>
+      <button
+        type="submit"
+        disabled={submitting}
+        className="rounded-md bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-60"
+      >
+        {submitting ? "追加中..." : "追加"}
+      </button>
+      <button
+        type="button"
+        onClick={() => setOpen(false)}
+        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+      >
+        キャンセル
+      </button>
+    </form>
+  );
+}
+
+function AddFloorForm({ dayId }: { dayId: string }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [startTime, setStartTime] = useState("18:00");
+  const [endTime, setEndTime] = useState("23:00");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="rounded-md border border-dashed border-slate-300 px-3 py-1.5 text-sm text-slate-500 hover:border-sky-400 hover:text-sky-700"
+      >
+        ＋ フロアを追加
+      </button>
+    );
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/organizer/days/${dayId}/floors`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, startTime, endTime }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "追加に失敗しました。");
+        return;
+      }
+      setOpen(false);
+      setName("");
+      router.refresh();
+    } catch {
+      setError("通信エラーが発生しました。");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+      {error && <p className="w-full text-sm text-rose-600">{error}</p>}
+      <div>
+        <label className="block text-xs font-medium text-slate-500">フロア名</label>
+        <input
+          type="text"
+          required
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="例: メインフロア"
+          className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-slate-500">開始</label>
+        <input
+          type="time"
+          required
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+          className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-slate-500">終了</label>
+        <input
+          type="time"
+          required
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+          className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+      </div>
+      <button
+        type="submit"
+        disabled={submitting}
+        className="rounded-md bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-60"
+      >
+        {submitting ? "追加中..." : "追加"}
+      </button>
+      <button
+        type="button"
+        onClick={() => setOpen(false)}
+        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+      >
+        キャンセル
+      </button>
+    </form>
+  );
+}
+
+function DayCard({ eventName, day }: { eventName: string; day: DayData }) {
+  const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDeleteDay() {
+    if (!window.confirm(`「${day.label ?? formatDateJa(day.date)}」を削除しますか？フロア・タイムテーブルもすべて削除されます。`)) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/organizer/days/${day.id}`, { method: "DELETE" });
+      if (res.ok) router.refresh();
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-3">
+        <h2 className="text-base font-bold text-slate-900">
+          {day.label ? `${day.label}（${formatDateJa(day.date)}）` : formatDateJa(day.date)}
+        </h2>
+        <button
+          type="button"
+          onClick={handleDeleteDay}
+          disabled={deleting}
+          className="rounded-md border border-rose-200 px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+        >
+          この日を削除
+        </button>
+      </div>
+      <div className="space-y-4 p-3">
+        {day.floors.map((floor) => (
+          <FloorEditor key={floor.id} floor={floor} eventName={eventName} dayLabel={day.label ?? formatDateJa(day.date)} />
+        ))}
+        <AddFloorForm dayId={day.id} />
+      </div>
+    </section>
+  );
+}
+
+export function EventEditor({ event }: { event: EventData }) {
+  const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDeleteEvent() {
+    if (!window.confirm(`イベント「${event.name}」を削除しますか？すべての日程・タイムテーブルが削除されます。`)) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/organizer/events/${event.id}`, { method: "DELETE" });
+      if (res.ok) router.push("/organizer/timetable");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <Link href="/organizer/timetable" className="text-xs text-slate-400 hover:text-slate-600">
+            ← イベント一覧に戻る
+          </Link>
+          <h1 className="mt-1 text-xl font-bold text-slate-900">{event.name}</h1>
+          {event.memo && <p className="mt-1 text-sm text-slate-500">{event.memo}</p>}
+        </div>
+        <button
+          type="button"
+          onClick={handleDeleteEvent}
+          disabled={deleting}
+          className="rounded-md border border-rose-200 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+        >
+          イベントを削除
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        {event.days.length === 0 && (
+          <p className="text-sm text-slate-500">まだ開催日が登録されていません。開催日を追加してください。</p>
+        )}
+        {event.days.map((day) => (
+          <DayCard key={day.id} eventName={event.name} day={day} />
+        ))}
+        <AddDayForm eventId={event.id} />
+      </div>
+    </div>
+  );
+}
