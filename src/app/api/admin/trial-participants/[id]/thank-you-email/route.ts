@@ -27,12 +27,21 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "本文を入力してください。" }, { status: 400 });
   }
 
-  const participant = await prisma.trialParticipant.findUnique({ where: { id } });
+  const participant = await prisma.trialParticipant.findUnique({
+    where: { id },
+    include: { trialSession: true },
+  });
   if (!participant) {
     return NextResponse.json({ error: "参加者が見つかりません。" }, { status: 404 });
   }
   if (participant.thankYouEmailSentAt) {
     return NextResponse.json({ error: "お礼メールは既に送信済みです。" }, { status: 409 });
+  }
+  if (participant.trialSession.datetime > new Date()) {
+    return NextResponse.json(
+      { error: "この体験会はまだ終了していないため、お礼メールは送信できません。" },
+      { status: 409 }
+    );
   }
 
   try {

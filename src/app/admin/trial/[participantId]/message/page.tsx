@@ -27,6 +27,8 @@ export default async function TrialThankYouMessagePage({
     notFound();
   }
 
+  const isSessionOver = participant.trialSession.datetime < new Date();
+
   const defaultText = buildTrialThankYouDefaultText(
     participant.studentName,
     participant.trialSession.instructorName
@@ -57,6 +59,10 @@ export default async function TrialThankYouMessagePage({
         {participant.thankYouEmailSentAt ? (
           <p className="rounded-md bg-slate-100 p-4 text-sm text-slate-500">
             このお礼メールは既に送信済みです。
+          </p>
+        ) : !isSessionOver ? (
+          <p className="rounded-md bg-slate-100 p-4 text-sm text-slate-500">
+            この体験会はまだ終了していないため、お礼メールは送信できません。
           </p>
         ) : (
           <TrialThankYouMessageForm

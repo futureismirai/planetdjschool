@@ -499,7 +499,7 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
                             >
                               {participant.studentName}
                             </Link>
-                            {!participant.thankYouEmailSentAt && (
+                            {isPast && !participant.thankYouEmailSentAt && (
                               <div className="mt-1">
                                 <Link
                                   href={`/admin/trial/${participant.id}/message`}
