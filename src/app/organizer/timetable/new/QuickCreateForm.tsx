@@ -38,7 +38,7 @@ export function QuickCreateForm() {
   const [startTime, setStartTime] = useState("18:00");
   const [endTime, setEndTime] = useState("23:00");
   const [rounding, setRounding] = useState<"none" | "5min" | "10min">("none");
-  const [performers, setPerformers] = useState<PerformerRow[]>([newPerformerRow()]);
+  const [performers, setPerformers] = useState<PerformerRow[]>([newPerformerRow(), newPerformerRow(), newPerformerRow()]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -138,15 +138,13 @@ export function QuickCreateForm() {
         <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
       </div>
 
-      <div className="grid grid-cols-2 gap-1.5">
-        <div className="min-w-0">
-          <label className={labelClass}>開始</label>
-          <input type="time" required value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputClass} />
-        </div>
-        <div className="min-w-0">
-          <label className={labelClass}>終了</label>
-          <input type="time" required value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputClass} />
-        </div>
+      <div>
+        <label className={labelClass}>開始</label>
+        <input type="time" required value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputClass} />
+      </div>
+      <div>
+        <label className={labelClass}>終了</label>
+        <input type="time" required value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputClass} />
       </div>
 
       <div className="flex items-center gap-2">
