@@ -2,7 +2,8 @@
 export function formatPerformerRosterText(
   name: string,
   entries: { name: string; snsHandle: string | null; isCategory?: boolean }[],
-  includeSns: boolean
+  includeSns: boolean,
+  snsParentheses: boolean = true
 ): string {
   const lines = [name, ""];
   for (const entry of entries) {
@@ -14,7 +15,7 @@ export function formatPerformerRosterText(
     }
     if (includeSns && entry.snsHandle) {
       const handle = `@${entry.snsHandle.replace(/^@/, "")}`;
-      lines.push(`${entry.name}  (${handle} )`);
+      lines.push(`${entry.name}  ${snsParentheses ? `(${handle} )` : handle}`);
     } else {
       lines.push(entry.name);
     }

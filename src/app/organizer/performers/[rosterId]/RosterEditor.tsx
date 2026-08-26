@@ -245,6 +245,7 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
   const [addingEntry, setAddingEntry] = useState(false);
   const [sorting, setSorting] = useState(false);
   const [includeSns, setIncludeSns] = useState(true);
+  const [snsParentheses, setSnsParentheses] = useState(true);
   const [copyLabel, setCopyLabel] = useState("コピーする");
   const [copyPreview, setCopyPreview] = useState<string | null>(null);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
@@ -326,7 +327,7 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
 
   function handleOpenCopyPreview() {
     setCopyLabel("コピーする");
-    setCopyPreview(formatPerformerRosterText(roster.name, roster.entries, includeSns));
+    setCopyPreview(formatPerformerRosterText(roster.name, roster.entries, includeSns, snsParentheses));
   }
 
   async function handleCopyToClipboard() {
@@ -403,6 +404,16 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
             <input type="checkbox" checked={includeSns} onChange={(e) => setIncludeSns(e.target.checked)} />
             SNSを含める
           </label>
+          {includeSns && (
+            <label className="flex items-center gap-1 text-xs text-slate-600">
+              <input
+                type="checkbox"
+                checked={snsParentheses}
+                onChange={(e) => setSnsParentheses(e.target.checked)}
+              />
+              SNSに(　)をつける
+            </label>
+          )}
           <button
             type="button"
             onClick={handleOpenCopyPreview}
