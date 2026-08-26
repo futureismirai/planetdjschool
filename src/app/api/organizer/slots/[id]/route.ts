@@ -29,8 +29,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const timeChanged =
     parsed.data.startTime !== existing.startTime || parsed.data.endTime !== existing.endTime;
+  const isFixedChanged = parsed.data.isFixed !== existing.isFixed;
 
-  if (!timeChanged) {
+  if (!timeChanged && !isFixedChanged) {
     // order はこのエンドポイントの対象外（並び替えは専用のreorder APIで行う）。
     // parsed.data.order は未送信時に0がデフォルトされるため、そのまま使うと
     // 並び順が先頭にリセットされてしまう。
@@ -47,8 +48,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ slot });
   }
 
-  // 時間を直接変更した場合は、「時間固定」がついていない他の出演者の時間を
-  // 自動で均等に再配分する（時間固定の人は現在の出演時間を保ったまま）
+  // 時間を直接変更、または「時間固定」のチェックを変更した場合は、
+  // 固定されていない出演者の時間を自動で均等に再配分する
+  // （時間固定の人は出演時間を保ったまま、対象の枠自身も現在のisFixedの値に従う）
   const floor = await prisma.eventFloor.findUnique({
     where: { id: existing.eventFloorId },
     include: { slots: { orderBy: { order: "asc" } } },
@@ -64,7 +66,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return {
         name: parsed.data.performerName,
         snsHandle: parsed.data.snsHandle ?? undefined,
-        fixedDurationMinutes: editedDuration,
+        fixedDurationMinutes: parsed.data.isFixed ? editedDuration : undefined,
       };
     }
     if (s.isFixed) {

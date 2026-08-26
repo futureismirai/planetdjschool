@@ -191,14 +191,14 @@ function SlotRow({
         <input
           type="time"
           defaultValue={slot.startTime}
-          onBlur={(e) => saveField({ startTime: e.target.value })}
+          onBlur={(e) => saveField({ startTime: e.target.value, isFixed: true })}
           className="w-[4.5rem] shrink-0 rounded-md border border-slate-300 px-1 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
         <span className="shrink-0 text-xs text-slate-400">〜</span>
         <input
           type="time"
           defaultValue={slot.endTime}
-          onBlur={(e) => saveField({ endTime: e.target.value })}
+          onBlur={(e) => saveField({ endTime: e.target.value, isFixed: true })}
           className="w-[4.5rem] shrink-0 rounded-md border border-slate-300 px-1 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
         <button
@@ -220,7 +220,7 @@ function SlotRow({
             const minutes = Number(e.target.value);
             if (!Number.isFinite(minutes) || minutes <= 0) return;
             const endTime = toHHMM(toMinutes(slot.startTime) + minutes);
-            saveField({ endTime });
+            saveField({ endTime, isFixed: true });
           }}
           className="w-14 shrink-0 rounded-md border border-slate-300 px-1.5 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
