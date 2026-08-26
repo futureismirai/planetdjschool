@@ -188,19 +188,9 @@ function SlotRow({
         >
           ⠿
         </span>
-        <input
-          type="time"
-          defaultValue={slot.startTime}
-          onBlur={(e) => saveField({ startTime: e.target.value, isFixed: true })}
-          className="w-[4.5rem] shrink-0 rounded-md border border-slate-300 px-1 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-        />
-        <span className="shrink-0 text-xs text-slate-400">〜</span>
-        <input
-          type="time"
-          defaultValue={slot.endTime}
-          onBlur={(e) => saveField({ endTime: e.target.value, isFixed: true })}
-          className="w-[4.5rem] shrink-0 rounded-md border border-slate-300 px-1 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-        />
+        <span className="shrink-0 text-sm text-slate-700">
+          {slot.startTime} 〜 {slot.endTime}
+        </span>
         <button
           type="button"
           onClick={handleDelete}
