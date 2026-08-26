@@ -200,6 +200,32 @@ export function parseVenueInput(
   };
 }
 
+export function parsePerformerRosterInput(body: unknown): ParseResult<{ name: string }> {
+  const { name } = asRecord(body);
+  if (typeof name !== "string" || !name.trim()) {
+    return { error: "一覧表の名前を入力してください。" };
+  }
+  return { data: { name: name.trim() } };
+}
+
+export function parsePerformerRosterEntryInput(
+  body: unknown
+): ParseResult<{ name: string; snsHandle: string | null }> {
+  const { name, snsHandle } = asRecord(body);
+  if (typeof name !== "string" || !name.trim()) {
+    return { error: "出演者名を入力してください。" };
+  }
+  if (snsHandle !== undefined && snsHandle !== null && typeof snsHandle !== "string") {
+    return { error: "SNSアカウント名の形式が正しくありません。" };
+  }
+  return {
+    data: {
+      name: name.trim(),
+      snsHandle: typeof snsHandle === "string" && snsHandle.trim() ? snsHandle.trim().replace(/^@/, "") : null,
+    },
+  };
+}
+
 const MAX_PHOTO_DATA_URL_LENGTH = 8 * 1024 * 1024; // base64換算で約6MB程度の画像まで許可
 
 export function parseVenuePhotoInput(

@@ -181,6 +181,29 @@ model Performer {
   updatedAt DateTime @updatedAt
 }
 
+/// イベントオーガナイザーツール: 出演者一覧表（複数出演者のSNSをまとめてコピーするためのリスト）
+model PerformerRoster {
+  id        String                 @id @default(cuid())
+  name      String
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+  entries   PerformerRosterEntry[]
+}
+
+/// 出演者一覧表の1行分（出演者名・SNSアカウント）
+model PerformerRosterEntry {
+  id                String          @id @default(cuid())
+  performerRosterId String
+  performerRoster   PerformerRoster @relation(fields: [performerRosterId], references: [id], onDelete: Cascade)
+  name              String
+  /// InstagramなどSNSのアカウント名（任意、@は含めない）
+  snsHandle         String?
+  order             Int             @default(0)
+  createdAt         DateTime        @default(now())
+
+  @@index([performerRosterId])
+}
+
 /// イベントオーガナイザーツール: 会場情報の保存・リスト化
 model Venue {
   id         String       @id @default(cuid())

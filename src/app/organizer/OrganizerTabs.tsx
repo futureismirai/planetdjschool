@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const TABS = [
   { href: "/organizer/timetable", label: "タイムテーブル作成" },
+  { href: "/organizer/performers", label: "出演者一覧表" },
   { href: "/organizer/venues", label: "会場情報" },
 ];
 
