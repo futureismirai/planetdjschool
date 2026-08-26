@@ -133,16 +133,17 @@ export function QuickCreateForm() {
         <input type="text" required autoFocus value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
       </div>
 
-      <div className="grid grid-cols-3 gap-1.5">
-        <div>
-          <label className={labelClass}>開催日</label>
-          <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
-        </div>
-        <div>
+      <div>
+        <label className={labelClass}>開催日</label>
+        <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-1.5">
+        <div className="min-w-0">
           <label className={labelClass}>開始</label>
           <input type="time" required value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputClass} />
         </div>
-        <div>
+        <div className="min-w-0">
           <label className={labelClass}>終了</label>
           <input type="time" required value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputClass} />
         </div>
