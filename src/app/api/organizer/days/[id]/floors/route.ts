@@ -22,8 +22,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "開催日が見つかりません。" }, { status: 404 });
   }
 
+  let name = parsed.data.name;
+  if (!name) {
+    const floorCount = await prisma.eventFloor.count({ where: { eventDayId } });
+    name = `フロア${floorCount + 1}`;
+  }
+
   const floor = await prisma.eventFloor.create({
-    data: { ...parsed.data, eventDayId },
+    data: { ...parsed.data, name, eventDayId },
     include: { slots: true },
   });
   return NextResponse.json({ floor }, { status: 201 });

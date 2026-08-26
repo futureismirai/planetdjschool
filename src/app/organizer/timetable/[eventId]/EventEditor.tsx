@@ -162,14 +162,13 @@ function AddFloorForm({ dayId }: { dayId: string }) {
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2 rounded-md border border-slate-200 bg-slate-50 p-3">
       {error && <p className="w-full text-sm text-rose-600">{error}</p>}
       <div>
-        <label className="block text-xs font-medium text-slate-500">フロア名</label>
+        <label className="block text-xs font-medium text-slate-500">フロア名（任意）</label>
         <input
           type="text"
-          required
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="例: メインフロア"
+          placeholder="未入力の場合は自動で名付けられます"
           className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
       </div>

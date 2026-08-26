@@ -6,9 +6,8 @@ export type RoundingMode = "none" | "5min" | "10min";
 export type PerformerInput = {
   name: string;
   snsHandle?: string;
-  /** この出演者の時間を固定したい場合に指定する（両方揃っている場合のみ固定扱い） */
-  fixedStart?: string;
-  fixedEnd?: string;
+  /** この出演者の出演時間を分単位で固定したい場合に指定する（例: 30分固定） */
+  fixedDurationMinutes?: number;
 };
 
 export type GeneratedSlot = {
@@ -44,14 +43,21 @@ function resolveEndAfterStart(startMin: number, endMin: number): number {
   return endMin <= startMin ? endMin + 1440 : endMin;
 }
 
-type GapSlot = { startMin: number; endMin: number };
+/** 出演開始・終了時刻(HH:mm)から出演時間(分)を求める。日をまたぐ場合も考慮する。 */
+export function slotDurationMinutes(startTime: string, endTime: string): number {
+  const startMin = toMinutes(startTime);
+  const endMin = resolveEndAfterStart(startMin, toMinutes(endTime));
+  return endMin - startMin;
+}
+
+type Span = { startMin: number; endMin: number };
 
 /**
  * 指定した区間 [start, end) を count 個に分割する。
  * rounding が指定されている場合は境界を5分/10分単位に丸め、
  * ほぼ均等になるようにしつつ最後の枠で端数を吸収する。
  */
-function splitEvenly(start: number, end: number, count: number, rounding: RoundingMode): GapSlot[] {
+function splitEvenly(start: number, end: number, count: number, rounding: RoundingMode): Span[] {
   if (count <= 0) return [];
   const each = (end - start) / count;
   const boundaries: number[] = [start];
@@ -73,7 +79,7 @@ function splitEvenly(start: number, end: number, count: number, rounding: Roundi
     }
   }
 
-  const result: GapSlot[] = [];
+  const result: Span[] = [];
   for (let i = 0; i < count; i++) {
     result.push({ startMin: boundaries[i], endMin: boundaries[i + 1] });
   }
@@ -84,8 +90,9 @@ function splitEvenly(start: number, end: number, count: number, rounding: Roundi
  * 出演者リストとフロアの開始・終了時刻から、タイムテーブルを自動作成する。
  * - デフォルトは均等割り
  * - rounding で5分/10分単位のほぼ均等な区切りに変更可能
- * - fixedStart/fixedEnd が指定された出演者はその時間で固定し、
- *   残りの出演者はその前後の空き時間内でそれぞれ均等に配置する
+ * - fixedDurationMinutes が指定された出演者は、出演順のその位置でその分数だけ
+ *   固定の出演時間を確保する。残りの出演者は、残った時間全体を均等に分け合う
+ *   （固定出演者を挟んでいても、全体としてほぼ均等になるように配分する）
  */
 export function generateTimetable(
   performers: PerformerInput[],
@@ -97,76 +104,91 @@ export function generateTimetable(
 
   const startMin = toMinutes(floorStart);
   const endMin = resolveEndAfterStart(startMin, toMinutes(floorEnd));
-  if (endMin <= startMin) {
+  const totalMinutes = endMin - startMin;
+  if (totalMinutes <= 0) {
     throw new Error("終了時刻は開始時刻より後にしてください。");
   }
 
-  const fixedRanges: (GapSlot | null)[] = performers.map((p) => {
-    if (!p.fixedStart || !p.fixedEnd) return null;
-    const fs = toMinutes(p.fixedStart);
-    const rawFe = toMinutes(p.fixedEnd);
-    const fe = resolveEndAfterStart(fs, rawFe);
-    // 固定時間はフロア開始時刻を基準にした連続分に正規化する
-    const normalizedStart = fs < startMin ? fs + 1440 : fs;
-    const normalizedEnd = normalizedStart + (fe - fs);
-    return { startMin: normalizedStart, endMin: normalizedEnd };
-  });
+  const fixedDurations = performers.map((p) =>
+    p.fixedDurationMinutes && p.fixedDurationMinutes > 0 ? Math.round(p.fixedDurationMinutes) : null
+  );
+  const totalFixedMinutes = fixedDurations.reduce((sum: number, d) => sum + (d ?? 0), 0);
+  const nonFixedCount = fixedDurations.filter((d) => d === null).length;
+  const remainingMinutes = totalMinutes - totalFixedMinutes;
 
-  const results: GeneratedSlot[] = new Array(performers.length);
+  if (nonFixedCount > 0 && remainingMinutes <= 0) {
+    throw new Error("固定した出演時間の合計がフロアの時間を超えています。");
+  }
+
+  // 固定されていない出演者全員分の持ち時間を、全体でほぼ均等になるようあらかじめ計算しておく
+  const nonFixedSpans =
+    nonFixedCount > 0 ? splitEvenly(0, remainingMinutes, nonFixedCount, rounding) : [];
+
+  const results: GeneratedSlot[] = [];
+  let cursor = startMin;
+  let nonFixedIndex = 0;
 
   performers.forEach((p, i) => {
-    const fixed = fixedRanges[i];
-    if (fixed) {
-      results[i] = {
-        name: p.name,
-        snsHandle: p.snsHandle,
-        startTime: toHHMM(fixed.startMin),
-        endTime: toHHMM(fixed.endMin),
-        isFixed: true,
-      };
+    const fixedDuration = fixedDurations[i];
+    let duration: number;
+    if (fixedDuration !== null) {
+      duration = fixedDuration;
+    } else {
+      const span = nonFixedSpans[nonFixedIndex];
+      duration = span.endMin - span.startMin;
+      nonFixedIndex++;
     }
+    const start = cursor;
+    const end = cursor + duration;
+    results.push({
+      name: p.name,
+      snsHandle: p.snsHandle,
+      startTime: toHHMM(start),
+      endTime: toHHMM(end),
+      isFixed: fixedDuration !== null,
+    });
+    cursor = end;
   });
-
-  let cursor = startMin;
-  let i = 0;
-  while (i < performers.length) {
-    if (fixedRanges[i]) {
-      cursor = Math.max(cursor, fixedRanges[i]!.endMin);
-      i++;
-      continue;
-    }
-    const runStart = i;
-    while (i < performers.length && !fixedRanges[i]) i++;
-    const runEnd = i;
-    const gapEnd = i < performers.length ? fixedRanges[i]!.startMin : endMin;
-    const count = runEnd - runStart;
-    const gapStart = Math.min(cursor, gapEnd);
-    const slots = splitEvenly(gapStart, gapEnd, count, rounding);
-    for (let k = 0; k < count; k++) {
-      const p = performers[runStart + k];
-      results[runStart + k] = {
-        name: p.name,
-        snsHandle: p.snsHandle,
-        startTime: toHHMM(slots[k].startMin),
-        endTime: toHHMM(slots[k].endMin),
-        isFixed: false,
-      };
-    }
-    cursor = gapEnd;
-  }
 
   return results;
 }
 
+export type SnsFormatOptions = {
+  includeStartTime: boolean;
+  includeEndTime: boolean;
+  includeSns: boolean;
+  includeDuration: boolean;
+};
+
 /** タイムテーブルをSNSにそのまま貼り付けられるテキスト形式に変換する */
 export function formatTimetableForSns(
   title: string,
-  slots: { performerName: string; snsHandle: string | null; startTime: string; endTime: string }[]
+  slots: { performerName: string; snsHandle: string | null; startTime: string; endTime: string }[],
+  options: SnsFormatOptions = {
+    includeStartTime: true,
+    includeEndTime: true,
+    includeSns: true,
+    includeDuration: false,
+  }
 ): string {
   const lines = [title, ""];
   for (const slot of slots) {
-    const handle = slot.snsHandle ? ` (@${slot.snsHandle.replace(/^@/, "")})` : "";
-    lines.push(`${slot.startTime}-${slot.endTime}  ${slot.performerName}${handle}`);
+    const parts: string[] = [];
+    if (options.includeStartTime && options.includeEndTime) {
+      parts.push(`${slot.startTime}-${slot.endTime}`);
+    } else if (options.includeStartTime) {
+      parts.push(slot.startTime);
+    } else if (options.includeEndTime) {
+      parts.push(slot.endTime);
+    }
+    parts.push(slot.performerName);
+    if (options.includeSns && slot.snsHandle) {
+      parts.push(`(@${slot.snsHandle.replace(/^@/, "")})`);
+    }
+    if (options.includeDuration) {
+      parts.push(`【${slotDurationMinutes(slot.startTime, slot.endTime)}分】`);
+    }
+    lines.push(parts.join("  "));
   }
   return lines.join("\n");
 }

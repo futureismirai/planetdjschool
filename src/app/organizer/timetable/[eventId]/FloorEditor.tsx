@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatTimetableForSns } from "@/lib/timetable";
+import { formatTimetableForSns, slotDurationMinutes, type SnsFormatOptions } from "@/lib/timetable";
 
 export type SlotData = {
   id: string;
@@ -26,8 +26,7 @@ type PerformerRow = {
   name: string;
   sns: string;
   useFixed: boolean;
-  fixedStart: string;
-  fixedEnd: string;
+  fixedDurationMinutes: string;
 };
 
 function newPerformerRow(): PerformerRow {
@@ -36,8 +35,7 @@ function newPerformerRow(): PerformerRow {
     name: "",
     sns: "",
     useFixed: false,
-    fixedStart: "",
-    fixedEnd: "",
+    fixedDurationMinutes: "",
   };
 }
 
@@ -56,8 +54,7 @@ function GenerateForm({ floor, onDone }: { floor: FloorData; onDone: () => void 
           name: s.performerName,
           sns: s.snsHandle ?? "",
           useFixed: s.isFixed,
-          fixedStart: s.isFixed ? s.startTime : "",
-          fixedEnd: s.isFixed ? s.endTime : "",
+          fixedDurationMinutes: s.isFixed ? String(slotDurationMinutes(s.startTime, s.endTime)) : "",
         }))
       : [newPerformerRow(), newPerformerRow()]
   );
@@ -94,8 +91,7 @@ function GenerateForm({ floor, onDone }: { floor: FloorData; onDone: () => void 
           performers: names.map((p) => ({
             name: p.name,
             snsHandle: p.sns || undefined,
-            fixedStart: p.useFixed ? p.fixedStart : undefined,
-            fixedEnd: p.useFixed ? p.fixedEnd : undefined,
+            fixedDurationMinutes: p.useFixed && p.fixedDurationMinutes ? Number(p.fixedDurationMinutes) : undefined,
           })),
         }),
       });
@@ -133,7 +129,7 @@ function GenerateForm({ floor, onDone }: { floor: FloorData; onDone: () => void 
 
       <div className="space-y-2">
         <p className="text-xs font-medium text-slate-600">
-          出演者（出演順に入力。時間を固定したい場合は「時間固定」にチェックして開始・終了を入力）
+          出演者（出演順に入力。出演時間を固定したい場合は「時間固定」にチェックして分数を入力）
         </p>
         {performers.map((p, i) => (
           <div key={p.key} className="flex flex-wrap items-center gap-2 rounded-md bg-white p-2 shadow-sm">
@@ -161,21 +157,17 @@ function GenerateForm({ floor, onDone }: { floor: FloorData; onDone: () => void 
               時間固定
             </label>
             {p.useFixed && (
-              <>
+              <div className="flex shrink-0 items-center gap-1">
                 <input
-                  type="time"
-                  value={p.fixedStart}
-                  onChange={(e) => updateRow(p.key, { fixedStart: e.target.value })}
-                  className="rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                  type="number"
+                  min={1}
+                  placeholder="分"
+                  value={p.fixedDurationMinutes}
+                  onChange={(e) => updateRow(p.key, { fixedDurationMinutes: e.target.value })}
+                  className="w-20 rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
                 />
-                <span className="text-xs text-slate-400">〜</span>
-                <input
-                  type="time"
-                  value={p.fixedEnd}
-                  onChange={(e) => updateRow(p.key, { fixedEnd: e.target.value })}
-                  className="rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-                />
-              </>
+                <span className="text-xs text-slate-400">分</span>
+              </div>
             )}
             <button
               type="button"
@@ -301,6 +293,7 @@ function SlotRow({
           className="w-24 rounded-md border border-slate-300 px-1.5 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
       </td>
+      <td className="px-1 py-1 text-xs text-slate-500">{slotDurationMinutes(slot.startTime, slot.endTime)}分</td>
       <td className="px-1 py-1">
         <input
           type="text"
@@ -333,12 +326,25 @@ function SlotRow({
   );
 }
 
+const COPY_FIELD_OPTIONS: { key: keyof SnsFormatOptions; label: string }[] = [
+  { key: "includeStartTime", label: "開始時間" },
+  { key: "includeEndTime", label: "終了時間" },
+  { key: "includeSns", label: "SNS" },
+  { key: "includeDuration", label: "出演時間" },
+];
+
 export function FloorEditor({ floor, eventName, dayLabel }: { floor: FloorData; eventName: string; dayLabel: string }) {
   const router = useRouter();
   const [showGenerate, setShowGenerate] = useState(floor.slots.length === 0);
   const [copyLabel, setCopyLabel] = useState("SNSにコピー");
   const [deletingFloor, setDeletingFloor] = useState(false);
   const [addingSlot, setAddingSlot] = useState(false);
+  const [copyOptions, setCopyOptions] = useState<SnsFormatOptions>({
+    includeStartTime: true,
+    includeEndTime: true,
+    includeSns: true,
+    includeDuration: false,
+  });
 
   async function handleMove(slot: SlotData, direction: -1 | 1) {
     const ids = floor.slots.map((s) => s.id);
@@ -385,7 +391,7 @@ export function FloorEditor({ floor, eventName, dayLabel }: { floor: FloorData; 
 
   async function handleCopy() {
     const title = `【${eventName}】${dayLabel} ${floor.name} タイムテーブル`;
-    const text = formatTimetableForSns(title, floor.slots);
+    const text = formatTimetableForSns(title, floor.slots, copyOptions);
     try {
       await navigator.clipboard.writeText(text);
       setCopyLabel("コピーしました！");
@@ -406,14 +412,6 @@ export function FloorEditor({ floor, eventName, dayLabel }: { floor: FloorData; 
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={handleCopy}
-            disabled={floor.slots.length === 0}
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
-          >
-            {copyLabel}
-          </button>
           <button
             type="button"
             onClick={() => setShowGenerate((v) => !v)}
@@ -449,6 +447,7 @@ export function FloorEditor({ floor, eventName, dayLabel }: { floor: FloorData; 
                   <th className="px-1 py-1 font-medium"></th>
                   <th className="px-1 py-1 font-medium">開始</th>
                   <th className="px-1 py-1 font-medium">終了</th>
+                  <th className="px-1 py-1 font-medium">出演時間</th>
                   <th className="px-1 py-1 font-medium">出演者名</th>
                   <th className="px-1 py-1 font-medium">SNS</th>
                   <th className="px-1 py-1 font-medium"></th>
@@ -478,6 +477,29 @@ export function FloorEditor({ floor, eventName, dayLabel }: { floor: FloorData; 
           ＋ 出演枠を手動で追加
         </button>
       </div>
+
+      {floor.slots.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-2">
+          <span className="text-xs font-medium text-slate-500">コピーする項目:</span>
+          {COPY_FIELD_OPTIONS.map((f) => (
+            <label key={f.key} className="flex items-center gap-1 text-xs text-slate-600">
+              <input
+                type="checkbox"
+                checked={copyOptions[f.key]}
+                onChange={(e) => setCopyOptions((o) => ({ ...o, [f.key]: e.target.checked }))}
+              />
+              {f.label}
+            </label>
+          ))}
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="ml-auto rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
+          >
+            {copyLabel}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

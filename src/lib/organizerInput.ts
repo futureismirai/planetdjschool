@@ -58,8 +58,8 @@ export function parseEventFloorInput(
   body: unknown
 ): ParseResult<{ name: string; startTime: string; endTime: string; order: number }> {
   const { name, startTime, endTime, order } = asRecord(body);
-  if (typeof name !== "string" || !name.trim()) {
-    return { error: "フロア名を入力してください。" };
+  if (name !== undefined && name !== null && typeof name !== "string") {
+    return { error: "フロア名の形式が正しくありません。" };
   }
   const start = normalizeTime(startTime, "開始時刻");
   if ("error" in start) return start;
@@ -69,14 +69,20 @@ export function parseEventFloorInput(
   if (!Number.isFinite(orderNum)) {
     return { error: "並び順の形式が正しくありません。" };
   }
-  return { data: { name: name.trim(), startTime: start.value, endTime: end.value, order: orderNum } };
+  return {
+    data: {
+      name: typeof name === "string" ? name.trim() : "",
+      startTime: start.value,
+      endTime: end.value,
+      order: orderNum,
+    },
+  };
 }
 
 export type PerformerInputRaw = {
   name: string;
   snsHandle?: string;
-  fixedStart?: string;
-  fixedEnd?: string;
+  fixedDurationMinutes?: number;
 };
 
 export function parseGenerateInput(
@@ -96,17 +102,15 @@ export function parseGenerateInput(
       return { error: "出演者名をすべて入力してください。" };
     }
     const sns = typeof p.snsHandle === "string" && p.snsHandle.trim() ? p.snsHandle.trim().replace(/^@/, "") : undefined;
-    let fixedStart: string | undefined;
-    let fixedEnd: string | undefined;
-    if (p.fixedStart || p.fixedEnd) {
-      const fs = normalizeTime(p.fixedStart, "固定開始時刻");
-      if ("error" in fs) return fs;
-      const fe = normalizeTime(p.fixedEnd, "固定終了時刻");
-      if ("error" in fe) return fe;
-      fixedStart = fs.value;
-      fixedEnd = fe.value;
+    let fixedDurationMinutes: number | undefined;
+    if (p.fixedDurationMinutes !== undefined && p.fixedDurationMinutes !== null && p.fixedDurationMinutes !== "") {
+      const minutes = Number(p.fixedDurationMinutes);
+      if (!Number.isFinite(minutes) || minutes <= 0) {
+        return { error: "固定する出演時間は1分以上の数値で入力してください。" };
+      }
+      fixedDurationMinutes = minutes;
     }
-    parsedPerformers.push({ name: p.name.trim(), snsHandle: sns, fixedStart, fixedEnd });
+    parsedPerformers.push({ name: p.name.trim(), snsHandle: sns, fixedDurationMinutes });
   }
   const roundingValue = rounding === "5min" || rounding === "10min" ? rounding : "none";
   return { data: { performers: parsedPerformers, rounding: roundingValue } };
