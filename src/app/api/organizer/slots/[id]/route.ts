@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { parseSlotInput } from "@/lib/organizerInput";
+import { parseSlotInput, parseRounding } from "@/lib/organizerInput";
 import { rememberPerformer } from "@/lib/performerDirectory";
-import { generateTimetable, slotDurationMinutes, type PerformerInput, type RoundingMode } from "@/lib/timetable";
-
-function parseRounding(value: unknown): RoundingMode {
-  return value === "5min" || value === "10min" ? value : "none";
-}
+import { generateTimetable, slotDurationMinutes, type PerformerInput } from "@/lib/timetable";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

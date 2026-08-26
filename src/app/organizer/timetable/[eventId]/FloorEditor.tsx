@@ -37,10 +37,12 @@ const ROUNDING_OPTIONS: { value: "none" | "5min" | "10min"; label: string }[] = 
 function FloorHeaderFields({
   floor,
   showName,
+  rounding,
   onSaved,
 }: {
   floor: FloorData;
   showName: boolean;
+  rounding: "none" | "5min" | "10min";
   onSaved: () => void;
 }) {
   const [name, setName] = useState(floor.name);
@@ -57,6 +59,7 @@ function FloorHeaderFields({
         name: patch.name ?? name,
         startTime: patch.startTime ?? startTime,
         endTime: patch.endTime ?? endTime,
+        rounding,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -425,10 +428,25 @@ export function FloorEditor({
     }
   }
 
+  async function handleRoundingChange(value: "none" | "5min" | "10min") {
+    setRounding(value);
+    const res = await fetch(`/api/organizer/floors/${floor.id}/rebalance`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rounding: value }),
+    });
+    if (res.ok) router.refresh();
+  }
+
   return (
     <div className="rounded-md border border-slate-200 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <FloorHeaderFields floor={floor} showName={showFloorName} onSaved={() => router.refresh()} />
+        <FloorHeaderFields
+          floor={floor}
+          showName={showFloorName}
+          rounding={rounding}
+          onSaved={() => router.refresh()}
+        />
         <button
           type="button"
           onClick={handleDeleteFloor}
@@ -443,7 +461,7 @@ export function FloorEditor({
         <label className="text-xs font-medium text-slate-500">区切り方</label>
         <select
           value={rounding}
-          onChange={(e) => setRounding(e.target.value as typeof rounding)}
+          onChange={(e) => handleRoundingChange(e.target.value as typeof rounding)}
           className="rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         >
           {ROUNDING_OPTIONS.map((o) => (

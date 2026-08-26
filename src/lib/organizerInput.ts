@@ -1,9 +1,15 @@
 // イベントオーガナイザーツール: APIリクエストのバリデーション
 
+import type { RoundingMode } from "@/lib/timetable";
+
 export type ParseResult<T> = { data: T } | { error: string };
 
 function asRecord(body: unknown): Record<string, unknown> {
   return (body ?? {}) as Record<string, unknown>;
+}
+
+export function parseRounding(value: unknown): RoundingMode {
+  return value === "5min" || value === "10min" ? value : "none";
 }
 
 export function parseEventInput(body: unknown): ParseResult<{ name: string; memo: string | null }> {
