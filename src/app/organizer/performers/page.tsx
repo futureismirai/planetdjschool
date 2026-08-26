@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { DeleteRosterButton } from "./DeleteRosterButton";
 
 export const dynamic = "force-dynamic";
 
@@ -31,14 +32,16 @@ export default async function PerformerRosterListPage() {
       <div className="space-y-2">
         {rosters.length === 0 && <p className="text-sm text-slate-500">一覧がまだありません。</p>}
         {rosters.map((roster) => (
-          <Link
+          <div
             key={roster.id}
-            href={`/organizer/performers/${roster.id}`}
-            className="block rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:border-sky-300 hover:shadow"
+            className="relative rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:border-sky-300 hover:shadow"
           >
-            <h2 className="text-sm font-bold text-slate-900">{roster.name}</h2>
-            <p className="mt-0.5 text-xs text-slate-500">{roster.entries.length}名</p>
-          </Link>
+            <Link href={`/organizer/performers/${roster.id}`} className="block pr-14">
+              <h2 className="text-sm font-bold text-slate-900">{roster.name}</h2>
+              <p className="mt-0.5 text-xs text-slate-500">{roster.entries.length}名</p>
+            </Link>
+            <DeleteRosterButton rosterId={roster.id} rosterName={roster.name} />
+          </div>
         ))}
       </div>
     </div>

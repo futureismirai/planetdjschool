@@ -113,7 +113,6 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
   const router = useRouter();
   const [addingEntry, setAddingEntry] = useState(false);
   const [sorting, setSorting] = useState(false);
-  const [deletingRoster, setDeletingRoster] = useState(false);
   const [includeSns, setIncludeSns] = useState(true);
   const [copyLabel, setCopyLabel] = useState("コピーする");
   const [copyPreview, setCopyPreview] = useState<string | null>(null);
@@ -135,17 +134,6 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
       if (res.ok) router.refresh();
     } finally {
       setSorting(false);
-    }
-  }
-
-  async function handleDeleteRoster() {
-    if (!window.confirm(`「${roster.name}」を削除しますか？`)) return;
-    setDeletingRoster(true);
-    try {
-      const res = await fetch(`/api/organizer/performer-rosters/${roster.id}`, { method: "DELETE" });
-      if (res.ok) router.push("/organizer/performers");
-    } finally {
-      setDeletingRoster(false);
     }
   }
 
@@ -181,14 +169,6 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
           className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-60"
         >
           A→Zで並び替え
-        </button>
-        <button
-          type="button"
-          onClick={handleDeleteRoster}
-          disabled={deletingRoster}
-          className="ml-auto rounded-md border border-rose-200 px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 disabled:opacity-60"
-        >
-          一覧を削除
         </button>
       </div>
 
