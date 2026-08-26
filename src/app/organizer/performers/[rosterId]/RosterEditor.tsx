@@ -8,7 +8,7 @@ import { formatPerformerRosterText } from "@/lib/performerRoster";
 export type RosterEntryData = { id: string; name: string; snsHandle: string | null; isCategory: boolean };
 export type RosterData = { id: string; name: string; entries: RosterEntryData[] };
 
-const CATEGORY_PRESETS = ["【DJ】", "【LIVE】", "【VJ】", "【POP-UP】", "【FOOD】"];
+const CATEGORY_PRESETS = ["【DJ】", "【LIVE】", "【VJ】", "【GUEST】", "【POP-UP】", "【FOOD】"];
 
 function RosterNameField({ roster, onSaved }: { roster: RosterData; onSaved: () => void }) {
   const [name, setName] = useState(roster.name);
