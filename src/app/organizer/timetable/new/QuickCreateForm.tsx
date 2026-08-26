@@ -22,9 +22,9 @@ function newPerformerRow(): PerformerRow {
 }
 
 const ROUNDING_OPTIONS: { value: "none" | "5min" | "10min"; label: string }[] = [
+  { value: "5min", label: "5分区切り" },
+  { value: "10min", label: "10分区切り" },
   { value: "none", label: "均等割り" },
-  { value: "5min", label: "5分単位" },
-  { value: "10min", label: "10分単位" },
 ];
 
 const inputClass =
@@ -37,7 +37,7 @@ export function QuickCreateForm() {
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("18:00");
   const [endTime, setEndTime] = useState("23:00");
-  const [rounding, setRounding] = useState<"none" | "5min" | "10min">("none");
+  const [rounding, setRounding] = useState<"none" | "5min" | "10min">("5min");
   const [performers, setPerformers] = useState<PerformerRow[]>([newPerformerRow(), newPerformerRow(), newPerformerRow()]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

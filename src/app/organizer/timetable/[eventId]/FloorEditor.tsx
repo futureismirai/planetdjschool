@@ -28,28 +28,10 @@ export type FloorData = {
   slots: SlotData[];
 };
 
-type PerformerRow = {
-  key: string;
-  name: string;
-  sns: string;
-  useFixed: boolean;
-  fixedDurationMinutes: string;
-};
-
-function newPerformerRow(): PerformerRow {
-  return {
-    key: Math.random().toString(36).slice(2),
-    name: "",
-    sns: "",
-    useFixed: false,
-    fixedDurationMinutes: "",
-  };
-}
-
 const ROUNDING_OPTIONS: { value: "none" | "5min" | "10min"; label: string }[] = [
+  { value: "5min", label: "5分区切り" },
+  { value: "10min", label: "10分区切り" },
   { value: "none", label: "均等割り" },
-  { value: "5min", label: "ほぼ均等（5分単位）" },
-  { value: "10min", label: "ほぼ均等（10分単位）" },
 ];
 
 function FloorHeaderFields({
@@ -116,164 +98,6 @@ function FloorHeaderFields({
       </div>
       {error && <p className="mt-0.5 text-xs text-rose-600">{error}</p>}
     </div>
-  );
-}
-
-function GenerateForm({
-  floor,
-  rounding,
-  onDone,
-}: {
-  floor: FloorData;
-  rounding: "none" | "5min" | "10min";
-  onDone: () => void;
-}) {
-  const router = useRouter();
-  const [performers, setPerformers] = useState<PerformerRow[]>(
-    floor.slots.length > 0
-      ? floor.slots.map((s) => ({
-          key: s.id,
-          name: s.performerName,
-          sns: s.snsHandle ?? "",
-          useFixed: s.isFixed,
-          fixedDurationMinutes: s.isFixed ? String(slotDurationMinutes(s.startTime, s.endTime)) : "",
-        }))
-      : [newPerformerRow(), newPerformerRow()]
-  );
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  function updateRow(key: string, patch: Partial<PerformerRow>) {
-    setPerformers((rows) => rows.map((r) => (r.key === key ? { ...r, ...patch } : r)));
-  }
-
-  function removeRow(key: string) {
-    setPerformers((rows) => rows.filter((r) => r.key !== key));
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    const names = performers.filter((p) => p.name.trim());
-    if (names.length === 0) {
-      setError("出演者を1名以上入力してください。");
-      return;
-    }
-    if (floor.slots.length > 0 && !window.confirm("現在のタイムテーブルは上書きされます。よろしいですか？")) {
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const res = await fetch(`/api/organizer/floors/${floor.id}/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rounding,
-          performers: names.map((p) => ({
-            name: p.name,
-            snsHandle: p.sns || undefined,
-            fixedDurationMinutes: p.useFixed && p.fixedDurationMinutes ? Number(p.fixedDurationMinutes) : undefined,
-          })),
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data.error ?? "作成に失敗しました。");
-        return;
-      }
-      router.refresh();
-      onDone();
-    } catch {
-      setError("通信エラーが発生しました。");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-md border border-sky-200 bg-sky-50 p-3">
-      {error && <p className="text-sm text-rose-600">{error}</p>}
-      <p className="text-xs text-slate-500">
-        区切り方: {ROUNDING_OPTIONS.find((o) => o.value === rounding)?.label}（上の「区切り方」で変更できます）
-      </p>
-
-      <div className="space-y-2">
-        <p className="text-xs font-medium text-slate-600">
-          出演者（出演順に入力。出演時間を固定したい場合は「時間固定」にチェックして分数を入力）
-        </p>
-        {performers.map((p, i) => (
-          <div key={p.key} className="flex flex-wrap items-center gap-2 rounded-md bg-white p-2 shadow-sm">
-            <span className="w-5 shrink-0 text-right text-xs text-slate-400">{i + 1}</span>
-            <input
-              type="text"
-              placeholder="出演者名"
-              value={p.name}
-              onChange={(e) => updateRow(p.key, { name: e.target.value })}
-              className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-            />
-            <input
-              type="text"
-              placeholder="Instagram等（任意・@なし）"
-              value={p.sns}
-              onChange={(e) => updateRow(p.key, { sns: e.target.value })}
-              className="w-40 min-w-0 rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-            />
-            <label className="flex shrink-0 items-center gap-1 text-xs text-slate-500">
-              <input
-                type="checkbox"
-                checked={p.useFixed}
-                onChange={(e) => updateRow(p.key, { useFixed: e.target.checked })}
-              />
-              時間固定
-            </label>
-            {p.useFixed && (
-              <div className="flex shrink-0 items-center gap-1">
-                <input
-                  type="number"
-                  min={1}
-                  placeholder="分"
-                  value={p.fixedDurationMinutes}
-                  onChange={(e) => updateRow(p.key, { fixedDurationMinutes: e.target.value })}
-                  className="w-20 rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-                />
-                <span className="text-xs text-slate-400">分</span>
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => removeRow(p.key)}
-              className="shrink-0 rounded-md border border-rose-200 px-2 py-1 text-xs text-rose-600 hover:bg-rose-50"
-            >
-              削除
-            </button>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={() => setPerformers((rows) => [...rows, newPerformerRow()])}
-          className="rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-sky-400 hover:text-sky-700"
-        >
-          ＋ 出演者を追加
-        </button>
-      </div>
-
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-60"
-        >
-          {submitting ? "作成中..." : "タイムテーブルを自動作成"}
-        </button>
-        <button
-          type="button"
-          onClick={onDone}
-          className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-white"
-        >
-          閉じる
-        </button>
-      </div>
-    </form>
   );
 }
 
@@ -434,7 +258,6 @@ const COPY_FIELD_OPTIONS: { key: keyof Omit<SnsFormatOptions, "snsParentheses">;
   { key: "includeStartTime", label: "開始時間" },
   { key: "includeEndTime", label: "終了時間" },
   { key: "includeSns", label: "SNS" },
-  { key: "includeDuration", label: "出演時間" },
 ];
 
 export function FloorEditor({
@@ -449,8 +272,7 @@ export function FloorEditor({
   showFloorName?: boolean;
 }) {
   const router = useRouter();
-  const [showGenerate, setShowGenerate] = useState(floor.slots.length === 0);
-  const [rounding, setRounding] = useState<"none" | "5min" | "10min">("none");
+  const [rounding, setRounding] = useState<"none" | "5min" | "10min">("5min");
   const [copyLabel, setCopyLabel] = useState("SNSにコピー");
   const [deletingFloor, setDeletingFloor] = useState(false);
   const [addingSlot, setAddingSlot] = useState(false);
@@ -552,23 +374,14 @@ export function FloorEditor({
     <div className="rounded-md border border-slate-200 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <FloorHeaderFields floor={floor} showName={showFloorName} onSaved={() => router.refresh()} />
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setShowGenerate((v) => !v)}
-            className="rounded-md border border-sky-300 px-3 py-1.5 text-xs text-sky-700 hover:bg-sky-50"
-          >
-            {showGenerate ? "自動作成フォームを閉じる" : "タイムテーブルを自動作成"}
-          </button>
-          <button
-            type="button"
-            onClick={handleDeleteFloor}
-            disabled={deletingFloor}
-            className="rounded-md border border-rose-200 px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 disabled:opacity-60"
-          >
-            フロアを削除
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleDeleteFloor}
+          disabled={deletingFloor}
+          className="rounded-md border border-rose-200 px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+        >
+          フロアを削除
+        </button>
       </div>
 
       <div className="mt-2 flex items-center gap-2">
@@ -586,15 +399,9 @@ export function FloorEditor({
         </select>
       </div>
 
-      {showGenerate && (
-        <div className="mt-3">
-          <GenerateForm floor={floor} rounding={rounding} onDone={() => setShowGenerate(false)} />
-        </div>
-      )}
-
       <div className="mt-3">
         {floor.slots.length === 0 ? (
-          <p className="text-sm text-slate-400">出演枠がまだありません。自動作成するか、手動で追加してください。</p>
+          <p className="text-sm text-slate-400">出演枠がまだありません。「＋ 出演枠を手動で追加」から追加してください。</p>
         ) : (
           <div className="space-y-1.5">
             {floor.slots.map((slot) => (

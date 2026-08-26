@@ -157,7 +157,6 @@ export type SnsFormatOptions = {
   includeStartTime: boolean;
   includeEndTime: boolean;
   includeSns: boolean;
-  includeDuration: boolean;
   /** SNSアカウント名を "(@handle)" のようにカッコで囲むかどうか */
   snsParentheses: boolean;
 };
@@ -166,7 +165,6 @@ export const DEFAULT_SNS_FORMAT_OPTIONS: SnsFormatOptions = {
   includeStartTime: true,
   includeEndTime: true,
   includeSns: true,
-  includeDuration: false,
   snsParentheses: true,
 };
 
@@ -190,9 +188,6 @@ export function formatTimetableForSns(
     if (options.includeSns && slot.snsHandle) {
       const handle = `@${slot.snsHandle.replace(/^@/, "")}`;
       parts.push(options.snsParentheses ? `(${handle})` : handle);
-    }
-    if (options.includeDuration) {
-      parts.push(`【${slotDurationMinutes(slot.startTime, slot.endTime)}分】`);
     }
     lines.push(parts.join("  "));
   }
