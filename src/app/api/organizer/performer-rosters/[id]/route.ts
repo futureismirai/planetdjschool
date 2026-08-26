@@ -21,7 +21,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const roster = await prisma.performerRoster.update({ where: { id }, data: parsed.data });
     return NextResponse.json({ roster });
   } catch {
-    return NextResponse.json({ error: "一覧表が見つかりません。" }, { status: 404 });
+    return NextResponse.json({ error: "一覧が見つかりません。" }, { status: 404 });
   }
 }
 
@@ -32,6 +32,6 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
     await prisma.performerRoster.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch {
-    return NextResponse.json({ error: "一覧表が見つかりません。" }, { status: 404 });
+    return NextResponse.json({ error: "一覧が見つかりません。" }, { status: 404 });
   }
 }

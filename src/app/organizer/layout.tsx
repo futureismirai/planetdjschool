@@ -5,7 +5,7 @@ import { OrganizerTabs } from "./OrganizerTabs";
 
 export const metadata: Metadata = {
   title: "Event Organizer",
-  description: "Event Organizer: イベントのタイムテーブル・会場情報の作成ツールです。",
+  description: "Event Organizer: イベントのタイムテーブル・出演者一覧・会場の作成ツールです。",
 };
 
 export default function OrganizerLayout({ children }: { children: ReactNode }) {

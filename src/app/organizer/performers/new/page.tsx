@@ -25,7 +25,7 @@ export default async function NewPerformerRosterPage() {
         <Link href="/organizer/performers" className="text-xs text-slate-400 hover:text-slate-600">
           ← 戻る
         </Link>
-        <h1 className="text-sm font-bold text-slate-900">出演者一覧表を作成</h1>
+        <h1 className="text-sm font-bold text-slate-900">出演者一覧を作成</h1>
         <span className="w-8" />
       </div>
       <NewRosterForm events={events} />

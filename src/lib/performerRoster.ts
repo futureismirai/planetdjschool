@@ -1,4 +1,4 @@
-/** 出演者一覧表をコピー用のテキストに変換する */
+/** 出演者一覧をコピー用のテキストに変換する */
 export function formatPerformerRosterText(
   name: string,
   entries: { name: string; snsHandle: string | null }[],

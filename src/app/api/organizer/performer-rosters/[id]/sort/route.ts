@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-/** 出演者一覧表の並びを名前順（A→Z）に並び替えて保存する */
+/** 出演者一覧の並びを名前順（A→Z）に並び替えて保存する */
 export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: performerRosterId } = await params;
 

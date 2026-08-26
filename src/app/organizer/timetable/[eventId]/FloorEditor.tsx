@@ -329,6 +329,10 @@ export function FloorEditor({
   const [copyPreview, setCopyPreview] = useState<string | null>(null);
   const [dragSlotId, setDragSlotId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [showRosterPicker, setShowRosterPicker] = useState(false);
+  const [rosterOptions, setRosterOptions] = useState<{ id: string; name: string; entries: { id: string }[] }[]>([]);
+  const [loadingRosters, setLoadingRosters] = useState(false);
+  const [importingRosterId, setImportingRosterId] = useState<string | null>(null);
 
   // スマホなどのタッチ操作でも並び替えできるように、指の位置から対象行を検出する
   useEffect(() => {
@@ -393,6 +397,35 @@ export function FloorEditor({
       if (res.ok) router.refresh();
     } finally {
       setAddingSlot(false);
+    }
+  }
+
+  async function handleOpenRosterPicker() {
+    setShowRosterPicker(true);
+    setLoadingRosters(true);
+    try {
+      const res = await fetch("/api/organizer/performer-rosters");
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) setRosterOptions(data.rosters ?? []);
+    } finally {
+      setLoadingRosters(false);
+    }
+  }
+
+  async function handleImportRoster(rosterId: string) {
+    setImportingRosterId(rosterId);
+    try {
+      const res = await fetch(`/api/organizer/floors/${floor.id}/slots/import-roster`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ performerRosterId: rosterId, rounding }),
+      });
+      if (res.ok) {
+        setShowRosterPicker(false);
+        router.refresh();
+      }
+    } finally {
+      setImportingRosterId(null);
     }
   }
 
@@ -500,15 +533,68 @@ export function FloorEditor({
             ))}
           </div>
         )}
-        <button
-          type="button"
-          onClick={handleAddSlot}
-          disabled={addingSlot}
-          className="mt-2 rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-sky-400 hover:text-sky-700 disabled:opacity-60"
-        >
-          ＋ 出演枠を手動で追加
-        </button>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={handleAddSlot}
+            disabled={addingSlot}
+            className="rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-sky-400 hover:text-sky-700 disabled:opacity-60"
+          >
+            ＋ 出演枠を手動で追加
+          </button>
+          <button
+            type="button"
+            onClick={handleOpenRosterPicker}
+            className="rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-sky-400 hover:text-sky-700"
+          >
+            出演者一覧から追加
+          </button>
+        </div>
       </div>
+
+      {showRosterPicker && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setShowRosterPicker(false)}
+        >
+          <div
+            className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-4 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="mb-2 text-sm font-bold text-slate-900">出演者一覧から追加</p>
+            {loadingRosters ? (
+              <p className="text-sm text-slate-500">読み込み中...</p>
+            ) : rosterOptions.length === 0 ? (
+              <p className="text-sm text-slate-500">出演者一覧がまだありません。</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {rosterOptions.map((r) => (
+                  <li key={r.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleImportRoster(r.id)}
+                      disabled={importingRosterId !== null}
+                      className="flex w-full items-center justify-between rounded-md border border-slate-200 px-3 py-2 text-left text-sm hover:border-sky-300 hover:bg-sky-50 disabled:opacity-60"
+                    >
+                      <span className="font-medium text-slate-800">{r.name}</span>
+                      <span className="text-xs text-slate-400">{r.entries.length}名</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowRosterPicker(false)}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {floor.slots.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-2">

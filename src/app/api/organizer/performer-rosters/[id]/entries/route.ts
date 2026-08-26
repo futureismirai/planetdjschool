@@ -6,7 +6,7 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
 
   const roster = await prisma.performerRoster.findUnique({ where: { id: performerRosterId } });
   if (!roster) {
-    return NextResponse.json({ error: "一覧表が見つかりません。" }, { status: 404 });
+    return NextResponse.json({ error: "一覧が見つかりません。" }, { status: 404 });
   }
 
   const count = await prisma.performerRosterEntry.count({ where: { performerRosterId } });

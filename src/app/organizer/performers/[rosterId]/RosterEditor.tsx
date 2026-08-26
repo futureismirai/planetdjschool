@@ -34,7 +34,7 @@ function RosterNameField({ roster, onSaved }: { roster: RosterData; onSaved: () 
         value={name}
         onChange={(e) => setName(e.target.value)}
         onBlur={(e) => handleSave(e.target.value)}
-        placeholder="一覧表の名前"
+        placeholder="一覧の名前"
         className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-xl font-bold text-slate-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
       />
       {error && <p className="mt-0.5 text-xs text-rose-600">{error}</p>}
@@ -168,7 +168,7 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
     <div className="space-y-4">
       <div>
         <Link href="/organizer/performers" className="text-xs text-slate-400 hover:text-slate-600">
-          ← 一覧表に戻る
+          ← 一覧に戻る
         </Link>
         <RosterNameField roster={roster} onSaved={() => router.refresh()} />
       </div>
@@ -188,7 +188,7 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
           disabled={deletingRoster}
           className="ml-auto rounded-md border border-rose-200 px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 disabled:opacity-60"
         >
-          一覧表を削除
+          一覧を削除
         </button>
       </div>
 

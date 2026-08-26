@@ -181,7 +181,7 @@ model Performer {
   updatedAt DateTime @updatedAt
 }
 
-/// イベントオーガナイザーツール: 出演者一覧表（複数出演者のSNSをまとめてコピーするためのリスト）
+/// イベントオーガナイザーツール: 出演者一覧（複数出演者のSNSをまとめてコピーするためのリスト）
 model PerformerRoster {
   id        String                 @id @default(cuid())
   name      String
@@ -190,7 +190,7 @@ model PerformerRoster {
   entries   PerformerRosterEntry[]
 }
 
-/// 出演者一覧表の1行分（出演者名・SNSアカウント）
+/// 出演者一覧の1行分（出演者名・SNSアカウント）
 model PerformerRosterEntry {
   id                String          @id @default(cuid())
   performerRosterId String
@@ -204,7 +204,7 @@ model PerformerRosterEntry {
   @@index([performerRosterId])
 }
 
-/// イベントオーガナイザーツール: 会場情報の保存・リスト化
+/// イベントオーガナイザーツール: 会場の保存・リスト化
 model Venue {
   id         String       @id @default(cuid())
   name       String

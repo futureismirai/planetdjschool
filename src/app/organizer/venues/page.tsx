@@ -17,7 +17,7 @@ export default async function VenueListPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">会場情報</h1>
+        <h1 className="text-xl font-bold text-slate-900">会場</h1>
         <p className="mt-1 text-sm text-slate-500">
           会場ごとに開催条件・機材情報・住所やアクセス・宣材写真・注意事項を保存して、いつでも確認・共有できます。
         </p>

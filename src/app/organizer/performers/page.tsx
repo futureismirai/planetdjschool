@@ -17,7 +17,7 @@ export default async function PerformerRosterListPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">出演者一覧表</h1>
+          <h1 className="text-xl font-bold text-slate-900">出演者一覧</h1>
           <p className="mt-1 text-sm text-slate-500">出演者名とSNSをまとめて管理・コピーできます。</p>
         </div>
         <Link
@@ -29,7 +29,7 @@ export default async function PerformerRosterListPage() {
       </div>
 
       <div className="space-y-2">
-        {rosters.length === 0 && <p className="text-sm text-slate-500">一覧表がまだありません。</p>}
+        {rosters.length === 0 && <p className="text-sm text-slate-500">一覧がまだありません。</p>}
         {rosters.map((roster) => (
           <Link
             key={roster.id}

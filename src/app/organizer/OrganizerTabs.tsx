@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const TABS = [
-  { href: "/organizer/timetable", label: "タイムテーブル作成" },
-  { href: "/organizer/performers", label: "出演者一覧表" },
-  { href: "/organizer/venues", label: "会場情報" },
+  { href: "/organizer/timetable", label: "タイムテーブル" },
+  { href: "/organizer/performers", label: "出演者一覧" },
+  { href: "/organizer/venues", label: "会場" },
 ];
 
 export function OrganizerTabs() {

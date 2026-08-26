@@ -203,7 +203,7 @@ export function parseVenueInput(
 export function parsePerformerRosterInput(body: unknown): ParseResult<{ name: string }> {
   const { name } = asRecord(body);
   if (typeof name !== "string" || !name.trim()) {
-    return { error: "一覧表の名前を入力してください。" };
+    return { error: "一覧の名前を入力してください。" };
   }
   return { data: { name: name.trim() } };
 }

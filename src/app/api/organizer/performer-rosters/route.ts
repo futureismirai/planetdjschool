@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parsePerformerRosterInput } from "@/lib/organizerInput";
 
+export async function GET() {
+  const rosters = await prisma.performerRoster.findMany({
+    orderBy: { updatedAt: "desc" },
+    include: { entries: { orderBy: { order: "asc" } } },
+  });
+  return NextResponse.json({ rosters });
+}
+
 export async function POST(request: NextRequest) {
   let body: unknown;
   try {
