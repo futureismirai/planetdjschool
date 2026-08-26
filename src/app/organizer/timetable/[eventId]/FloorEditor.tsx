@@ -274,10 +274,11 @@ export function FloorEditor({
 }) {
   const router = useRouter();
   const [rounding, setRounding] = useState<"none" | "5min" | "10min">("5min");
-  const [copyLabel, setCopyLabel] = useState("SNSにコピー");
+  const [copyLabel, setCopyLabel] = useState("コピーする");
   const [deletingFloor, setDeletingFloor] = useState(false);
   const [addingSlot, setAddingSlot] = useState(false);
   const [copyOptions, setCopyOptions] = useState<SnsFormatOptions>(DEFAULT_SNS_FORMAT_OPTIONS);
+  const [copyPreview, setCopyPreview] = useState<string | null>(null);
   const [dragSlotId, setDragSlotId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
 
@@ -358,16 +359,24 @@ export function FloorEditor({
     }
   }
 
-  async function handleCopy() {
-    const title = `【${eventName}】${dayLabel} ${floor.name} タイムテーブル`;
-    const text = formatTimetableForSns(title, floor.slots, copyOptions);
+  function buildCopyText(): string {
+    const titleLines = [eventName, dayLabel];
+    if (showFloorName) titleLines.push(floor.name);
+    return formatTimetableForSns(titleLines, floor.slots, copyOptions);
+  }
+
+  function handleOpenCopyPreview() {
+    setCopyLabel("コピーする");
+    setCopyPreview(buildCopyText());
+  }
+
+  async function handleCopyToClipboard() {
+    if (copyPreview === null) return;
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(copyPreview);
       setCopyLabel("コピーしました！");
     } catch {
       setCopyLabel("コピーに失敗しました");
-    } finally {
-      setTimeout(() => setCopyLabel("SNSにコピー"), 2000);
     }
   }
 
@@ -463,11 +472,48 @@ export function FloorEditor({
           )}
           <button
             type="button"
-            onClick={handleCopy}
+            onClick={handleOpenCopyPreview}
             className="ml-auto rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
           >
-            {copyLabel}
+            SNSにコピー
           </button>
+        </div>
+      )}
+
+      {copyPreview !== null && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setCopyPreview(null)}
+        >
+          <div
+            className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-4 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="mb-2 text-sm font-bold text-slate-900">コピーされる内容</p>
+            <textarea
+              readOnly
+              value={copyPreview}
+              rows={Math.min(20, copyPreview.split("\n").length + 1)}
+              className="w-full rounded-md border border-slate-300 p-2 text-sm text-slate-700"
+              onFocus={(e) => e.target.select()}
+            />
+            <div className="mt-3 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCopyPreview(null)}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
+              >
+                閉じる
+              </button>
+              <button
+                type="button"
+                onClick={handleCopyToClipboard}
+                className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-700"
+              >
+                {copyLabel}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

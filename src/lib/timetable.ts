@@ -170,11 +170,11 @@ export const DEFAULT_SNS_FORMAT_OPTIONS: SnsFormatOptions = {
 
 /** タイムテーブルをSNSにそのまま貼り付けられるテキスト形式に変換する */
 export function formatTimetableForSns(
-  title: string,
+  titleLines: string[],
   slots: { performerName: string; snsHandle: string | null; startTime: string; endTime: string }[],
   options: SnsFormatOptions = DEFAULT_SNS_FORMAT_OPTIONS
 ): string {
-  const lines = [title, ""];
+  const lines = [...titleLines, ""];
   for (const slot of slots) {
     const parts: string[] = [];
     if (options.includeStartTime && options.includeEndTime) {
@@ -190,6 +190,10 @@ export function formatTimetableForSns(
       parts.push(options.snsParentheses ? `(${handle})` : handle);
     }
     lines.push(parts.join("  "));
+  }
+  // 開始時刻のみ表示している場合、最後の枠の終了時刻がわからなくなるため末尾に補足する
+  if (options.includeStartTime && !options.includeEndTime && slots.length > 0) {
+    lines.push(`${slots[slots.length - 1].endTime} End`);
   }
   return lines.join("\n");
 }
