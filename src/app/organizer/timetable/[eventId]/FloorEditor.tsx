@@ -301,7 +301,9 @@ function SlotRow({
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  async function saveField(patch: Partial<Pick<SlotData, "performerName" | "snsHandle" | "startTime" | "endTime">>) {
+  async function saveField(
+    patch: Partial<Pick<SlotData, "performerName" | "snsHandle" | "startTime" | "endTime" | "isFixed">>
+  ) {
     setError(null);
     const res = await fetch(`/api/organizer/slots/${slot.id}`, {
       method: "PATCH",
@@ -311,7 +313,7 @@ function SlotRow({
         snsHandle: patch.snsHandle ?? slot.snsHandle,
         startTime: patch.startTime ?? slot.startTime,
         endTime: patch.endTime ?? slot.endTime,
-        isFixed: slot.isFixed,
+        isFixed: patch.isFixed ?? slot.isFixed,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -400,6 +402,14 @@ function SlotRow({
           className="min-w-0 flex-1 rounded-md border border-slate-300 px-1.5 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
       </div>
+      <label className="mt-1 flex items-center gap-1 pl-6 text-[11px] text-slate-500">
+        <input
+          type="checkbox"
+          checked={slot.isFixed}
+          onChange={(e) => saveField({ isFixed: e.target.checked })}
+        />
+        時間固定（他の人を変更してもこの出演時間は保たれます）
+      </label>
       {error && <p className="mt-1 pl-6 text-xs text-rose-600">{error}</p>}
     </div>
   );
@@ -558,7 +568,7 @@ export function FloorEditor({
           <div className="space-y-1.5">
             {floor.slots.map((slot) => (
               <SlotRow
-                key={slot.id}
+                key={`${slot.id}:${slot.startTime}:${slot.endTime}`}
                 slot={slot}
                 isDragging={dragSlotId === slot.id}
                 isDropTarget={dropTargetId === slot.id && dragSlotId !== slot.id}
