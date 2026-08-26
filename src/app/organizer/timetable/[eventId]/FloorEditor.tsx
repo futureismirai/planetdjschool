@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { formatTimetableForSns, slotDurationMinutes, type SnsFormatOptions } from "@/lib/timetable";
+import {
+  DEFAULT_SNS_FORMAT_OPTIONS,
+  formatTimetableForSns,
+  slotDurationMinutes,
+  type SnsFormatOptions,
+} from "@/lib/timetable";
 
 export type SlotData = {
   id: string;
@@ -44,6 +49,63 @@ const ROUNDING_OPTIONS: { value: "none" | "5min" | "10min"; label: string }[] = 
   { value: "5min", label: "ほぼ均等（5分単位）" },
   { value: "10min", label: "ほぼ均等（10分単位）" },
 ];
+
+function FloorHeaderFields({ floor, onSaved }: { floor: FloorData; onSaved: () => void }) {
+  const [name, setName] = useState(floor.name);
+  const [startTime, setStartTime] = useState(floor.startTime);
+  const [endTime, setEndTime] = useState(floor.endTime);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSave(patch: { name?: string; startTime?: string; endTime?: string }) {
+    setError(null);
+    const res = await fetch(`/api/organizer/floors/${floor.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: patch.name ?? name,
+        startTime: patch.startTime ?? startTime,
+        endTime: patch.endTime ?? endTime,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(data.error ?? "保存に失敗しました。");
+      return;
+    }
+    onSaved();
+  }
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={(e) => handleSave({ name: e.target.value })}
+          placeholder="フロア名"
+          className="rounded-md border border-transparent px-1 text-sm font-bold text-slate-900 hover:border-slate-200 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+        <input
+          type="time"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+          onBlur={(e) => handleSave({ startTime: e.target.value })}
+          className="rounded-md border border-transparent px-1 text-xs text-slate-500 hover:border-slate-200 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+        <span className="text-xs text-slate-400">〜</span>
+        <input
+          type="time"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+          onBlur={(e) => handleSave({ endTime: e.target.value })}
+          className="rounded-md border border-transparent px-1 text-xs text-slate-500 hover:border-slate-200 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+      </div>
+      {error && <p className="mt-0.5 text-xs text-rose-600">{error}</p>}
+    </div>
+  );
+}
 
 function GenerateForm({ floor, onDone }: { floor: FloorData; onDone: () => void }) {
   const router = useRouter();
@@ -209,15 +271,21 @@ function GenerateForm({ floor, onDone }: { floor: FloorData; onDone: () => void 
 
 function SlotRow({
   slot,
-  isFirst,
-  isLast,
-  onMove,
+  isDragging,
+  isDropTarget,
+  onDragStart,
+  onDragEnter,
+  onDragEnd,
+  onDrop,
   onChanged,
 }: {
   slot: SlotData;
-  isFirst: boolean;
-  isLast: boolean;
-  onMove: (direction: -1 | 1) => void;
+  isDragging: boolean;
+  isDropTarget: boolean;
+  onDragStart: () => void;
+  onDragEnter: () => void;
+  onDragEnd: () => void;
+  onDrop: () => void;
   onChanged: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
@@ -256,26 +324,29 @@ function SlotRow({
   }
 
   return (
-    <tr className="border-b border-slate-50 last:border-0">
+    <tr
+      onDragEnter={onDragEnter}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        onDrop();
+      }}
+      className={
+        "border-b border-slate-50 last:border-0" +
+        (isDragging ? " opacity-40" : "") +
+        (isDropTarget ? " border-t-2 border-t-sky-400" : "")
+      }
+    >
       <td className="px-1 py-1">
-        <div className="flex flex-col">
-          <button
-            type="button"
-            disabled={isFirst}
-            onClick={() => onMove(-1)}
-            className="text-slate-400 hover:text-slate-700 disabled:opacity-20"
-          >
-            ▲
-          </button>
-          <button
-            type="button"
-            disabled={isLast}
-            onClick={() => onMove(1)}
-            className="text-slate-400 hover:text-slate-700 disabled:opacity-20"
-          >
-            ▼
-          </button>
-        </div>
+        <span
+          draggable
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          title="ドラッグして並び替え"
+          className="inline-block cursor-grab select-none px-1 text-slate-400 hover:text-slate-700 active:cursor-grabbing"
+        >
+          ⠿
+        </span>
       </td>
       <td className="px-1 py-1">
         <input
@@ -326,7 +397,7 @@ function SlotRow({
   );
 }
 
-const COPY_FIELD_OPTIONS: { key: keyof SnsFormatOptions; label: string }[] = [
+const COPY_FIELD_OPTIONS: { key: keyof Omit<SnsFormatOptions, "snsParentheses">; label: string }[] = [
   { key: "includeStartTime", label: "開始時間" },
   { key: "includeEndTime", label: "終了時間" },
   { key: "includeSns", label: "SNS" },
@@ -339,19 +410,18 @@ export function FloorEditor({ floor, eventName, dayLabel }: { floor: FloorData; 
   const [copyLabel, setCopyLabel] = useState("SNSにコピー");
   const [deletingFloor, setDeletingFloor] = useState(false);
   const [addingSlot, setAddingSlot] = useState(false);
-  const [copyOptions, setCopyOptions] = useState<SnsFormatOptions>({
-    includeStartTime: true,
-    includeEndTime: true,
-    includeSns: true,
-    includeDuration: false,
-  });
+  const [copyOptions, setCopyOptions] = useState<SnsFormatOptions>(DEFAULT_SNS_FORMAT_OPTIONS);
+  const [dragSlotId, setDragSlotId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
 
-  async function handleMove(slot: SlotData, direction: -1 | 1) {
+  async function handleReorder(fromId: string, toId: string) {
+    if (fromId === toId) return;
     const ids = floor.slots.map((s) => s.id);
-    const index = ids.indexOf(slot.id);
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= ids.length) return;
-    [ids[index], ids[targetIndex]] = [ids[targetIndex], ids[index]];
+    const fromIndex = ids.indexOf(fromId);
+    const toIndex = ids.indexOf(toId);
+    if (fromIndex === -1 || toIndex === -1) return;
+    ids.splice(fromIndex, 1);
+    ids.splice(toIndex, 0, fromId);
     const res = await fetch(`/api/organizer/floors/${floor.id}/slots/reorder`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -405,12 +475,7 @@ export function FloorEditor({ floor, eventName, dayLabel }: { floor: FloorData; 
   return (
     <div className="rounded-md border border-slate-200 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h3 className="text-sm font-bold text-slate-900">{floor.name}</h3>
-          <p className="text-xs text-slate-400">
-            {floor.startTime} 〜 {floor.endTime}
-          </p>
-        </div>
+        <FloorHeaderFields floor={floor} onSaved={() => router.refresh()} />
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -454,13 +519,23 @@ export function FloorEditor({ floor, eventName, dayLabel }: { floor: FloorData; 
                 </tr>
               </thead>
               <tbody>
-                {floor.slots.map((slot, index) => (
+                {floor.slots.map((slot) => (
                   <SlotRow
                     key={slot.id}
                     slot={slot}
-                    isFirst={index === 0}
-                    isLast={index === floor.slots.length - 1}
-                    onMove={(direction) => handleMove(slot, direction)}
+                    isDragging={dragSlotId === slot.id}
+                    isDropTarget={dropTargetId === slot.id && dragSlotId !== slot.id}
+                    onDragStart={() => setDragSlotId(slot.id)}
+                    onDragEnter={() => setDropTargetId(slot.id)}
+                    onDragEnd={() => {
+                      setDragSlotId(null);
+                      setDropTargetId(null);
+                    }}
+                    onDrop={() => {
+                      if (dragSlotId) handleReorder(dragSlotId, slot.id);
+                      setDragSlotId(null);
+                      setDropTargetId(null);
+                    }}
                     onChanged={() => router.refresh()}
                   />
                 ))}
@@ -491,6 +566,16 @@ export function FloorEditor({ floor, eventName, dayLabel }: { floor: FloorData; 
               {f.label}
             </label>
           ))}
+          {copyOptions.includeSns && (
+            <label className="flex items-center gap-1 text-xs text-slate-600">
+              <input
+                type="checkbox"
+                checked={copyOptions.snsParentheses}
+                onChange={(e) => setCopyOptions((o) => ({ ...o, snsParentheses: e.target.checked }))}
+              />
+              SNSに(　)をつける
+            </label>
+          )}
           <button
             type="button"
             onClick={handleCopy}

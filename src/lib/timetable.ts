@@ -158,18 +158,23 @@ export type SnsFormatOptions = {
   includeEndTime: boolean;
   includeSns: boolean;
   includeDuration: boolean;
+  /** SNSアカウント名を "(@handle)" のようにカッコで囲むかどうか */
+  snsParentheses: boolean;
+};
+
+export const DEFAULT_SNS_FORMAT_OPTIONS: SnsFormatOptions = {
+  includeStartTime: true,
+  includeEndTime: true,
+  includeSns: true,
+  includeDuration: false,
+  snsParentheses: true,
 };
 
 /** タイムテーブルをSNSにそのまま貼り付けられるテキスト形式に変換する */
 export function formatTimetableForSns(
   title: string,
   slots: { performerName: string; snsHandle: string | null; startTime: string; endTime: string }[],
-  options: SnsFormatOptions = {
-    includeStartTime: true,
-    includeEndTime: true,
-    includeSns: true,
-    includeDuration: false,
-  }
+  options: SnsFormatOptions = DEFAULT_SNS_FORMAT_OPTIONS
 ): string {
   const lines = [title, ""];
   for (const slot of slots) {
@@ -183,7 +188,8 @@ export function formatTimetableForSns(
     }
     parts.push(slot.performerName);
     if (options.includeSns && slot.snsHandle) {
-      parts.push(`(@${slot.snsHandle.replace(/^@/, "")})`);
+      const handle = `@${slot.snsHandle.replace(/^@/, "")}`;
+      parts.push(options.snsParentheses ? `(${handle})` : handle);
     }
     if (options.includeDuration) {
       parts.push(`【${slotDurationMinutes(slot.startTime, slot.endTime)}分】`);

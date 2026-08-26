@@ -213,9 +213,28 @@ function AddFloorForm({ dayId }: { dayId: string }) {
 function DayCard({ eventName, day }: { eventName: string; day: DayData }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
+  const [date, setDate] = useState(day.date);
+  const [label, setLabel] = useState(day.label ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const currentDayLabel = day.label ? `${day.label}（${formatDateJa(day.date)}）` : formatDateJa(day.date);
+
+  async function handleSaveDay(patch: { date?: string; label?: string }) {
+    setError(null);
+    const res = await fetch(`/api/organizer/days/${day.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date: patch.date ?? date, label: patch.label ?? label }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(data.error ?? "保存に失敗しました。");
+      return;
+    }
+    router.refresh();
+  }
 
   async function handleDeleteDay() {
-    if (!window.confirm(`「${day.label ?? formatDateJa(day.date)}」を削除しますか？フロア・タイムテーブルもすべて削除されます。`)) {
+    if (!window.confirm(`「${currentDayLabel}」を削除しますか？フロア・タイムテーブルもすべて削除されます。`)) {
       return;
     }
     setDeleting(true);
@@ -230,9 +249,24 @@ function DayCard({ eventName, day }: { eventName: string; day: DayData }) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-3">
-        <h2 className="text-base font-bold text-slate-900">
-          {day.label ? `${day.label}（${formatDateJa(day.date)}）` : formatDateJa(day.date)}
-        </h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            onBlur={(e) => handleSaveDay({ date: e.target.value })}
+            className="rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          />
+          <input
+            type="text"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            onBlur={(e) => handleSaveDay({ label: e.target.value })}
+            placeholder="ラベル（任意 例: 1日目）"
+            className="w-40 rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          />
+          {error && <p className="text-xs text-rose-600">{error}</p>}
+        </div>
         <button
           type="button"
           onClick={handleDeleteDay}
@@ -244,7 +278,7 @@ function DayCard({ eventName, day }: { eventName: string; day: DayData }) {
       </div>
       <div className="space-y-4 p-3">
         {day.floors.map((floor) => (
-          <FloorEditor key={floor.id} floor={floor} eventName={eventName} dayLabel={day.label ?? formatDateJa(day.date)} />
+          <FloorEditor key={floor.id} floor={floor} eventName={eventName} dayLabel={currentDayLabel} />
         ))}
         <AddFloorForm dayId={day.id} />
       </div>
