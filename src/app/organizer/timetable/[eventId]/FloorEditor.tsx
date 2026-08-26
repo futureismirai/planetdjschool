@@ -6,6 +6,8 @@ import {
   DEFAULT_SNS_FORMAT_OPTIONS,
   formatTimetableForSns,
   slotDurationMinutes,
+  toHHMM,
+  toMinutes,
   type SnsFormatOptions,
 } from "@/lib/timetable";
 
@@ -375,7 +377,6 @@ function SlotRow({
           onBlur={(e) => saveField({ endTime: e.target.value })}
           className="w-[4.5rem] shrink-0 rounded-md border border-slate-300 px-1 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
-        <span className="shrink-0 text-[11px] text-slate-500">{slotDurationMinutes(slot.startTime, slot.endTime)}分</span>
         <button
           type="button"
           onClick={handleDelete}
@@ -385,6 +386,29 @@ function SlotRow({
         >
           ✕
         </button>
+      </div>
+      <div className="mt-1 flex items-center gap-1 pl-6">
+        <input
+          type="number"
+          min={1}
+          defaultValue={slotDurationMinutes(slot.startTime, slot.endTime)}
+          onBlur={(e) => {
+            const minutes = Number(e.target.value);
+            if (!Number.isFinite(minutes) || minutes <= 0) return;
+            const endTime = toHHMM(toMinutes(slot.startTime) + minutes);
+            saveField({ endTime });
+          }}
+          className="w-14 shrink-0 rounded-md border border-slate-300 px-1.5 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+        <span className="shrink-0 text-[11px] text-slate-500">分</span>
+        <label className="ml-2 flex shrink-0 items-center gap-1 text-[11px] text-slate-500">
+          <input
+            type="checkbox"
+            checked={slot.isFixed}
+            onChange={(e) => saveField({ isFixed: e.target.checked })}
+          />
+          時間固定
+        </label>
       </div>
       <div className="mt-1 flex gap-1 pl-6">
         <input
@@ -402,14 +426,6 @@ function SlotRow({
           className="min-w-0 flex-1 rounded-md border border-slate-300 px-1.5 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
       </div>
-      <label className="mt-1 flex items-center gap-1 pl-6 text-[11px] text-slate-500">
-        <input
-          type="checkbox"
-          checked={slot.isFixed}
-          onChange={(e) => saveField({ isFixed: e.target.checked })}
-        />
-        時間固定（他の人を変更してもこの出演時間は保たれます）
-      </label>
       {error && <p className="mt-1 pl-6 text-xs text-rose-600">{error}</p>}
     </div>
   );
