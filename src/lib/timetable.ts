@@ -198,7 +198,7 @@ export function formatTimetableForSns(
     parts.push(slot.performerName);
     if (options.includeSns && slot.snsHandle) {
       const handle = `@${slot.snsHandle.replace(/^@/, "")}`;
-      parts.push(options.snsParentheses ? `(${handle})` : handle);
+      parts.push(options.snsParentheses ? `(${handle} )` : handle);
     }
     lines.push(parts.join("  "));
   }
