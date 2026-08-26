@@ -119,7 +119,7 @@ function EntryRow({
   }
 
   async function handleDelete() {
-    const label = entry.isCategory ? `「${entry.name}」の分類見出し` : `「${entry.name}」`;
+    const label = entry.isCategory ? `「${entry.name}」の見出し` : `「${entry.name}」`;
     if (!window.confirm(`${label}を削除しますか？`)) return;
     setDeleting(true);
     try {
@@ -139,7 +139,7 @@ function EntryRow({
           value={name}
           onChange={(e) => setName(e.target.value)}
           onBlur={(e) => saveField({ name: e.target.value })}
-          placeholder="分類名"
+          placeholder="見出し名"
           className="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-1.5 py-1 text-sm font-bold text-slate-700 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
         <button
@@ -310,6 +310,13 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
 
       <div className="space-y-0.5">
         {roster.entries.length === 0 && <p className="text-sm text-slate-500">まだ出演者がいません。</p>}
+        <button
+          type="button"
+          onClick={() => openCategoryPicker(0)}
+          className="flex w-full items-center justify-center py-0.5 text-[10px] text-slate-300 hover:text-sky-500"
+        >
+          ＋ ここに見出しを挿入
+        </button>
         {roster.entries.map((entry, index) => (
           <div key={entry.id}>
             <EntryRow
@@ -325,27 +332,18 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
               onClick={() => openCategoryPicker(index + 1)}
               className="flex w-full items-center justify-center py-0.5 text-[10px] text-slate-300 hover:text-sky-500"
             >
-              ＋ ここに分類を挿入
+              ＋ ここに見出しを挿入
             </button>
           </div>
         ))}
-        <div className="mt-1 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={handleAddEntry}
-            disabled={addingEntry}
-            className="flex-1 rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-sky-400 hover:text-sky-700 disabled:opacity-60"
-          >
-            ＋ 出演者を追加
-          </button>
-          <button
-            type="button"
-            onClick={() => openCategoryPicker(roster.entries.length)}
-            className="flex-1 rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-sky-400 hover:text-sky-700"
-          >
-            ＋ 分類を追加
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleAddEntry}
+          disabled={addingEntry}
+          className="mt-1 w-full rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-sky-400 hover:text-sky-700 disabled:opacity-60"
+        >
+          ＋ 出演者を追加
+        </button>
       </div>
 
       {roster.entries.length > 0 && (
@@ -376,7 +374,7 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
             className="w-full max-w-md rounded-lg bg-white p-4 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="mb-2 text-sm font-bold text-slate-900">分類を追加</p>
+            <p className="mb-2 text-sm font-bold text-slate-900">見出しを追加</p>
             <div className="flex flex-wrap gap-2">
               {CATEGORY_PRESETS.map((preset) => (
                 <button

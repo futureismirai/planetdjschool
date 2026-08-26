@@ -214,7 +214,7 @@ export function parsePerformerRosterEntryInput(
   const { name, snsHandle, isCategory } = asRecord(body);
   const isCategoryValue = Boolean(isCategory);
   if (typeof name !== "string" || !name.trim()) {
-    return { error: isCategoryValue ? "分類名を入力してください。" : "出演者名を入力してください。" };
+    return { error: isCategoryValue ? "見出し名を入力してください。" : "出演者名を入力してください。" };
   }
   if (snsHandle !== undefined && snsHandle !== null && typeof snsHandle !== "string") {
     return { error: "SNSアカウント名の形式が正しくありません。" };

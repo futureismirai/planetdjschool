@@ -1,11 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+type Entry = { id: string; name: string; isCategory: boolean };
+
 /**
- * 出演者一覧の並びを名前順（A→Z）に並び替えて保存する。
- * 分類の見出し行はその位置に固定し、見出しで区切られた出演者だけを
- * それぞれのまとまりの中で名前順に並び替える。
+ * 見出し行の位置は固定したまま、見出しで区切られたまとまりごとに
+ * 出演者だけを名前順（A→Z）に並び替える。
  */
+function sortWithinSegments<T extends Entry>(entries: T[]): T[] {
+  const result: T[] = [];
+  let segment: T[] = [];
+
+  function flushSegment() {
+    segment.sort((a, b) => a.name.localeCompare(b.name, "ja"));
+    result.push(...segment);
+    segment = [];
+  }
+
+  for (const entry of entries) {
+    if (entry.isCategory) {
+      flushSegment();
+      result.push(entry);
+    } else {
+      segment.push(entry);
+    }
+  }
+  flushSegment();
+
+  return result;
+}
+
 export async function POST(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: performerRosterId } = await params;
 
@@ -17,24 +41,10 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ entries: [] });
   }
 
-  const performerIndices: number[] = [];
-  const performerNames: { index: number; name: string }[] = [];
-  entries.forEach((entry, index) => {
-    if (!entry.isCategory) {
-      performerIndices.push(index);
-      performerNames.push({ index, name: entry.name });
-    }
-  });
-  const sortedNames = [...performerNames].sort((a, b) => a.name.localeCompare(b.name, "ja"));
-
-  const finalOrder = [...entries];
-  performerIndices.forEach((slotIndex, i) => {
-    const original = entries[sortedNames[i].index];
-    finalOrder[slotIndex] = original;
-  });
+  const sorted = sortWithinSegments(entries);
 
   const updated = await prisma.$transaction(
-    finalOrder.map((entry, index) =>
+    sorted.map((entry, index) =>
       prisma.performerRosterEntry.update({ where: { id: entry.id }, data: { order: index } })
     )
   );

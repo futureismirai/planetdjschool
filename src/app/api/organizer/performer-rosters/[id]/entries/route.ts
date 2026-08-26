@@ -19,7 +19,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const categoryName = (body as Record<string, unknown>)?.name;
 
   if (isCategory && (typeof categoryName !== "string" || !categoryName.trim())) {
-    return NextResponse.json({ error: "分類名を入力してください。" }, { status: 400 });
+    return NextResponse.json({ error: "見出し名を入力してください。" }, { status: 400 });
   }
 
   const count = await prisma.performerRosterEntry.count({ where: { performerRosterId } });
