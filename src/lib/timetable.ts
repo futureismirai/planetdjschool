@@ -56,6 +56,8 @@ type Span = { startMin: number; endMin: number };
  * 指定した区間 [start, end) を count 個に分割する。
  * rounding が指定されている場合は境界を5分/10分単位に丸め、
  * ほぼ均等になるようにしつつ最後の枠で端数を吸収する。
+ * 丸めによって出演時間に差が出る場合は、短い時間を前半に、
+ * 長い時間を後半に配置する。
  */
 function splitEvenly(start: number, end: number, count: number, rounding: RoundingMode): Span[] {
   if (count <= 0) return [];
@@ -79,9 +81,18 @@ function splitEvenly(start: number, end: number, count: number, rounding: Roundi
     }
   }
 
-  const result: Span[] = [];
+  const durations: number[] = [];
   for (let i = 0; i < count; i++) {
-    result.push({ startMin: boundaries[i], endMin: boundaries[i + 1] });
+    durations.push(boundaries[i + 1] - boundaries[i]);
+  }
+  durations.sort((a, b) => a - b);
+
+  const result: Span[] = [];
+  let cursor = start;
+  for (let i = 0; i < count; i++) {
+    const next = cursor + durations[i];
+    result.push({ startMin: cursor, endMin: next });
+    cursor = next;
   }
   return result;
 }
