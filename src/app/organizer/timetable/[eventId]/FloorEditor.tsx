@@ -119,7 +119,15 @@ function FloorHeaderFields({
   );
 }
 
-function GenerateForm({ floor, onDone }: { floor: FloorData; onDone: () => void }) {
+function GenerateForm({
+  floor,
+  rounding,
+  onDone,
+}: {
+  floor: FloorData;
+  rounding: "none" | "5min" | "10min";
+  onDone: () => void;
+}) {
   const router = useRouter();
   const [performers, setPerformers] = useState<PerformerRow[]>(
     floor.slots.length > 0
@@ -132,7 +140,6 @@ function GenerateForm({ floor, onDone }: { floor: FloorData; onDone: () => void 
         }))
       : [newPerformerRow(), newPerformerRow()]
   );
-  const [rounding, setRounding] = useState<"none" | "5min" | "10min">("none");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -186,20 +193,9 @@ function GenerateForm({ floor, onDone }: { floor: FloorData; onDone: () => void 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-md border border-sky-200 bg-sky-50 p-3">
       {error && <p className="text-sm text-rose-600">{error}</p>}
-      <div>
-        <label className="block text-xs font-medium text-slate-600">区切り方</label>
-        <select
-          value={rounding}
-          onChange={(e) => setRounding(e.target.value as typeof rounding)}
-          className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-        >
-          {ROUNDING_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      <p className="text-xs text-slate-500">
+        区切り方: {ROUNDING_OPTIONS.find((o) => o.value === rounding)?.label}（上の「区切り方」で変更できます）
+      </p>
 
       <div className="space-y-2">
         <p className="text-xs font-medium text-slate-600">
@@ -283,6 +279,7 @@ function GenerateForm({ floor, onDone }: { floor: FloorData; onDone: () => void 
 
 function SlotRow({
   slot,
+  rounding,
   isDragging,
   isDropTarget,
   onDragStart,
@@ -292,6 +289,7 @@ function SlotRow({
   onChanged,
 }: {
   slot: SlotData;
+  rounding: "none" | "5min" | "10min";
   isDragging: boolean;
   isDropTarget: boolean;
   onDragStart: () => void;
@@ -316,6 +314,7 @@ function SlotRow({
         startTime: patch.startTime ?? slot.startTime,
         endTime: patch.endTime ?? slot.endTime,
         isFixed: patch.isFixed ?? slot.isFixed,
+        rounding,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -451,6 +450,7 @@ export function FloorEditor({
 }) {
   const router = useRouter();
   const [showGenerate, setShowGenerate] = useState(floor.slots.length === 0);
+  const [rounding, setRounding] = useState<"none" | "5min" | "10min">("none");
   const [copyLabel, setCopyLabel] = useState("SNSにコピー");
   const [deletingFloor, setDeletingFloor] = useState(false);
   const [addingSlot, setAddingSlot] = useState(false);
@@ -571,9 +571,24 @@ export function FloorEditor({
         </div>
       </div>
 
+      <div className="mt-2 flex items-center gap-2">
+        <label className="text-xs font-medium text-slate-500">区切り方</label>
+        <select
+          value={rounding}
+          onChange={(e) => setRounding(e.target.value as typeof rounding)}
+          className="rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        >
+          {ROUNDING_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {showGenerate && (
         <div className="mt-3">
-          <GenerateForm floor={floor} onDone={() => setShowGenerate(false)} />
+          <GenerateForm floor={floor} rounding={rounding} onDone={() => setShowGenerate(false)} />
         </div>
       )}
 
@@ -586,6 +601,7 @@ export function FloorEditor({
               <SlotRow
                 key={`${slot.id}:${slot.startTime}:${slot.endTime}`}
                 slot={slot}
+                rounding={rounding}
                 isDragging={dragSlotId === slot.id}
                 isDropTarget={dropTargetId === slot.id && dragSlotId !== slot.id}
                 onDragStart={() => setDragSlotId(slot.id)}

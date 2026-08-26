@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parseSlotInput } from "@/lib/organizerInput";
-import { generateTimetable, slotDurationMinutes, type PerformerInput } from "@/lib/timetable";
+import { generateTimetable, slotDurationMinutes, type PerformerInput, type RoundingMode } from "@/lib/timetable";
+
+function parseRounding(value: unknown): RoundingMode {
+  return value === "5min" || value === "10min" ? value : "none";
+}
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -61,9 +65,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return { name: s.performerName, snsHandle: s.snsHandle ?? undefined };
   });
 
+  const rounding = parseRounding((body as Record<string, unknown>)?.rounding);
+
   let generated;
   try {
-    generated = generateTimetable(performers, floor.startTime, floor.endTime, "none");
+    generated = generateTimetable(performers, floor.startTime, floor.endTime, rounding);
   } catch (e) {
     const message = e instanceof Error ? e.message : "時間の再計算に失敗しました。";
     return NextResponse.json({ error: message }, { status: 400 });
