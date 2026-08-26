@@ -50,7 +50,15 @@ const ROUNDING_OPTIONS: { value: "none" | "5min" | "10min"; label: string }[] = 
   { value: "10min", label: "ほぼ均等（10分単位）" },
 ];
 
-function FloorHeaderFields({ floor, onSaved }: { floor: FloorData; onSaved: () => void }) {
+function FloorHeaderFields({
+  floor,
+  showName,
+  onSaved,
+}: {
+  floor: FloorData;
+  showName: boolean;
+  onSaved: () => void;
+}) {
   const [name, setName] = useState(floor.name);
   const [startTime, setStartTime] = useState(floor.startTime);
   const [endTime, setEndTime] = useState(floor.endTime);
@@ -78,14 +86,16 @@ function FloorHeaderFields({ floor, onSaved }: { floor: FloorData; onSaved: () =
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onBlur={(e) => handleSave({ name: e.target.value })}
-          placeholder="フロア名"
-          className="rounded-md border border-transparent px-1 text-sm font-bold text-slate-900 hover:border-slate-200 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-        />
+        {showName && (
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={(e) => handleSave({ name: e.target.value })}
+            placeholder="フロア名"
+            className="rounded-md border border-transparent px-1 text-sm font-bold text-slate-900 hover:border-slate-200 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          />
+        )}
         <input
           type="time"
           value={startTime}
@@ -402,7 +412,17 @@ const COPY_FIELD_OPTIONS: { key: keyof Omit<SnsFormatOptions, "snsParentheses">;
   { key: "includeDuration", label: "出演時間" },
 ];
 
-export function FloorEditor({ floor, eventName, dayLabel }: { floor: FloorData; eventName: string; dayLabel: string }) {
+export function FloorEditor({
+  floor,
+  eventName,
+  dayLabel,
+  showFloorName = false,
+}: {
+  floor: FloorData;
+  eventName: string;
+  dayLabel: string;
+  showFloorName?: boolean;
+}) {
   const router = useRouter();
   const [showGenerate, setShowGenerate] = useState(floor.slots.length === 0);
   const [copyLabel, setCopyLabel] = useState("SNSにコピー");
@@ -505,7 +525,7 @@ export function FloorEditor({ floor, eventName, dayLabel }: { floor: FloorData; 
   return (
     <div className="rounded-md border border-slate-200 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <FloorHeaderFields floor={floor} onSaved={() => router.refresh()} />
+        <FloorHeaderFields floor={floor} showName={showFloorName} onSaved={() => router.refresh()} />
         <div className="flex flex-wrap gap-2">
           <button
             type="button"

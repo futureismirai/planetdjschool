@@ -278,7 +278,13 @@ function DayCard({ eventName, day }: { eventName: string; day: DayData }) {
       </div>
       <div className="space-y-4 p-3">
         {day.floors.map((floor) => (
-          <FloorEditor key={floor.id} floor={floor} eventName={eventName} dayLabel={currentDayLabel} />
+          <FloorEditor
+            key={floor.id}
+            floor={floor}
+            eventName={eventName}
+            dayLabel={currentDayLabel}
+            showFloorName={day.floors.length > 1}
+          />
         ))}
         <AddFloorForm dayId={day.id} defaultOpen={day.floors.length === 0} />
       </div>
