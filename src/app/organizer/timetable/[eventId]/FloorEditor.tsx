@@ -330,7 +330,9 @@ export function FloorEditor({
   const [dragSlotId, setDragSlotId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [showRosterPicker, setShowRosterPicker] = useState(false);
-  const [rosterOptions, setRosterOptions] = useState<{ id: string; name: string; entries: { id: string }[] }[]>([]);
+  const [rosterOptions, setRosterOptions] = useState<
+    { id: string; name: string; entries: { id: string; isCategory: boolean }[] }[]
+  >([]);
   const [loadingRosters, setLoadingRosters] = useState(false);
   const [importingRosterId, setImportingRosterId] = useState<string | null>(null);
 
@@ -577,7 +579,9 @@ export function FloorEditor({
                       className="flex w-full items-center justify-between rounded-md border border-slate-200 px-3 py-2 text-left text-sm hover:border-sky-300 hover:bg-sky-50 disabled:opacity-60"
                     >
                       <span className="font-medium text-slate-800">{r.name}</span>
-                      <span className="text-xs text-slate-400">{r.entries.length}名</span>
+                      <span className="text-xs text-slate-400">
+                        {r.entries.filter((e) => !e.isCategory).length}名
+                      </span>
                     </button>
                   </li>
                 ))}

@@ -20,7 +20,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   try {
     const entry = await prisma.performerRosterEntry.update({ where: { id }, data: parsed.data });
-    await rememberPerformer(parsed.data.name, parsed.data.snsHandle);
+    if (!parsed.data.isCategory) {
+      await rememberPerformer(parsed.data.name, parsed.data.snsHandle);
+    }
     return NextResponse.json({ entry });
   } catch {
     return NextResponse.json({ error: "出演者が見つかりません。" }, { status: 404 });

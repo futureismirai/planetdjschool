@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatPerformerRosterText } from "@/lib/performerRoster";
 
-export type RosterEntryData = { id: string; name: string; snsHandle: string | null };
+export type RosterEntryData = { id: string; name: string; snsHandle: string | null; isCategory: boolean };
 export type RosterData = { id: string; name: string; entries: RosterEntryData[] };
+
+const CATEGORY_PRESETS = ["【DJ】", "【LIVE】", "【VJ】", "【POP-UP】", "【FOOD】"];
 
 function RosterNameField({ roster, onSaved }: { roster: RosterData; onSaved: () => void }) {
   const [name, setName] = useState(roster.name);
@@ -42,7 +44,56 @@ function RosterNameField({ roster, onSaved }: { roster: RosterData; onSaved: () 
   );
 }
 
-function EntryRow({ entry, onChanged }: { entry: RosterEntryData; onChanged: () => void }) {
+function MoveButtons({
+  isFirst,
+  isLast,
+  onMoveUp,
+  onMoveDown,
+}: {
+  isFirst: boolean;
+  isLast: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+}) {
+  return (
+    <div className="flex shrink-0 flex-col">
+      <button
+        type="button"
+        onClick={onMoveUp}
+        disabled={isFirst}
+        aria-label="上に移動"
+        className="rounded-t-md border border-b-0 border-slate-200 px-1 text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30"
+      >
+        ▲
+      </button>
+      <button
+        type="button"
+        onClick={onMoveDown}
+        disabled={isLast}
+        aria-label="下に移動"
+        className="rounded-b-md border border-slate-200 px-1 text-xs text-slate-500 hover:bg-slate-50 disabled:opacity-30"
+      >
+        ▼
+      </button>
+    </div>
+  );
+}
+
+function EntryRow({
+  entry,
+  isFirst,
+  isLast,
+  onMoveUp,
+  onMoveDown,
+  onChanged,
+}: {
+  entry: RosterEntryData;
+  isFirst: boolean;
+  isLast: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onChanged: () => void;
+}) {
   const [name, setName] = useState(entry.name);
   const [snsHandle, setSnsHandle] = useState(entry.snsHandle ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +107,7 @@ function EntryRow({ entry, onChanged }: { entry: RosterEntryData; onChanged: () 
       body: JSON.stringify({
         name: patch.name ?? name,
         snsHandle: patch.snsHandle ?? snsHandle,
+        isCategory: entry.isCategory,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -67,7 +119,8 @@ function EntryRow({ entry, onChanged }: { entry: RosterEntryData; onChanged: () 
   }
 
   async function handleDelete() {
-    if (!window.confirm(`「${entry.name}」を削除しますか？`)) return;
+    const label = entry.isCategory ? `「${entry.name}」の分類見出し` : `「${entry.name}」`;
+    if (!window.confirm(`${label}を削除しますか？`)) return;
     setDeleting(true);
     try {
       const res = await fetch(`/api/organizer/performer-roster-entries/${entry.id}`, { method: "DELETE" });
@@ -77,8 +130,35 @@ function EntryRow({ entry, onChanged }: { entry: RosterEntryData; onChanged: () 
     }
   }
 
+  if (entry.isCategory) {
+    return (
+      <div className="flex items-center gap-1 rounded-md border border-slate-300 bg-slate-100 p-1.5">
+        <MoveButtons isFirst={isFirst} isLast={isLast} onMoveUp={onMoveUp} onMoveDown={onMoveDown} />
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={(e) => saveField({ name: e.target.value })}
+          placeholder="分類名"
+          className="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-1.5 py-1 text-sm font-bold text-slate-700 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={deleting}
+          aria-label="削除"
+          className="shrink-0 rounded-md border border-rose-200 px-2 py-1 text-xs text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+        >
+          ✕
+        </button>
+        {error && <p className="text-xs text-rose-600">{error}</p>}
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-1 rounded-md border border-slate-200 p-1.5">
+      <MoveButtons isFirst={isFirst} isLast={isLast} onMoveUp={onMoveUp} onMoveDown={onMoveDown} />
       <input
         type="text"
         value={name}
@@ -116,6 +196,9 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
   const [includeSns, setIncludeSns] = useState(true);
   const [copyLabel, setCopyLabel] = useState("コピーする");
   const [copyPreview, setCopyPreview] = useState<string | null>(null);
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [customCategory, setCustomCategory] = useState("");
+  const [addingCategory, setAddingCategory] = useState(false);
 
   async function handleAddEntry() {
     setAddingEntry(true);
@@ -127,6 +210,25 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
     }
   }
 
+  async function handleAddCategory(label: string) {
+    if (!label.trim()) return;
+    setAddingCategory(true);
+    try {
+      const res = await fetch(`/api/organizer/performer-rosters/${roster.id}/entries`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isCategory: true, name: label.trim() }),
+      });
+      if (res.ok) {
+        setShowCategoryPicker(false);
+        setCustomCategory("");
+        router.refresh();
+      }
+    } finally {
+      setAddingCategory(false);
+    }
+  }
+
   async function handleSort() {
     setSorting(true);
     try {
@@ -135,6 +237,20 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
     } finally {
       setSorting(false);
     }
+  }
+
+  async function handleMove(entryId: string, direction: -1 | 1) {
+    const ids = roster.entries.map((e) => e.id);
+    const index = ids.indexOf(entryId);
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= ids.length) return;
+    [ids[index], ids[targetIndex]] = [ids[targetIndex], ids[index]];
+    const res = await fetch(`/api/organizer/performer-rosters/${roster.id}/reorder`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderedIds: ids }),
+    });
+    if (res.ok) router.refresh();
   }
 
   function handleOpenCopyPreview() {
@@ -174,17 +290,34 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
 
       <div className="space-y-1.5">
         {roster.entries.length === 0 && <p className="text-sm text-slate-500">まだ出演者がいません。</p>}
-        {roster.entries.map((entry) => (
-          <EntryRow key={entry.id} entry={entry} onChanged={() => router.refresh()} />
+        {roster.entries.map((entry, index) => (
+          <EntryRow
+            key={entry.id}
+            entry={entry}
+            isFirst={index === 0}
+            isLast={index === roster.entries.length - 1}
+            onMoveUp={() => handleMove(entry.id, -1)}
+            onMoveDown={() => handleMove(entry.id, 1)}
+            onChanged={() => router.refresh()}
+          />
         ))}
-        <button
-          type="button"
-          onClick={handleAddEntry}
-          disabled={addingEntry}
-          className="w-full rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-sky-400 hover:text-sky-700 disabled:opacity-60"
-        >
-          ＋ 出演者を追加
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={handleAddEntry}
+            disabled={addingEntry}
+            className="flex-1 rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-sky-400 hover:text-sky-700 disabled:opacity-60"
+          >
+            ＋ 出演者を追加
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowCategoryPicker(true)}
+            className="flex-1 rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-sky-400 hover:text-sky-700"
+          >
+            ＋ 分類を追加
+          </button>
+        </div>
       </div>
 
       {roster.entries.length > 0 && (
@@ -200,6 +333,59 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
           >
             コピー
           </button>
+        </div>
+      )}
+
+      {showCategoryPicker && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setShowCategoryPicker(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-lg bg-white p-4 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="mb-2 text-sm font-bold text-slate-900">分類を追加</p>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORY_PRESETS.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => handleAddCategory(preset)}
+                  disabled={addingCategory}
+                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:border-sky-400 hover:bg-sky-50 disabled:opacity-60"
+                >
+                  {preset}
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <input
+                type="text"
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                placeholder="自由に入力（例: 【出店】）"
+                className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              />
+              <button
+                type="button"
+                onClick={() => handleAddCategory(customCategory)}
+                disabled={addingCategory || !customCategory.trim()}
+                className="shrink-0 rounded-md bg-sky-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                追加
+              </button>
+            </div>
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowCategoryPicker(false)}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
+              >
+                閉じる
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

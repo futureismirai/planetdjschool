@@ -31,7 +31,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!roster) {
     return NextResponse.json({ error: "出演者一覧が見つかりません。" }, { status: 404 });
   }
-  if (roster.entries.length === 0) {
+  const performerEntries = roster.entries.filter((entry) => !entry.isCategory);
+  if (performerEntries.length === 0) {
     return NextResponse.json({ error: "この出演者一覧には出演者がいません。" }, { status: 400 });
   }
 
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   let nextOrder = (maxOrder._max.order ?? -1) + 1;
 
   await prisma.timetableSlot.createMany({
-    data: roster.entries.map((entry) => ({
+    data: performerEntries.map((entry) => ({
       eventFloorId,
       performerName: entry.name,
       snsHandle: entry.snsHandle,

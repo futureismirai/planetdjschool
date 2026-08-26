@@ -13,7 +13,12 @@ async function getRoster(rosterId: string) {
   return {
     id: roster.id,
     name: roster.name,
-    entries: roster.entries.map((e) => ({ id: e.id, name: e.name, snsHandle: e.snsHandle })),
+    entries: roster.entries.map((e) => ({
+      id: e.id,
+      name: e.name,
+      snsHandle: e.snsHandle,
+      isCategory: e.isCategory,
+    })),
   };
 }
 

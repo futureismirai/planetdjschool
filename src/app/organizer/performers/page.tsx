@@ -5,10 +5,14 @@ import { DeleteRosterButton } from "./DeleteRosterButton";
 export const dynamic = "force-dynamic";
 
 async function getRosters() {
-  return prisma.performerRoster.findMany({
+  const rosters = await prisma.performerRoster.findMany({
     orderBy: { updatedAt: "desc" },
-    include: { entries: { select: { id: true } } },
+    include: { entries: { select: { id: true, isCategory: true } } },
   });
+  return rosters.map((roster) => ({
+    ...roster,
+    performerCount: roster.entries.filter((e) => !e.isCategory).length,
+  }));
 }
 
 export default async function PerformerRosterListPage() {
@@ -38,7 +42,7 @@ export default async function PerformerRosterListPage() {
           >
             <Link href={`/organizer/performers/${roster.id}`} className="block pr-14">
               <h2 className="text-sm font-bold text-slate-900">{roster.name}</h2>
-              <p className="mt-0.5 text-xs text-slate-500">{roster.entries.length}名</p>
+              <p className="mt-0.5 text-xs text-slate-500">{roster.performerCount}名</p>
             </Link>
             <DeleteRosterButton rosterId={roster.id} rosterName={roster.name} />
           </div>

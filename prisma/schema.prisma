@@ -190,7 +190,7 @@ model PerformerRoster {
   entries   PerformerRosterEntry[]
 }
 
-/// 出演者一覧の1行分（出演者名・SNSアカウント）
+/// 出演者一覧の1行分（出演者名・SNSアカウント、または分類の見出し行）
 model PerformerRosterEntry {
   id                String          @id @default(cuid())
   performerRosterId String
@@ -198,6 +198,8 @@ model PerformerRosterEntry {
   name              String
   /// InstagramなどSNSのアカウント名（任意、@は含めない）
   snsHandle         String?
+  /// trueの場合、出演者ではなく【DJ】などの分類の見出し行として扱う（nameに見出しテキストを格納）
+  isCategory        Boolean         @default(false)
   order             Int             @default(0)
   createdAt         DateTime        @default(now())
 
