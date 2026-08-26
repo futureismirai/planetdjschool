@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentAdmin } from "@/lib/auth";
 import { parseReorderInput } from "@/lib/organizerInput";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const admin = await getCurrentAdmin();
-  if (!admin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { id: eventFloorId } = await params;
 
   let body: unknown;

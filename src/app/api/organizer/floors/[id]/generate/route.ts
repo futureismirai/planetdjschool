@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentAdmin } from "@/lib/auth";
 import { parseGenerateInput } from "@/lib/organizerInput";
 import { generateTimetable } from "@/lib/timetable";
 
 /** タイムテーブルを自動作成し、このフロアの既存の枠をすべて置き換える */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const admin = await getCurrentAdmin();
-  if (!admin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const { id: floorId } = await params;
 
   let body: unknown;

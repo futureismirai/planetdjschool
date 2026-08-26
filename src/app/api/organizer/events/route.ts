@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentAdmin } from "@/lib/auth";
 import { parseEventInput } from "@/lib/organizerInput";
 
 export async function GET() {
-  const admin = await getCurrentAdmin();
-  if (!admin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const events = await prisma.event.findMany({
     orderBy: { createdAt: "desc" },
     include: {
@@ -22,11 +16,6 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const admin = await getCurrentAdmin();
-  if (!admin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   let body: unknown;
   try {
     body = await request.json();

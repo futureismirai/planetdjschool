@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentAdmin } from "@/lib/auth";
 import { parseVenueInput } from "@/lib/organizerInput";
 
 export async function GET() {
-  const admin = await getCurrentAdmin();
-  if (!admin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const venues = await prisma.venue.findMany({
     orderBy: { updatedAt: "desc" },
     include: { photos: { orderBy: { order: "asc" }, take: 1 } },
@@ -17,11 +11,6 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const admin = await getCurrentAdmin();
-  if (!admin) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   let body: unknown;
   try {
     body = await request.json();
