@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { DeleteEventButton } from "./DeleteEventButton";
+import { CreateEventButton } from "./CreateEventButton";
 
 export const dynamic = "force-dynamic";
 
@@ -27,12 +28,7 @@ export default async function TimetableEventListPage() {
 
   return (
     <div className="space-y-3">
-      <Link
-        href="/organizer/timetable/new"
-        className="block rounded-md bg-sky-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700"
-      >
-        ＋ 新しいイベントを作成
-      </Link>
+      <CreateEventButton />
 
       <div className="space-y-2">
         {events.length === 0 && <p className="text-sm text-slate-500">イベントがまだありません。</p>}

@@ -272,6 +272,41 @@ function DayCard({ eventName, day }: { eventName: string; day: DayData }) {
   );
 }
 
+function EventNameField({ event }: { event: EventData }) {
+  const router = useRouter();
+  const [name, setName] = useState(event.name);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSave(value: string) {
+    setError(null);
+    const res = await fetch(`/api/organizer/events/${event.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: value, memo: event.memo }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(data.error ?? "保存に失敗しました。");
+      return;
+    }
+    router.refresh();
+  }
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onBlur={(e) => handleSave(e.target.value)}
+        placeholder="イベント名"
+        className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-xl font-bold text-slate-900 shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+      />
+      {error && <p className="mt-0.5 text-xs text-rose-600">{error}</p>}
+    </div>
+  );
+}
+
 export function EventEditor({ event }: { event: EventData }) {
   return (
     <div className="space-y-5">
@@ -279,7 +314,7 @@ export function EventEditor({ event }: { event: EventData }) {
         <Link href="/organizer/timetable" className="text-xs text-slate-400 hover:text-slate-600">
           ← イベント一覧に戻る
         </Link>
-        <h1 className="mt-1 text-xl font-bold text-slate-900">{event.name}</h1>
+        <EventNameField event={event} />
         {event.memo && <p className="mt-1 text-sm text-slate-500">{event.memo}</p>}
       </div>
 
