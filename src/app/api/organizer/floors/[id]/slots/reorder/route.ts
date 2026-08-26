@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parseReorderInput } from "@/lib/organizerInput";
+import { slotDurationMinutes, toHHMM, toMinutes } from "@/lib/timetable";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: eventFloorId } = await params;
@@ -17,14 +18,29 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
-  await prisma.$transaction(
-    parsed.data.orderedIds.map((id, index) =>
-      prisma.timetableSlot.update({
-        where: { id, eventFloorId },
-        data: { order: index },
-      })
-    )
-  );
+  const floor = await prisma.eventFloor.findUnique({
+    where: { id: eventFloorId },
+    include: { slots: true },
+  });
+  if (!floor) {
+    return NextResponse.json({ error: "フロアが見つかりません。" }, { status: 404 });
+  }
+  const slotsById = new Map(floor.slots.map((s) => [s.id, s]));
+
+  // 出演順を入れ替えても各出演者の出演時間(分)はそのまま保ち、
+  // 新しい順番に合わせて開始・終了時刻だけを先頭から詰め直す
+  let cursor = toMinutes(floor.startTime);
+  const updates = parsed.data.orderedIds.flatMap((id, index) => {
+    const slot = slotsById.get(id);
+    if (!slot) return [];
+    const duration = slotDurationMinutes(slot.startTime, slot.endTime);
+    const startTime = toHHMM(cursor);
+    const endTime = toHHMM(cursor + duration);
+    cursor += duration;
+    return [prisma.timetableSlot.update({ where: { id }, data: { order: index, startTime, endTime } })];
+  });
+
+  await prisma.$transaction(updates);
 
   const slots = await prisma.timetableSlot.findMany({
     where: { eventFloorId },
