@@ -23,9 +23,13 @@ function newPerformerRow(): PerformerRow {
 
 const ROUNDING_OPTIONS: { value: "none" | "5min" | "10min"; label: string }[] = [
   { value: "none", label: "均等割り" },
-  { value: "5min", label: "ほぼ均等（5分単位）" },
-  { value: "10min", label: "ほぼ均等（10分単位）" },
+  { value: "5min", label: "5分単位" },
+  { value: "10min", label: "10分単位" },
 ];
+
+const inputClass =
+  "w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500";
+const labelClass = "block text-[11px] font-medium text-slate-500";
 
 export function QuickCreateForm() {
   const router = useRouter();
@@ -34,7 +38,7 @@ export function QuickCreateForm() {
   const [startTime, setStartTime] = useState("18:00");
   const [endTime, setEndTime] = useState("23:00");
   const [rounding, setRounding] = useState<"none" | "5min" | "10min">("none");
-  const [performers, setPerformers] = useState<PerformerRow[]>([newPerformerRow(), newPerformerRow()]);
+  const [performers, setPerformers] = useState<PerformerRow[]>([newPerformerRow()]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -121,98 +125,75 @@ export function QuickCreateForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {error && <p className="rounded-md bg-rose-50 p-2 text-sm text-rose-600">{error}</p>}
+    <form onSubmit={handleSubmit} className="space-y-2">
+      {error && <p className="rounded-md bg-rose-50 p-2 text-xs text-rose-600">{error}</p>}
 
-      <div className="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-500">イベント名</label>
-          <input
-            type="text"
-            required
-            autoFocus
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-          />
+      <div>
+        <label className={labelClass}>イベント名</label>
+        <input type="text" required autoFocus value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+      </div>
+
+      <div className="grid grid-cols-3 gap-1.5">
+        <div>
+          <label className={labelClass}>開催日</label>
+          <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-500">開催日</label>
-          <input
-            type="date"
-            required
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-          />
+          <label className={labelClass}>開始</label>
+          <input type="time" required value={startTime} onChange={(e) => setStartTime(e.target.value)} className={inputClass} />
         </div>
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <label className="block text-xs font-medium text-slate-500">開始</label>
-            <input
-              type="time"
-              required
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-            />
-          </div>
-          <div className="flex-1">
-            <label className="block text-xs font-medium text-slate-500">終了</label>
-            <input
-              type="time"
-              required
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-            />
-          </div>
+        <div>
+          <label className={labelClass}>終了</label>
+          <input type="time" required value={endTime} onChange={(e) => setEndTime(e.target.value)} className={inputClass} />
         </div>
       </div>
 
-      <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div>
-          <label className="block text-xs font-medium text-slate-500">区切り方</label>
-          <select
-            value={rounding}
-            onChange={(e) => setRounding(e.target.value as typeof rounding)}
-            className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-          >
-            {ROUNDING_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="flex items-center gap-2">
+        <label className="shrink-0 text-[11px] font-medium text-slate-500">区切り方</label>
+        <select
+          value={rounding}
+          onChange={(e) => setRounding(e.target.value as typeof rounding)}
+          className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        >
+          {ROUNDING_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        <p className="text-xs font-medium text-slate-600">
-          出演者（出演順に入力。出演時間を固定したい場合は「時間固定」にチェックして分数を入力）
-        </p>
-        <div className="space-y-2">
-          {performers.map((p, i) => (
-            <div key={p.key} className="flex flex-wrap items-center gap-2 rounded-md border border-slate-100 bg-slate-50 p-2">
-              <span className="w-5 shrink-0 text-right text-xs text-slate-400">{i + 1}</span>
+      <div className="space-y-1.5">
+        {performers.map((p, i) => (
+          <div key={p.key} className="rounded-md border border-slate-200 bg-slate-50 p-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="w-4 shrink-0 text-right text-[11px] text-slate-400">{i + 1}</span>
               <input
                 type="text"
                 placeholder="出演者名"
                 value={p.name}
                 onChange={(e) => updateRow(p.key, { name: e.target.value })}
-                className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
               />
+              <button
+                type="button"
+                onClick={() => removeRow(p.key)}
+                aria-label="削除"
+                className="shrink-0 rounded-md border border-rose-200 px-2 py-1 text-xs text-rose-600 hover:bg-rose-50"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 pl-[22px]">
               <input
                 type="text"
-                placeholder="Instagram等（任意・@なし）"
+                placeholder="SNS（任意・@なし）"
                 value={p.sns}
                 onChange={(e) => updateRow(p.key, { sns: e.target.value })}
-                className="w-40 min-w-0 rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 text-xs focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
               />
-              <label className="flex shrink-0 items-center gap-1 text-xs text-slate-500">
-                <input
-                  type="checkbox"
-                  checked={p.useFixed}
-                  onChange={(e) => updateRow(p.key, { useFixed: e.target.checked })}
-                />
+              <label className="flex shrink-0 items-center gap-1 text-[11px] text-slate-500">
+                <input type="checkbox" checked={p.useFixed} onChange={(e) => updateRow(p.key, { useFixed: e.target.checked })} />
                 時間固定
               </label>
               {p.useFixed && (
@@ -223,25 +204,18 @@ export function QuickCreateForm() {
                     placeholder="分"
                     value={p.fixedDurationMinutes}
                     onChange={(e) => updateRow(p.key, { fixedDurationMinutes: e.target.value })}
-                    className="w-20 rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                    className="w-14 rounded-md border border-slate-300 px-1.5 py-1 text-xs focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
                   />
-                  <span className="text-xs text-slate-400">分</span>
+                  <span className="text-[11px] text-slate-400">分</span>
                 </div>
               )}
-              <button
-                type="button"
-                onClick={() => removeRow(p.key)}
-                className="shrink-0 rounded-md border border-rose-200 px-2 py-1 text-xs text-rose-600 hover:bg-rose-50"
-              >
-                削除
-              </button>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
         <button
           type="button"
           onClick={() => setPerformers((rows) => [...rows, newPerformerRow()])}
-          className="rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-sky-400 hover:text-sky-700"
+          className="w-full rounded-md border border-dashed border-slate-300 py-1.5 text-xs text-slate-500 hover:border-sky-400 hover:text-sky-700"
         >
           ＋ 出演者を追加
         </button>
@@ -250,7 +224,7 @@ export function QuickCreateForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-md bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+        className="w-full rounded-md bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {submitting ? "作成中..." : "タイムテーブルを作成する"}
       </button>
