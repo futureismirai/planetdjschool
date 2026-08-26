@@ -324,7 +324,7 @@ function SlotRow({
   }
 
   return (
-    <tr
+    <div
       data-slot-id={slot.id}
       onDragEnter={onDragEnter}
       onDragOver={(e) => e.preventDefault()}
@@ -333,12 +333,12 @@ function SlotRow({
         onDrop();
       }}
       className={
-        "border-b border-slate-50 last:border-0" +
+        "rounded-md border border-slate-200 p-1.5" +
         (isDragging ? " opacity-40" : "") +
         (isDropTarget ? " border-t-2 border-t-sky-400" : "")
       }
     >
-      <td className="px-1 py-1">
+      <div className="flex items-center gap-1">
         <span
           draggable
           onDragStart={onDragStart}
@@ -346,57 +346,52 @@ function SlotRow({
           onTouchStart={onDragStart}
           title="ドラッグして並び替え"
           style={{ touchAction: "none" }}
-          className="inline-block cursor-grab select-none px-2 py-1 text-base text-slate-400 hover:text-slate-700 active:cursor-grabbing"
+          className="shrink-0 cursor-grab select-none px-1 text-base text-slate-400 hover:text-slate-700 active:cursor-grabbing"
         >
           ⠿
         </span>
-      </td>
-      <td className="px-1 py-1">
         <input
           type="time"
           defaultValue={slot.startTime}
           onBlur={(e) => saveField({ startTime: e.target.value })}
-          className="w-24 rounded-md border border-slate-300 px-1.5 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          className="w-[4.5rem] shrink-0 rounded-md border border-slate-300 px-1 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
-      </td>
-      <td className="px-1 py-1">
+        <span className="shrink-0 text-xs text-slate-400">〜</span>
         <input
           type="time"
           defaultValue={slot.endTime}
           onBlur={(e) => saveField({ endTime: e.target.value })}
-          className="w-24 rounded-md border border-slate-300 px-1.5 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          className="w-[4.5rem] shrink-0 rounded-md border border-slate-300 px-1 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
-      </td>
-      <td className="px-1 py-1 text-xs text-slate-500">{slotDurationMinutes(slot.startTime, slot.endTime)}分</td>
-      <td className="px-1 py-1">
-        <input
-          type="text"
-          defaultValue={slot.performerName}
-          onBlur={(e) => saveField({ performerName: e.target.value })}
-          className="w-full min-w-[8rem] rounded-md border border-slate-300 px-1.5 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-        />
-      </td>
-      <td className="px-1 py-1">
-        <input
-          type="text"
-          placeholder="@なし"
-          defaultValue={slot.snsHandle ?? ""}
-          onBlur={(e) => saveField({ snsHandle: e.target.value })}
-          className="w-32 rounded-md border border-slate-300 px-1.5 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-        />
-      </td>
-      <td className="px-1 py-1 text-right">
+        <span className="shrink-0 text-[11px] text-slate-500">{slotDurationMinutes(slot.startTime, slot.endTime)}分</span>
         <button
           type="button"
           onClick={handleDelete}
           disabled={deleting}
-          className="rounded-md border border-rose-200 px-2 py-1 text-xs text-rose-600 hover:bg-rose-50 disabled:opacity-60"
+          aria-label="削除"
+          className="ml-auto shrink-0 rounded-md border border-rose-200 px-2 py-1 text-xs text-rose-600 hover:bg-rose-50 disabled:opacity-60"
         >
-          削除
+          ✕
         </button>
-        {error && <p className="mt-1 text-xs text-rose-600">{error}</p>}
-      </td>
-    </tr>
+      </div>
+      <div className="mt-1 flex gap-1 pl-6">
+        <input
+          type="text"
+          defaultValue={slot.performerName}
+          onBlur={(e) => saveField({ performerName: e.target.value })}
+          placeholder="出演者名"
+          className="min-w-0 flex-1 rounded-md border border-slate-300 px-1.5 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+        <input
+          type="text"
+          placeholder="SNS（@なし）"
+          defaultValue={slot.snsHandle ?? ""}
+          onBlur={(e) => saveField({ snsHandle: e.target.value })}
+          className="min-w-0 flex-1 rounded-md border border-slate-300 px-1.5 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+      </div>
+      {error && <p className="mt-1 pl-6 text-xs text-rose-600">{error}</p>}
+    </div>
   );
 }
 
@@ -540,42 +535,27 @@ export function FloorEditor({ floor, eventName, dayLabel }: { floor: FloorData; 
         {floor.slots.length === 0 ? (
           <p className="text-sm text-slate-400">出演枠がまだありません。自動作成するか、手動で追加してください。</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="text-xs text-slate-400">
-                  <th className="px-1 py-1 font-medium"></th>
-                  <th className="px-1 py-1 font-medium">開始</th>
-                  <th className="px-1 py-1 font-medium">終了</th>
-                  <th className="px-1 py-1 font-medium">出演時間</th>
-                  <th className="px-1 py-1 font-medium">出演者名</th>
-                  <th className="px-1 py-1 font-medium">SNS</th>
-                  <th className="px-1 py-1 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {floor.slots.map((slot) => (
-                  <SlotRow
-                    key={slot.id}
-                    slot={slot}
-                    isDragging={dragSlotId === slot.id}
-                    isDropTarget={dropTargetId === slot.id && dragSlotId !== slot.id}
-                    onDragStart={() => setDragSlotId(slot.id)}
-                    onDragEnter={() => setDropTargetId(slot.id)}
-                    onDragEnd={() => {
-                      setDragSlotId(null);
-                      setDropTargetId(null);
-                    }}
-                    onDrop={() => {
-                      if (dragSlotId) handleReorder(dragSlotId, slot.id);
-                      setDragSlotId(null);
-                      setDropTargetId(null);
-                    }}
-                    onChanged={() => router.refresh()}
-                  />
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-1.5">
+            {floor.slots.map((slot) => (
+              <SlotRow
+                key={slot.id}
+                slot={slot}
+                isDragging={dragSlotId === slot.id}
+                isDropTarget={dropTargetId === slot.id && dragSlotId !== slot.id}
+                onDragStart={() => setDragSlotId(slot.id)}
+                onDragEnter={() => setDropTargetId(slot.id)}
+                onDragEnd={() => {
+                  setDragSlotId(null);
+                  setDropTargetId(null);
+                }}
+                onDrop={() => {
+                  if (dragSlotId) handleReorder(dragSlotId, slot.id);
+                  setDragSlotId(null);
+                  setDropTargetId(null);
+                }}
+                onChanged={() => router.refresh()}
+              />
+            ))}
           </div>
         )}
         <button
