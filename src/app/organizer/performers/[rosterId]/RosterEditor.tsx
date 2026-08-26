@@ -197,8 +197,14 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
   const [copyLabel, setCopyLabel] = useState("コピーする");
   const [copyPreview, setCopyPreview] = useState<string | null>(null);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [categoryInsertIndex, setCategoryInsertIndex] = useState<number | null>(null);
   const [customCategory, setCustomCategory] = useState("");
   const [addingCategory, setAddingCategory] = useState(false);
+
+  function openCategoryPicker(insertIndex: number) {
+    setCategoryInsertIndex(insertIndex);
+    setShowCategoryPicker(true);
+  }
 
   async function handleAddEntry() {
     setAddingEntry(true);
@@ -219,11 +225,25 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isCategory: true, name: label.trim() }),
       });
-      if (res.ok) {
-        setShowCategoryPicker(false);
-        setCustomCategory("");
-        router.refresh();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return;
+
+      // 挿入位置が指定されている場合は、作成直後にその位置へ並び替える
+      const insertIndex = categoryInsertIndex ?? roster.entries.length;
+      if (insertIndex < roster.entries.length) {
+        const ids = roster.entries.map((e) => e.id);
+        ids.splice(insertIndex, 0, data.entry.id);
+        await fetch(`/api/organizer/performer-rosters/${roster.id}/reorder`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderedIds: ids }),
+        });
       }
+
+      setShowCategoryPicker(false);
+      setCategoryInsertIndex(null);
+      setCustomCategory("");
+      router.refresh();
     } finally {
       setAddingCategory(false);
     }
@@ -288,20 +308,28 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
         </button>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-0.5">
         {roster.entries.length === 0 && <p className="text-sm text-slate-500">まだ出演者がいません。</p>}
         {roster.entries.map((entry, index) => (
-          <EntryRow
-            key={entry.id}
-            entry={entry}
-            isFirst={index === 0}
-            isLast={index === roster.entries.length - 1}
-            onMoveUp={() => handleMove(entry.id, -1)}
-            onMoveDown={() => handleMove(entry.id, 1)}
-            onChanged={() => router.refresh()}
-          />
+          <div key={entry.id}>
+            <EntryRow
+              entry={entry}
+              isFirst={index === 0}
+              isLast={index === roster.entries.length - 1}
+              onMoveUp={() => handleMove(entry.id, -1)}
+              onMoveDown={() => handleMove(entry.id, 1)}
+              onChanged={() => router.refresh()}
+            />
+            <button
+              type="button"
+              onClick={() => openCategoryPicker(index + 1)}
+              className="flex w-full items-center justify-center py-0.5 text-[10px] text-slate-300 hover:text-sky-500"
+            >
+              ＋ ここに分類を挿入
+            </button>
+          </div>
         ))}
-        <div className="flex flex-wrap gap-2">
+        <div className="mt-1 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={handleAddEntry}
@@ -312,7 +340,7 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
           </button>
           <button
             type="button"
-            onClick={() => setShowCategoryPicker(true)}
+            onClick={() => openCategoryPicker(roster.entries.length)}
             className="flex-1 rounded-md border border-dashed border-slate-300 px-3 py-1 text-xs text-slate-500 hover:border-sky-400 hover:text-sky-700"
           >
             ＋ 分類を追加
@@ -339,7 +367,10 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
       {showCategoryPicker && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setShowCategoryPicker(false)}
+          onClick={() => {
+            setShowCategoryPicker(false);
+            setCategoryInsertIndex(null);
+          }}
         >
           <div
             className="w-full max-w-md rounded-lg bg-white p-4 shadow-lg"
@@ -379,7 +410,10 @@ export function RosterEditor({ roster }: { roster: RosterData }) {
             <div className="mt-3 flex justify-end">
               <button
                 type="button"
-                onClick={() => setShowCategoryPicker(false)}
+                onClick={() => {
+                  setShowCategoryPicker(false);
+                  setCategoryInsertIndex(null);
+                }}
                 className="rounded-md border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
               >
                 閉じる
