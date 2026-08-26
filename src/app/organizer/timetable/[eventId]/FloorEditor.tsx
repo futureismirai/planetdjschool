@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   DEFAULT_SNS_FORMAT_OPTIONS,
@@ -325,6 +325,7 @@ function SlotRow({
 
   return (
     <tr
+      data-slot-id={slot.id}
       onDragEnter={onDragEnter}
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
@@ -342,8 +343,10 @@ function SlotRow({
           draggable
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
+          onTouchStart={onDragStart}
           title="ドラッグして並び替え"
-          className="inline-block cursor-grab select-none px-1 text-slate-400 hover:text-slate-700 active:cursor-grabbing"
+          style={{ touchAction: "none" }}
+          className="inline-block cursor-grab select-none px-2 py-1 text-base text-slate-400 hover:text-slate-700 active:cursor-grabbing"
         >
           ⠿
         </span>
@@ -413,6 +416,38 @@ export function FloorEditor({ floor, eventName, dayLabel }: { floor: FloorData; 
   const [copyOptions, setCopyOptions] = useState<SnsFormatOptions>(DEFAULT_SNS_FORMAT_OPTIONS);
   const [dragSlotId, setDragSlotId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+
+  // スマホなどのタッチ操作でも並び替えできるように、指の位置から対象行を検出する
+  useEffect(() => {
+    if (!dragSlotId) return;
+
+    function handleTouchMove(e: TouchEvent) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      if (!touch) return;
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      const row = (el as HTMLElement | null)?.closest<HTMLElement>("[data-slot-id]");
+      if (row?.dataset.slotId) setDropTargetId(row.dataset.slotId);
+    }
+
+    function handleTouchEnd() {
+      if (dragSlotId && dropTargetId && dropTargetId !== dragSlotId) {
+        handleReorder(dragSlotId, dropTargetId);
+      }
+      setDragSlotId(null);
+      setDropTargetId(null);
+    }
+
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
+    return () => {
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragSlotId, dropTargetId]);
 
   async function handleReorder(fromId: string, toId: string) {
     if (fromId === toId) return;

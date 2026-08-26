@@ -112,9 +112,9 @@ function AddDayForm({ eventId }: { eventId: string }) {
   );
 }
 
-function AddFloorForm({ dayId }: { dayId: string }) {
+function AddFloorForm({ dayId, defaultOpen = false }: { dayId: string; defaultOpen?: boolean }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [name, setName] = useState("");
   const [startTime, setStartTime] = useState("18:00");
   const [endTime, setEndTime] = useState("23:00");
@@ -280,7 +280,7 @@ function DayCard({ eventName, day }: { eventName: string; day: DayData }) {
         {day.floors.map((floor) => (
           <FloorEditor key={floor.id} floor={floor} eventName={eventName} dayLabel={currentDayLabel} />
         ))}
-        <AddFloorForm dayId={day.id} />
+        <AddFloorForm dayId={day.id} defaultOpen={day.floors.length === 0} />
       </div>
     </section>
   );
