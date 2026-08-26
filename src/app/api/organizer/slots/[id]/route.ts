@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parseSlotInput } from "@/lib/organizerInput";
+import { rememberPerformer } from "@/lib/performerDirectory";
 import { generateTimetable, slotDurationMinutes, type PerformerInput, type RoundingMode } from "@/lib/timetable";
 
 function parseRounding(value: unknown): RoundingMode {
@@ -45,6 +46,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         isFixed: parsed.data.isFixed,
       },
     });
+    await rememberPerformer(parsed.data.performerName, parsed.data.snsHandle);
     return NextResponse.json({ slot });
   }
 
@@ -108,6 +110,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           })
     )
   );
+
+  await rememberPerformer(parsed.data.performerName, parsed.data.snsHandle);
 
   const slot = updatedSlots.find((s) => s.id === id);
   return NextResponse.json({ slot, slots: updatedSlots });

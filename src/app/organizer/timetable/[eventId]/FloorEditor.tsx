@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   DEFAULT_SNS_FORMAT_OPTIONS,
@@ -102,6 +102,8 @@ function FloorHeaderFields({
   );
 }
 
+type PerformerSuggestion = { id: string; name: string; snsHandle: string | null };
+
 function SlotRow({
   slot,
   rounding,
@@ -125,6 +127,27 @@ function SlotRow({
 }) {
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [performerName, setPerformerName] = useState(slot.performerName);
+  const [snsHandle, setSnsHandle] = useState(slot.snsHandle ?? "");
+  const [suggestions, setSuggestions] = useState<PerformerSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function searchPerformers(query: string) {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(async () => {
+      const res = await fetch(`/api/organizer/performers?q=${encodeURIComponent(query)}`);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) setSuggestions(data.performers ?? []);
+    }, 150);
+  }
+
+  function selectSuggestion(s: PerformerSuggestion) {
+    setPerformerName(s.name);
+    setSnsHandle(s.snsHandle ?? "");
+    setShowSuggestions(false);
+    saveField({ performerName: s.name, snsHandle: s.snsHandle ?? "" });
+  }
 
   async function saveField(
     patch: Partial<Pick<SlotData, "performerName" | "snsHandle" | "startTime" | "endTime" | "isFixed">>
@@ -224,18 +247,50 @@ function SlotRow({
           時間固定
         </label>
       </div>
-      <div className="mt-1 flex gap-1 pl-6">
-        <input
-          type="text"
-          defaultValue={slot.performerName}
-          onBlur={(e) => saveField({ performerName: e.target.value })}
-          placeholder="出演者名"
-          className="min-w-0 flex-1 rounded-md border border-slate-300 px-1.5 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-        />
+      <div className="relative mt-1 flex gap-1 pl-6">
+        <div className="relative min-w-0 flex-1">
+          <input
+            type="text"
+            value={performerName}
+            onChange={(e) => {
+              setPerformerName(e.target.value);
+              setShowSuggestions(true);
+              searchPerformers(e.target.value);
+            }}
+            onFocus={() => {
+              setShowSuggestions(true);
+              searchPerformers(performerName);
+            }}
+            onBlur={(e) => {
+              setTimeout(() => setShowSuggestions(false), 150);
+              saveField({ performerName: e.target.value });
+            }}
+            placeholder="出演者名"
+            className="w-full rounded-md border border-slate-300 px-1.5 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <ul className="absolute z-10 mt-0.5 max-h-40 w-full overflow-y-auto rounded-md border border-slate-200 bg-white text-sm shadow-lg">
+              {suggestions.map((s) => (
+                <li key={s.id}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => selectSuggestion(s)}
+                    className="block w-full px-2 py-1 text-left hover:bg-sky-50"
+                  >
+                    <span className="font-medium text-slate-800">{s.name}</span>
+                    {s.snsHandle && <span className="ml-1 text-xs text-slate-400">@{s.snsHandle}</span>}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         <input
           type="text"
           placeholder="SNS（@なし）"
-          defaultValue={slot.snsHandle ?? ""}
+          value={snsHandle}
+          onChange={(e) => setSnsHandle(e.target.value)}
           onBlur={(e) => saveField({ snsHandle: e.target.value })}
           className="min-w-0 flex-1 rounded-md border border-slate-300 px-1.5 py-1 text-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
