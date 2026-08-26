@@ -77,15 +77,16 @@ function FloorHeaderFields({
             onChange={(e) => setName(e.target.value)}
             onBlur={(e) => handleSave({ name: e.target.value })}
             placeholder="フロア名"
-            className="rounded-md border border-transparent px-1 text-sm font-bold text-slate-900 hover:border-slate-200 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+            className="rounded-md border border-slate-300 px-1.5 py-1 text-sm font-bold text-slate-900 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
           />
         )}
+        <span className="text-xs font-medium text-slate-500">開催時間</span>
         <input
           type="time"
           value={startTime}
           onChange={(e) => setStartTime(e.target.value)}
           onBlur={(e) => handleSave({ startTime: e.target.value })}
-          className="rounded-md border border-transparent px-1 text-xs text-slate-500 hover:border-slate-200 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          className="rounded-md border border-slate-300 px-1.5 py-1 text-sm text-slate-700 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
         <span className="text-xs text-slate-400">〜</span>
         <input
@@ -93,7 +94,7 @@ function FloorHeaderFields({
           value={endTime}
           onChange={(e) => setEndTime(e.target.value)}
           onBlur={(e) => handleSave({ endTime: e.target.value })}
-          className="rounded-md border border-transparent px-1 text-xs text-slate-500 hover:border-slate-200 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          className="rounded-md border border-slate-300 px-1.5 py-1 text-sm text-slate-700 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
       </div>
       {error && <p className="mt-0.5 text-xs text-rose-600">{error}</p>}

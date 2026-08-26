@@ -30,7 +30,6 @@ function AddDayForm({ eventId }: { eventId: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState("");
-  const [label, setLabel] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +53,7 @@ function AddDayForm({ eventId }: { eventId: string }) {
       const res = await fetch(`/api/organizer/events/${eventId}/days`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, label }),
+        body: JSON.stringify({ date }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -63,7 +62,6 @@ function AddDayForm({ eventId }: { eventId: string }) {
       }
       setOpen(false);
       setDate("");
-      setLabel("");
       router.refresh();
     } catch {
       setError("通信エラーが発生しました。");
@@ -82,15 +80,6 @@ function AddDayForm({ eventId }: { eventId: string }) {
           required
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-        />
-      </div>
-      <div>
-        <label className="block text-xs font-medium text-slate-500">ラベル（任意 例: 1日目）</label>
-        <input
-          type="text"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
           className="mt-1 rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
       </div>
@@ -214,16 +203,15 @@ function DayCard({ eventName, day }: { eventName: string; day: DayData }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
   const [date, setDate] = useState(day.date);
-  const [label, setLabel] = useState(day.label ?? "");
   const [error, setError] = useState<string | null>(null);
   const currentDayLabel = day.label ? `${day.label}（${formatDateJa(day.date)}）` : formatDateJa(day.date);
 
-  async function handleSaveDay(patch: { date?: string; label?: string }) {
+  async function handleSaveDay(patch: { date?: string }) {
     setError(null);
     const res = await fetch(`/api/organizer/days/${day.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date: patch.date ?? date, label: patch.label ?? label }),
+      body: JSON.stringify({ date: patch.date ?? date, label: day.label }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -256,14 +244,6 @@ function DayCard({ eventName, day }: { eventName: string; day: DayData }) {
             onChange={(e) => setDate(e.target.value)}
             onBlur={(e) => handleSaveDay({ date: e.target.value })}
             className="rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-          />
-          <input
-            type="text"
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            onBlur={(e) => handleSaveDay({ label: e.target.value })}
-            placeholder="ラベル（任意 例: 1日目）"
-            className="w-40 rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
           />
           {error && <p className="text-xs text-rose-600">{error}</p>}
         </div>

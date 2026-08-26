@@ -31,7 +31,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     parsed.data.startTime !== existing.startTime || parsed.data.endTime !== existing.endTime;
 
   if (!timeChanged) {
-    const slot = await prisma.timetableSlot.update({ where: { id }, data: parsed.data });
+    // order はこのエンドポイントの対象外（並び替えは専用のreorder APIで行う）。
+    // parsed.data.order は未送信時に0がデフォルトされるため、そのまま使うと
+    // 並び順が先頭にリセットされてしまう。
+    const slot = await prisma.timetableSlot.update({
+      where: { id },
+      data: {
+        performerName: parsed.data.performerName,
+        snsHandle: parsed.data.snsHandle,
+        startTime: parsed.data.startTime,
+        endTime: parsed.data.endTime,
+        isFixed: parsed.data.isFixed,
+      },
+    });
     return NextResponse.json({ slot });
   }
 
