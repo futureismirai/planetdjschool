@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { DeleteEventButton } from "./DeleteEventButton";
 
 export const dynamic = "force-dynamic";
 
@@ -36,14 +37,16 @@ export default async function TimetableEventListPage() {
       <div className="space-y-2">
         {events.length === 0 && <p className="text-sm text-slate-500">イベントがまだありません。</p>}
         {events.map((event) => (
-          <Link
+          <div
             key={event.id}
-            href={`/organizer/timetable/${event.id}`}
-            className="block rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:border-sky-300 hover:shadow"
+            className="relative rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition hover:border-sky-300 hover:shadow"
           >
-            <h2 className="text-sm font-bold text-slate-900">{event.name}</h2>
-            <p className="mt-0.5 text-xs text-slate-500">{formatDateRange(event.days.map((d) => d.date))}</p>
-          </Link>
+            <Link href={`/organizer/timetable/${event.id}`} className="block pr-14">
+              <h2 className="text-sm font-bold text-slate-900">{event.name}</h2>
+              <p className="mt-0.5 text-xs text-slate-500">{formatDateRange(event.days.map((d) => d.date))}</p>
+            </Link>
+            <DeleteEventButton eventId={event.id} eventName={event.name} />
+          </div>
         ))}
       </div>
     </div>

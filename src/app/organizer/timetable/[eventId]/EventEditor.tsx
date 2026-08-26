@@ -293,40 +293,14 @@ function DayCard({ eventName, day }: { eventName: string; day: DayData }) {
 }
 
 export function EventEditor({ event }: { event: EventData }) {
-  const router = useRouter();
-  const [deleting, setDeleting] = useState(false);
-
-  async function handleDeleteEvent() {
-    if (!window.confirm(`イベント「${event.name}」を削除しますか？すべての日程・タイムテーブルが削除されます。`)) {
-      return;
-    }
-    setDeleting(true);
-    try {
-      const res = await fetch(`/api/organizer/events/${event.id}`, { method: "DELETE" });
-      if (res.ok) router.push("/organizer/timetable");
-    } finally {
-      setDeleting(false);
-    }
-  }
-
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <Link href="/organizer/timetable" className="text-xs text-slate-400 hover:text-slate-600">
-            ← イベント一覧に戻る
-          </Link>
-          <h1 className="mt-1 text-xl font-bold text-slate-900">{event.name}</h1>
-          {event.memo && <p className="mt-1 text-sm text-slate-500">{event.memo}</p>}
-        </div>
-        <button
-          type="button"
-          onClick={handleDeleteEvent}
-          disabled={deleting}
-          className="rounded-md border border-rose-200 px-3 py-1.5 text-sm text-rose-600 hover:bg-rose-50 disabled:opacity-60"
-        >
-          イベントを削除
-        </button>
+      <div>
+        <Link href="/organizer/timetable" className="text-xs text-slate-400 hover:text-slate-600">
+          ← イベント一覧に戻る
+        </Link>
+        <h1 className="mt-1 text-xl font-bold text-slate-900">{event.name}</h1>
+        {event.memo && <p className="mt-1 text-sm text-slate-500">{event.memo}</p>}
       </div>
 
       <div className="space-y-4">
