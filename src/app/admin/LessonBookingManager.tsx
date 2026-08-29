@@ -13,7 +13,7 @@ import {
 import { ManualBookingForm } from "./ManualBookingForm";
 import { DeleteBookingButton } from "./DeleteBookingButton";
 import { NextLessonEmailButton } from "./NextLessonEmailButton";
-import { DEFAULT_LOCATION } from "@/lib/constants";
+import { DEFAULT_LOCATION, INSTRUCTOR_NAME_OPTIONS } from "@/lib/constants";
 
 // このレッスンを終了した生徒に、どのレッスンの受講を勧めるかの対応表。
 const NEXT_LESSON_NAME: Record<string, string> = {
@@ -147,13 +147,21 @@ function LessonForm({
       </div>
       <div>
         <label className="block text-xs font-medium text-slate-500">講師名</label>
-        <input
-          type="text"
+        <select
           required
           value={values.instructorName}
           onChange={(e) => setValues({ ...values, instructorName: e.target.value })}
           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-        />
+        >
+          <option value="" disabled>
+            選択してください
+          </option>
+          {INSTRUCTOR_NAME_OPTIONS.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
       </div>
       <div>
         <label className="block text-xs font-medium text-slate-500">定員</label>

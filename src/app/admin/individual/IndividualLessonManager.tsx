@@ -10,6 +10,7 @@ import {
   withDateGroupFlags,
 } from "@/lib/date";
 import { DEFAULT_LOCATION, LESSON_NAME_OPTIONS } from "../LessonBookingManager";
+import { INSTRUCTOR_NAME_OPTIONS } from "@/lib/constants";
 
 export type IndividualParticipantItem = {
   id: string;
@@ -107,13 +108,21 @@ function LessonForm({
       </div>
       <div>
         <label className="block text-xs font-medium text-slate-500">講師名</label>
-        <input
-          type="text"
+        <select
           required
           value={values.instructorName}
           onChange={(e) => setValues({ ...values, instructorName: e.target.value })}
           className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-        />
+        >
+          <option value="" disabled>
+            選択してください
+          </option>
+          {INSTRUCTOR_NAME_OPTIONS.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="sm:col-span-3">
         <label className="block text-xs font-medium text-slate-500">場所</label>
