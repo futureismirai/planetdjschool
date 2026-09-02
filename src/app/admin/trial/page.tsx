@@ -70,13 +70,13 @@ export default async function AdminTrialPage() {
             href="/admin/students"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
           >
-            進捗状況
+            レッスン進捗
           </Link>
           <Link
             href="/admin/form-responses"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
           >
-            アンケート結果
+            体験会アンケート
           </Link>
           <LogoutButton />
         </div>

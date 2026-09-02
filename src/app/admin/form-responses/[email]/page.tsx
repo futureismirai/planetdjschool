@@ -59,7 +59,7 @@ export default async function AdminFormResponseDetailPage({
 
       {!error && responses.length === 0 && (
         <p className="mt-6 text-sm text-slate-500">
-          このメールアドレスに一致するアンケート結果が見つかりませんでした。
+          このメールアドレスに一致する体験会アンケートが見つかりませんでした。
         </p>
       )}
 
