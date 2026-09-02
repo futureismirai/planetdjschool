@@ -20,14 +20,8 @@ export type Student = {
   lastCommentUpdatedAt: Date | null;
   lastLessonDatetime: Date | null;
   missingCommentInstructors: string[];
-  finishedLessons: string[];
+  latestFinishedLesson: string | null;
 };
-
-/** 「Lesson N」の並び順で比較するためのキー。該当しない名前は末尾に回す。 */
-function lessonSortKey(name: string): number {
-  const match = name.match(/^Lesson (\d+)$/);
-  return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
-}
 
 /**
  * グループレッスン・個別レッスンの登録者を、メールアドレスをキーに生徒単位でまとめる。
@@ -105,7 +99,7 @@ export async function getStudents(): Promise<Student[]> {
         lastCommentUpdatedAt: null,
         lastLessonDatetime: null,
         missingCommentInstructors: [],
-        finishedLessons: [],
+        latestFinishedLesson: null,
       };
       studentsByEmail.set(key, student);
     }
@@ -133,16 +127,10 @@ export async function getStudents(): Promise<Student[]> {
     }
     student.missingCommentInstructors = Array.from(missingInstructors);
 
-    // 登録があり、レッスンの開催日時を過ぎたものを終了とみなす
-    const finishedNames = new Set<string>();
-    for (const a of student.attendances) {
-      if (a.datetime > now) continue;
-      finishedNames.add(a.lessonName);
-    }
-    student.finishedLessons = Array.from(finishedNames).sort((a, b) => {
-      const diff = lessonSortKey(a) - lessonSortKey(b);
-      return diff !== 0 ? diff : a.localeCompare(b, "ja");
-    });
+    // 登録があり、レッスンの開催日時を過ぎたもののうち、最も新しいものを「終了したレッスン」とする
+    // (attendancesは開催日時の降順なので、過ぎたもので最初に見つかったものが最新)
+    const latestFinished = student.attendances.find((a) => a.datetime <= now);
+    student.latestFinishedLesson = latestFinished?.lessonName ?? null;
   }
 
   return students;

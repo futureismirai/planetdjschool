@@ -6,6 +6,23 @@ import { getStudents } from "@/lib/students";
 
 export const dynamic = "force-dynamic";
 
+// レッスン番号ごとに色分けする(Lesson 1, 2, 3, ...)。番号が無い名前(未定など)はグレー。
+const LESSON_BADGE_COLORS = [
+  "bg-sky-100 text-sky-700",
+  "bg-emerald-100 text-emerald-700",
+  "bg-violet-100 text-violet-700",
+  "bg-orange-100 text-orange-700",
+  "bg-rose-100 text-rose-700",
+  "bg-cyan-100 text-cyan-700",
+];
+
+function lessonBadgeClassName(lessonName: string): string {
+  const match = lessonName.match(/^Lesson (\d+)$/);
+  if (!match) return "bg-slate-100 text-slate-600";
+  const index = (Number(match[1]) - 1) % LESSON_BADGE_COLORS.length;
+  return LESSON_BADGE_COLORS[index];
+}
+
 export default async function AdminStudentsPage() {
   const [admin, students] = await Promise.all([getCurrentAdmin(), getStudents()]);
 
@@ -77,14 +94,13 @@ export default async function AdminStudentsPage() {
                 <div>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <p className="text-sm font-medium text-slate-900">{student.displayName}</p>
-                    {student.finishedLessons.map((name) => (
+                    {student.latestFinishedLesson && (
                       <span
-                        key={name}
-                        className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600"
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${lessonBadgeClassName(student.latestFinishedLesson)}`}
                       >
-                        {name} 終
+                        {student.latestFinishedLesson} 終
                       </span>
-                    ))}
+                    )}
                     {student.missingCommentInstructors.length > 0 && (
                       <span
                         title={`コメント未記入: ${student.missingCommentInstructors.join("、")}`}
