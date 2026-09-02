@@ -77,6 +77,14 @@ export default async function AdminStudentsPage() {
                 <div>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <p className="text-sm font-medium text-slate-900">{student.displayName}</p>
+                    {student.finishedLessons.map((name) => (
+                      <span
+                        key={name}
+                        className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600"
+                      >
+                        {name} 終
+                      </span>
+                    ))}
                     {student.missingCommentInstructors.length > 0 && (
                       <span
                         title={`コメント未記入: ${student.missingCommentInstructors.join("、")}`}
