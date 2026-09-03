@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendMail } from "@/lib/mailer";
-import { buildBookingConfirmationEmail } from "@/lib/emailTemplates";
+import { buildBookingConfirmationEmail, buildLesson3SurveyEmail } from "@/lib/emailTemplates";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -25,13 +25,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "toパラメータに送信先メールアドレスを指定してください。" }, { status: 400 });
   }
 
-  const email = buildBookingConfirmationEmail({
-    lessonName: "Lesson 1",
-    datetime: new Date("2026-08-15T19:00:00+09:00"),
-    instructorName: "佐藤",
-    location: "ゲートウェイスタジオ渋谷道玄坂店　3階　5st",
-    studentName: "山田太郎",
-  });
+  // templateパラメータで確認したいテンプレートを切り替えられる(省略時はLesson 1予約完了メール)。
+  const template = request.nextUrl.searchParams.get("template") ?? "booking";
+
+  const email =
+    template === "lesson3survey"
+      ? buildLesson3SurveyEmail("山田太郎")
+      : buildBookingConfirmationEmail({
+          lessonName: "Lesson 1",
+          datetime: new Date("2026-08-15T19:00:00+09:00"),
+          instructorName: "佐藤",
+          location: "ゲートウェイスタジオ渋谷道玄坂店　3階　5st",
+          studentName: "山田太郎",
+        });
 
   await sendMail({ to, subject: email.subject, text: email.text, html: email.html });
 
