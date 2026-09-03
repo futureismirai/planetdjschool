@@ -576,7 +576,7 @@ export function buildLesson3SurveyEmail(studentName: string): {
   text: string;
   html: string;
 } {
-  const subject = `【${SCHOOL_NAME}】Lesson 3受講のお礼とアンケートのお願い`;
+  const subject = `【${SCHOOL_NAME}】アンケートのお願い`;
 
   const text = `${studentName} 様
 
@@ -588,7 +588,7 @@ DJデビューの際にお使いいただくお名前（DJネーム）の確認�
 ▼アンケートはこちら
 ${LESSON3_SURVEY_FORM_URL}
 
-もし追加でレッスンが必要だと感じられた場合は、お気軽に本メールへご返信ください。
+「デビューが不安」「もう少し学びたい」など追加レッスン（追加料金）を必要に感じる場合は、お気軽にこちらのメールにご相談ください。
 
 またお会いできるのを楽しみにしております。
 
@@ -596,7 +596,7 @@ ${SCHOOL_NAME}`;
 
   const html = `
   <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
-    <h2 style="color:#0f172a;">Lesson 3受講のお礼とアンケートのお願い</h2>
+    <h2 style="color:#0f172a;">アンケートのお願い</h2>
     <p>${escapeHtml(studentName)} 様</p>
     <p>本日はLesson 3の受講お疲れ様でした。<br>
     ついに次はDJデビューですね！一緒に楽しみましょう！</p>
@@ -604,7 +604,7 @@ ${SCHOOL_NAME}`;
     <p style="margin-top:16px;text-align:center;">
       <a href="${escapeHtml(LESSON3_SURVEY_FORM_URL)}" style="display:inline-block;background:#0369a1;color:#fff;text-decoration:none;padding:10px 24px;border-radius:6px;font-weight:bold;">アンケートはこちら</a>
     </p>
-    <p style="margin-top:20px;">もし追加でレッスンが必要だと感じられた場合は、お気軽に本メールへご返信ください。</p>
+    <p style="margin-top:20px;">「デビューが不安」「もう少し学びたい」など追加レッスン（追加料金）を必要に感じる場合は、お気軽にこちらのメールにご相談ください。</p>
     <p style="margin-top:20px;">またお会いできるのを楽しみにしております。</p>
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;
