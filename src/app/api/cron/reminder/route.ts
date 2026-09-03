@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { sendMail } from "@/lib/mailer";
 import {
   buildIndividualLessonReminderEmail,
+  buildLesson3SurveyEmail,
   buildReminderEmail,
   buildTrialReminderEmail,
 } from "@/lib/emailTemplates";
@@ -139,20 +140,102 @@ async function runIndividualLessonReminderBatch() {
   return { targetIndividualLessons: individualLessons.length, sent, failed };
 }
 
+/**
+ * Lesson 3を受講した翌日に、アンケート依頼メールを自動送信する
+ * (グループレッスンの受講者向け)。
+ */
+async function runLesson3SurveyBatch() {
+  const { start, end } = getJstDayWindow(-1);
+
+  const lessons = await prisma.lesson.findMany({
+    where: { name: "Lesson 3", datetime: { gte: start, lt: end } },
+    include: {
+      bookings: { where: { lesson3SurveyEmailSentAt: null, studentEmail: { not: null } } },
+    },
+  });
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const lesson of lessons) {
+    for (const booking of lesson.bookings) {
+      if (!booking.studentEmail) continue;
+      try {
+        const { subject, text, html } = buildLesson3SurveyEmail(booking.studentName);
+        await sendMail({ to: booking.studentEmail, subject, text, html });
+        await prisma.booking.update({
+          where: { id: booking.id },
+          data: { lesson3SurveyEmailSentAt: new Date() },
+        });
+        sent += 1;
+      } catch (error) {
+        console.error(`Lesson3アンケートメール送信に失敗しました (bookingId=${booking.id}):`, error);
+        failed += 1;
+      }
+    }
+  }
+
+  return { targetLessons: lessons.length, sent, failed };
+}
+
+/**
+ * Lesson 3(個別レッスン)を受講した翌日に、アンケート依頼メールを自動送信する。
+ */
+async function runIndividualLesson3SurveyBatch() {
+  const { start, end } = getJstDayWindow(-1);
+
+  const individualLessons = await prisma.individualLesson.findMany({
+    where: { name: "Lesson 3", datetime: { gte: start, lt: end } },
+    include: {
+      participants: { where: { lesson3SurveyEmailSentAt: null } },
+    },
+  });
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const individualLesson of individualLessons) {
+    for (const participant of individualLesson.participants) {
+      try {
+        const { subject, text, html } = buildLesson3SurveyEmail(participant.studentName);
+        await sendMail({ to: participant.studentEmail, subject, text, html });
+        await prisma.individualParticipant.update({
+          where: { id: participant.id },
+          data: { lesson3SurveyEmailSentAt: new Date() },
+        });
+        sent += 1;
+      } catch (error) {
+        console.error(
+          `Lesson3アンケートメール送信に失敗しました (participantId=${participant.id}):`,
+          error
+        );
+        failed += 1;
+      }
+    }
+  }
+
+  return { targetIndividualLessons: individualLessons.length, sent, failed };
+}
+
 export async function GET(request: NextRequest) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [lessonResult, trialResult, individualResult] = await Promise.all([
-    runReminderBatch(),
-    runTrialReminderBatch(),
-    runIndividualLessonReminderBatch(),
-  ]);
+  const [lessonResult, trialResult, individualResult, lesson3SurveyResult, individualLesson3SurveyResult] =
+    await Promise.all([
+      runReminderBatch(),
+      runTrialReminderBatch(),
+      runIndividualLessonReminderBatch(),
+      runLesson3SurveyBatch(),
+      runIndividualLesson3SurveyBatch(),
+    ]);
   return NextResponse.json({
     lessons: lessonResult,
     trialSessions: trialResult,
     individualLessons: individualResult,
+    lesson3Survey: lesson3SurveyResult,
+    individualLesson3Survey: individualLesson3SurveyResult,
   });
 }
 

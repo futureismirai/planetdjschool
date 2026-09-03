@@ -564,6 +564,54 @@ ${SCHOOL_NAME}`;
   return { subject, text, html };
 }
 
+const LESSON3_SURVEY_FORM_URL = "https://forms.gle/AudcGM1yhCEnTQhW8";
+
+/**
+ * Lesson 3受講後のアンケート依頼メール。Lesson 3の翌日にcronで自動送信する
+ * (グループレッスン・個別レッスンどちらの修了者にも送る)。
+ * 文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildLesson3SurveyEmail(studentName: string): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】Lesson 3受講のお礼とアンケートのお願い`;
+
+  const text = `${studentName} 様
+
+本日はLesson 3の受講お疲れ様でした。
+ついに次はDJデビューですね！一緒に楽しみましょう！
+
+DJデビューの際にお使いいただくお名前（DJネーム）の確認も含まれておりますので、お忙しいところ恐れ入りますが、以下のアンケートへのご回答をお願いいたします。
+
+▼アンケートはこちら
+${LESSON3_SURVEY_FORM_URL}
+
+もし追加でレッスンが必要だと感じられた場合は、お気軽に本メールへご返信ください。
+
+またお会いできるのを楽しみにしております。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">Lesson 3受講のお礼とアンケートのお願い</h2>
+    <p>${escapeHtml(studentName)} 様</p>
+    <p>本日はLesson 3の受講お疲れ様でした。<br>
+    ついに次はDJデビューですね！一緒に楽しみましょう！</p>
+    <p>DJデビューの際にお使いいただくお名前（DJネーム）の確認も含まれておりますので、お忙しいところ恐れ入りますが、以下のアンケートへのご回答をお願いいたします。</p>
+    <p style="margin-top:16px;text-align:center;">
+      <a href="${escapeHtml(LESSON3_SURVEY_FORM_URL)}" style="display:inline-block;background:#0369a1;color:#fff;text-decoration:none;padding:10px 24px;border-radius:6px;font-weight:bold;">アンケートはこちら</a>
+    </p>
+    <p style="margin-top:20px;">もし追加でレッスンが必要だと感じられた場合は、お気軽に本メールへご返信ください。</p>
+    <p style="margin-top:20px;">またお会いできるのを楽しみにしております。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
 /**
  * 体験会受講後のお礼メールの初期文面(管理者が編集する前提のテンプレート)。
  * 文面を変更したい場合はこの関数を編集してください。

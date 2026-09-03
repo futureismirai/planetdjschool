@@ -39,6 +39,8 @@ model Booking {
   reminderSentAt DateTime?
   /// 次のレッスン案内メールを送信した日時(グループレッスン修了者への手動案内ボタン用)
   nextLessonEmailSentAt DateTime?
+  /// Lesson 3受講後のアンケート依頼メールを送信した日時(自動送信、翌日にcronで送信)
+  lesson3SurveyEmailSentAt DateTime?
   createdAt      DateTime  @default(now())
 
   @@index([lessonId])
@@ -106,6 +108,8 @@ model IndividualParticipant {
   /// commentが最後に保存された日時。生徒一覧の並び替え(更新順)に使用する。
   commentUpdatedAt   DateTime?
   reminderSentAt     DateTime?
+  /// Lesson 3受講後のアンケート依頼メールを送信した日時(自動送信、翌日にcronで送信)
+  lesson3SurveyEmailSentAt DateTime?
   createdAt          DateTime         @default(now())
 
   @@index([individualLessonId])
