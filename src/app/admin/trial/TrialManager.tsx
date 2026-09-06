@@ -6,9 +6,13 @@ import Link from "next/link";
 import {
   formatDateHeading,
   formatTimeOnly,
+  getJstDateParts,
   sortForDateGroupedDisplay,
   withDateGroupFlags,
 } from "@/lib/date";
+
+// 体験会は全て1時間で開催される(Instagram投稿用テキストの終了時刻表示に使用)。
+const TRIAL_DURATION_MINUTES = 60;
 import { DEFAULT_LOCATION } from "../LessonBookingManager";
 import { INSTRUCTOR_NAME_OPTIONS } from "@/lib/constants";
 
@@ -63,7 +67,9 @@ function buildInstagramStoryText(sessions: TrialSessionItem[], now: Date): strin
 
   const lines = upcoming.map(({ session, remaining }) => {
     const d = new Date(session.datetime);
-    return `${formatDateHeading(d)} ${formatTimeOnly(d)}〜　残り${remaining}枠`;
+    const { month, day, weekday } = getJstDateParts(d);
+    const end = new Date(d.getTime() + TRIAL_DURATION_MINUTES * 60 * 1000);
+    return `${month}/${day}(${weekday}) ${formatTimeOnly(d)}〜${formatTimeOnly(end)}　残り${remaining}枠`;
   });
 
   return ["体験会 予約受付中！", "", ...lines].join("\n");
