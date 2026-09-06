@@ -47,6 +47,28 @@ function emptySessionForm(): SessionFormValues {
   return { datetime: "", instructorName: "", maxSlots: "3", location: DEFAULT_LOCATION };
 }
 
+/**
+ * Instagramストーリーズ投稿用のコピペテキストを作成する。
+ * 開催前かつ空きがある体験会のみを、開催日時が早い順に並べる(満席のものは含めない)。
+ */
+function buildInstagramStoryText(sessions: TrialSessionItem[], now: Date): string {
+  const upcoming = sessions
+    .map((s) => ({ session: s, remaining: s.maxSlots - s.participants.length }))
+    .filter(({ session, remaining }) => new Date(session.datetime) > now && remaining > 0)
+    .sort((a, b) => new Date(a.session.datetime).getTime() - new Date(b.session.datetime).getTime());
+
+  if (upcoming.length === 0) {
+    return "現在ご案内できる体験会の空き枠はありません。";
+  }
+
+  const lines = upcoming.map(({ session, remaining }) => {
+    const d = new Date(session.datetime);
+    return `${formatDateHeading(d)} ${formatTimeOnly(d)}〜　残り${remaining}枠`;
+  });
+
+  return ["体験会 予約受付中！", "", ...lines].join("\n");
+}
+
 function sessionToForm(session: TrialSessionItem): SessionFormValues {
   return {
     datetime: toDatetimeLocalValue(session.datetime),
@@ -291,7 +313,20 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
   const [addingParticipantFor, setAddingParticipantFor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showSnsText, setShowSnsText] = useState(false);
+  const [copied, setCopied] = useState(false);
   const now = new Date();
+  const snsText = buildInstagramStoryText(sessions, now);
+
+  async function handleCopySnsText() {
+    try {
+      await navigator.clipboard.writeText(snsText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      window.alert("コピーに失敗しました。テキストを選択して手動でコピーしてください。");
+    }
+  }
 
   async function handleCreateSession(values: SessionFormValues) {
     setSubmitting(true);
@@ -391,13 +426,44 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
             onSubmit={handleCreateSession}
           />
         ) : (
-          <button
-            type="button"
-            onClick={() => setShowNewForm(true)}
-            className="rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700"
-          >
-            ＋ 新しい体験会を追加
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowNewForm(true)}
+              className="rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700"
+            >
+              ＋ 新しい体験会を追加
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowSnsText((v) => !v)}
+              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+            >
+              Instagram投稿用テキストを作成
+            </button>
+          </div>
+        )}
+
+        {!showNewForm && showSnsText && (
+          <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+            <textarea
+              readOnly
+              rows={5}
+              value={snsText}
+              onFocus={(e) => e.currentTarget.select()}
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700"
+            />
+            <div className="mt-2 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleCopySnsText}
+                className="rounded-md bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700"
+              >
+                コピーする
+              </button>
+              {copied && <span className="text-xs text-emerald-600">コピーしました</span>}
+            </div>
+          </div>
         )}
       </div>
 
