@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { parseSlotInput } from "@/lib/organizerInput";
+import { parseSlotInput, parseRounding } from "@/lib/organizerInput";
+import { rebalanceFloorSlots } from "@/lib/floorRebalance";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: eventFloorId } = await params;
@@ -27,12 +28,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     _max: { order: true },
   });
 
-  const slot = await prisma.timetableSlot.create({
+  const created = await prisma.timetableSlot.create({
     data: {
       ...parsed.data,
       eventFloorId,
       order: (maxOrder._max.order ?? -1) + 1,
     },
   });
-  return NextResponse.json({ slot }, { status: 201 });
+
+  // 出演者を追加したら、開催時間全体を固定されていない出演者の人数で
+  // 自動で割り直す
+  const rounding = parseRounding((body as Record<string, unknown>)?.rounding);
+  const result = await rebalanceFloorSlots(eventFloorId, rounding);
+  if ("error" in result) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
+  }
+
+  const slot = result.slots.find((s) => s.id === created.id) ?? created;
+  return NextResponse.json({ slot, slots: result.slots }, { status: 201 });
 }

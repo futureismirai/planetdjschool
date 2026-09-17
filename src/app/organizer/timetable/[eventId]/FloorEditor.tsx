@@ -394,6 +394,7 @@ export function FloorEditor({
           performerName: "新しい出演者",
           startTime: floor.startTime,
           endTime: floor.endTime,
+          rounding,
         }),
       });
       if (res.ok) router.refresh();
