@@ -15,10 +15,11 @@ export default function AdditionalLessonPage() {
       </section>
 
       <section className={styles.bookSection}>
-        <p className={`${styles.monoLabel} ${styles.bookSectionHead}`}>こんな人におすすめ</p>
-        <p className={styles.planNote}>
-          一通りレッスンを終えたが、デビューまで不安、学び足りないのでもう1回受講したい方
-        </p>
+        <p className={`${styles.monoLabel} ${styles.bookSectionHead}`}>こんな方におすすめ</p>
+        <ul className={styles.planRecommendList}>
+          <li className={styles.planRecommendItem}>もう一度同じレッスンを受け直したい</li>
+          <li className={styles.planRecommendItem}>デビューまでに少し学び足りない</li>
+        </ul>
       </section>
 
       <section className={styles.bookSection}>
