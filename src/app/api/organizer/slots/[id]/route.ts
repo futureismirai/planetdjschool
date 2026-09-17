@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parseSlotInput, parseRounding } from "@/lib/organizerInput";
 import { rememberPerformer } from "@/lib/performerDirectory";
+import { rebalanceFloorSlots } from "@/lib/floorRebalance";
 import { generateTimetable, slotDurationMinutes, type PerformerInput } from "@/lib/timetable";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -113,13 +114,23 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   return NextResponse.json({ slot, slots: updatedSlots });
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  try {
-    await prisma.timetableSlot.delete({ where: { id } });
-    return NextResponse.json({ ok: true });
-  } catch {
+  const existing = await prisma.timetableSlot.findUnique({ where: { id } });
+  if (!existing) {
     return NextResponse.json({ error: "出演枠が見つかりません。" }, { status: 404 });
   }
+
+  await prisma.timetableSlot.delete({ where: { id } });
+
+  // 出演者を減らしたら、開催時間全体を残った固定されていない出演者の
+  // 人数で自動的に割り直す
+  const rounding = parseRounding(request.nextUrl.searchParams.get("rounding"));
+  const result = await rebalanceFloorSlots(existing.eventFloorId, rounding);
+  if ("error" in result) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
+  }
+
+  return NextResponse.json({ ok: true, slots: result.slots });
 }

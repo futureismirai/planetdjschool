@@ -180,7 +180,7 @@ function SlotRow({
     if (!window.confirm(`「${slot.performerName}」の枠を削除しますか？`)) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/organizer/slots/${slot.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/organizer/slots/${slot.id}?rounding=${rounding}`, { method: "DELETE" });
       if (res.ok) onChanged();
     } finally {
       setDeleting(false);
