@@ -487,6 +487,66 @@
   margin: 0;
 }
 
+.planNote {
+  font-size: 13px;
+  color: var(--charcoal);
+  line-height: 1.7;
+}
+
+.planBlock {
+  border-top: 1px solid var(--line);
+  padding: 24px 0;
+}
+.planBlock:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.planTitle {
+  font-family: var(--grotesk);
+  font-weight: 800;
+  font-size: 14px;
+  margin: 0 0 10px;
+}
+
+.planPrice {
+  font-family: var(--expanded);
+  font-weight: 700;
+  font-size: 24px;
+  margin: 0 0 6px;
+}
+
+.planPriceUnit {
+  font-family: var(--jp);
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--charcoal);
+  margin-left: 4px;
+}
+
+.planDesc {
+  font-size: 13px;
+  color: var(--charcoal);
+  margin: 0 0 18px;
+}
+
+.planButton {
+  display: inline-block;
+  font-family: var(--grotesk);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--ink);
+  text-decoration: none;
+  padding: 12px 26px;
+  transition: background-color 0.16s ease;
+}
+.planButton:hover {
+  background: var(--lavender-deep);
+}
+
 .form {
   display: flex;
   flex-direction: column;

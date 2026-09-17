@@ -175,6 +175,17 @@ export default async function HomePage() {
           })
         )}
       </section>
+
+      <nav className={styles.index}>
+        <Link href="/additional-lesson" className={styles.indexRow}>
+          <span className={`${styles.indexChapter} ${styles.monoLabel}`}>＋</span>
+          <span className={styles.indexTitles}>
+            <span className={styles.indexEn}>Additional Lesson</span>
+            <span className={styles.indexJa}>追加レッスンをご希望の方はこちら</span>
+          </span>
+          <span className={styles.indexArrow}>&rarr;</span>
+        </Link>
+      </nav>
     </>
   );
 }
