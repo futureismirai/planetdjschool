@@ -35,6 +35,7 @@ export default async function BookLessonPage({
   }
 
   const isFull = lesson.remainingSlots <= 0;
+  const isLesson1 = lesson.name === "Lesson 1";
 
   return (
     <>
@@ -44,7 +45,9 @@ export default async function BookLessonPage({
       </Link>
 
       <section className={styles.bookHero}>
-        <p className={`${styles.monoLabel} ${styles.bookEyebrow}`}>Booking</p>
+        <p className={`${styles.monoLabel} ${styles.bookEyebrow}`}>
+          {isLesson1 ? "Lesson 1" : "Booking"}
+        </p>
         <h1 className={styles.bookTitle}>{lesson.name}</h1>
 
         <div className={styles.bookMeta}>
@@ -56,21 +59,30 @@ export default async function BookLessonPage({
             <span className={`${styles.bookMetaLabel} ${styles.monoLabel}`}>講師</span>
             <span className={styles.bookMetaValue}>{lesson.instructorName}</span>
           </div>
-          <div className={styles.bookMetaRow}>
-            <span className={`${styles.bookMetaLabel} ${styles.monoLabel}`}>残り枠</span>
-            <span
-              className={`${styles.bookMetaValue} ${
-                !isFull && lesson.remainingSlots === 1 ? styles.bookMetaValueLow : ""
-              }`}
-            >
-              {isFull ? "満席" : `残り ${lesson.remainingSlots}枠`}
-            </span>
-          </div>
+          {!isLesson1 && (
+            <div className={styles.bookMetaRow}>
+              <span className={`${styles.bookMetaLabel} ${styles.monoLabel}`}>残り枠</span>
+              <span
+                className={`${styles.bookMetaValue} ${
+                  !isFull && lesson.remainingSlots === 1 ? styles.bookMetaValueLow : ""
+                }`}
+              >
+                {isFull ? "満席" : `残り ${lesson.remainingSlots}枠`}
+              </span>
+            </div>
+          )}
         </div>
       </section>
 
       <section className={styles.bookSection}>
-        {isFull ? (
+        {isLesson1 ? (
+          <>
+            <p className={`${styles.monoLabel} ${styles.bookSectionHead}`}>ご予約について</p>
+            <p className={styles.planNote}>
+              Lesson 1は、担当講師が直接ご案内・日程調整のうえご予約を確定しております。このサイトからのオンライン予約は行っておりませんので、受講をご希望の方は担当講師までご連絡ください。
+            </p>
+          </>
+        ) : isFull ? (
           <p className={styles.bookFull}>このレッスンは満席のためご予約いただけません。</p>
         ) : (
           <>

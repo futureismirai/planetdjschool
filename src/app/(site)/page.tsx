@@ -123,8 +123,10 @@ export default async function HomePage() {
                   </div>
                   <div className={styles.lessonRows}>
                     {group.lessons.map((lesson) => {
+                      const isLesson1 = lesson.name === "Lesson 1";
                       const isFull = lesson.remainingSlots <= 0;
-                      const rowClassName = `${styles.lessonRow} ${isFull ? styles.lessonRowIsFull : ""}`;
+                      const isDisabled = isFull && !isLesson1;
+                      const rowClassName = `${styles.lessonRow} ${isDisabled ? styles.lessonRowIsFull : ""}`;
                       const spotsClassName = `${styles.lrSpots} ${
                         isFull
                           ? styles.lrSpotsIsFullTag
@@ -154,7 +156,7 @@ export default async function HomePage() {
                         </>
                       );
 
-                      return isFull ? (
+                      return isDisabled ? (
                         <div key={lesson.id} aria-disabled="true" className={rowClassName}>
                           {inner}
                         </div>
