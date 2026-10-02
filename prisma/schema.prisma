@@ -114,3 +114,37 @@ model IndividualParticipant {
 
   @@index([individualLessonId])
 }
+
+/// 個別レッスンの日程調整依頼。生徒に候補日の提示を依頼し、回答された候補の中から
+/// 管理者が最終日程を確定するために使用する。
+model ScheduleRequest {
+  id                String              @id @default(cuid())
+  token             String              @unique @default(cuid())
+  studentName       String
+  studentEmail      String
+  instructorName    String?
+  /// 候補日として提示できる期間(依頼日から2週間)
+  windowStart       DateTime
+  windowEnd         DateTime
+  /// 生徒が候補提出時に入力する備考
+  note              String?
+  /// "pending"(回答待ち/確定待ち) | "confirmed"(確定済み)
+  status            String              @default("pending")
+  confirmedDatetime DateTime?
+  confirmedAt       DateTime?
+  createdAt         DateTime            @default(now())
+  candidates        ScheduleCandidate[]
+
+  @@index([token])
+}
+
+model ScheduleCandidate {
+  id                String          @id @default(cuid())
+  scheduleRequestId String
+  scheduleRequest   ScheduleRequest @relation(fields: [scheduleRequestId], references: [id], onDelete: Cascade)
+  startDatetime     DateTime
+  endDatetime       DateTime
+  createdAt         DateTime        @default(now())
+
+  @@index([scheduleRequestId])
+}

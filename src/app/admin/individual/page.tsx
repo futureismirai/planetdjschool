@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
 import { LogoutButton } from "../LogoutButton";
 import { IndividualLessonManager } from "./IndividualLessonManager";
+import { ScheduleRequestPanel } from "./ScheduleRequestPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -30,10 +31,36 @@ async function getIndividualLessonsWithParticipants() {
   }));
 }
 
+async function getScheduleRequests() {
+  const requests = await prisma.scheduleRequest.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { candidates: { orderBy: { startDatetime: "asc" } } },
+  });
+
+  return requests.map((r) => ({
+    id: r.id,
+    token: r.token,
+    studentName: r.studentName,
+    studentEmail: r.studentEmail,
+    instructorName: r.instructorName,
+    windowStart: r.windowStart.toISOString(),
+    windowEnd: r.windowEnd.toISOString(),
+    note: r.note,
+    status: r.status,
+    confirmedDatetime: r.confirmedDatetime ? r.confirmedDatetime.toISOString() : null,
+    candidates: r.candidates.map((c) => ({
+      id: c.id,
+      startDatetime: c.startDatetime.toISOString(),
+      endDatetime: c.endDatetime.toISOString(),
+    })),
+  }));
+}
+
 export default async function AdminIndividualPage() {
-  const [admin, lessons] = await Promise.all([
+  const [admin, lessons, scheduleRequests] = await Promise.all([
     getCurrentAdmin(),
     getIndividualLessonsWithParticipants(),
+    getScheduleRequests(),
   ]);
 
   return (
@@ -79,6 +106,10 @@ export default async function AdminIndividualPage() {
           </Link>
           <LogoutButton />
         </div>
+      </div>
+
+      <div className="mt-6">
+        <ScheduleRequestPanel requests={scheduleRequests} />
       </div>
 
       <div className="mt-6">

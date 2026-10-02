@@ -480,6 +480,62 @@ ${SCHOOL_NAME}`;
   return { subject, text, html };
 }
 
+export type ScheduleRequestEmailInfo = {
+  studentName: string;
+  instructorName: string | null;
+  windowStartText: string;
+  windowEndText: string;
+  url: string;
+};
+
+/**
+ * 個別レッスンの日程調整依頼メール。管理者が「個別レッスン」画面から
+ * 候補日の提示を依頼する際に手動で送信する。
+ * 文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildScheduleRequestEmail(info: ScheduleRequestEmailInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】個別レッスンの日程調整のお願い`;
+  const instructorLine = info.instructorName ? `担当講師: ${info.instructorName}\n` : "";
+  const instructorLineHtml = info.instructorName
+    ? `<p style="margin:0 0 4px;color:#666;">担当講師: ${escapeHtml(info.instructorName)}</p>`
+    : "";
+
+  const text = `${info.studentName} 様
+
+個別レッスンの受講、ありがとうございます。
+下記の期間の中から、ご都合の良い候補日・時間帯をできるだけ多くお選びください。
+${instructorLine}
+回答期間: ${info.windowStartText}〜${info.windowEndText}
+
+以下のリンクより候補日をご入力ください。
+${info.url}
+
+いただいた候補の中から日程を確定し、改めてご連絡いたします。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">個別レッスンの日程調整のお願い</h2>
+    <p>${escapeHtml(info.studentName)} 様</p>
+    <p>個別レッスンの受講、ありがとうございます。<br>
+    下記の期間の中から、ご都合の良い候補日・時間帯をできるだけ多くお選びください。</p>
+    ${instructorLineHtml}
+    <p style="margin:12px 0 4px;color:#666;">回答期間: ${escapeHtml(info.windowStartText)}〜${escapeHtml(info.windowEndText)}</p>
+    <p style="margin-top:16px;text-align:center;">
+      <a href="${escapeHtml(info.url)}" style="display:inline-block;background:#0369a1;color:#fff;text-decoration:none;padding:10px 24px;border-radius:6px;font-weight:bold;">候補日を入力する</a>
+    </p>
+    <p style="margin-top:20px;">いただいた候補の中から日程を確定し、改めてご連絡いたします。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
 export type NextLessonInviteEmailInfo = {
   studentName: string;
   currentLessonName: string;

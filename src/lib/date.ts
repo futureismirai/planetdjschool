@@ -94,6 +94,14 @@ export function getJstMonthRange(year: number, month: number): { start: Date; en
 }
 
 /**
+ * 日本時間の日付文字列(yyyy-MM-dd)と時刻文字列(HH:mm)を結合してUTCのDateを返す。
+ * 日程調整の候補日時をDBに保存する際に使用する。
+ */
+export function combineJstDateAndTime(dateStr: string, timeStr: string): Date {
+  return fromZonedTime(`${dateStr} ${timeStr}:00`, TIME_ZONE);
+}
+
+/**
  * 日本時間で「今日からdaysFromNow日後」の1日分(00:00〜翌日00:00)のUTC範囲を返す。
  * リマインドメール送信対象日の判定に使用する。
  */

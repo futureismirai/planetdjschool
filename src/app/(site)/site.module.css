@@ -644,6 +644,173 @@
   opacity: 0.5;
 }
 
+/* ---- Schedule request (日程調整) ---- */
+
+.bookIntro {
+  margin: 14px 0 0;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--charcoal);
+}
+
+.periodRange {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.periodDate {
+  font-size: 20px;
+}
+.periodArrow {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.daysHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.daysHead .bookSectionHead {
+  margin-bottom: 0;
+}
+.daysHeadCount {
+  color: var(--lavender-deep);
+  font-weight: 700;
+}
+
+.dayRow {
+  border-top: 1px solid var(--line);
+  padding-block: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dayRow:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.dayToggleLine {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+}
+
+.checkbox {
+  position: relative;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--line);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.checkbox svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+.dayRowIsOn .checkbox {
+  background: var(--lavender-deep);
+  border-color: var(--lavender-deep);
+}
+.dayRowIsOn .checkbox svg {
+  opacity: 1;
+}
+
+.dayDate {
+  font-family: var(--grotesk);
+  font-weight: 700;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.dayWeekday {
+  font-family: var(--jp);
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--muted);
+  margin-left: 2px;
+}
+.dayWeekend {
+  color: var(--lavender-deep);
+}
+
+.dayRanges {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 34px;
+}
+.dayRowIsOn .dayRanges {
+  display: flex;
+}
+
+.timeRange {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.timeSelect {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  padding: 6px 2px;
+  min-width: 68px;
+}
+.timeSelect:focus {
+  outline: none;
+  border-bottom-color: var(--lavender-deep);
+}
+.timeTilde {
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.rangeRemove {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+.rangeRemove:hover {
+  color: var(--lavender-deep);
+}
+
+.rangeAdd {
+  align-self: flex-start;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--lavender-deep);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 0;
+}
+.rangeAdd:hover {
+  color: var(--ink);
+}
+
 /* ---- Footer ---- */
 
 .siteFooter {

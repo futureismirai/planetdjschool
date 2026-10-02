@@ -29,20 +29,20 @@ export type IndividualLessonItem = {
   participants: IndividualParticipantItem[];
 };
 
-type LessonFormValues = {
+export type LessonFormValues = {
   name: string;
   datetime: string; // datetime-local用の文字列
   instructorName: string;
   location: string;
 };
 
-function toDatetimeLocalValue(iso: string): string {
+export function toDatetimeLocalValue(iso: string): string {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function emptyLessonForm(): LessonFormValues {
+export function emptyLessonForm(): LessonFormValues {
   return { name: "", datetime: "", instructorName: "", location: DEFAULT_LOCATION };
 }
 
@@ -55,7 +55,7 @@ function lessonToForm(lesson: IndividualLessonItem): LessonFormValues {
   };
 }
 
-function LessonForm({
+export function LessonForm({
   initial,
   submitLabel,
   onCancel,

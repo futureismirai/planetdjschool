@@ -121,6 +121,38 @@ const CREATE_TABLES_SQL = [
   // Lesson 3受講後のアンケート依頼メール(自動送信、翌日にcronで送信)を送信済みかどうかの記録
   `ALTER TABLE "Booking" ADD COLUMN IF NOT EXISTS "lesson3SurveyEmailSentAt" TIMESTAMP(3)`,
   `ALTER TABLE "IndividualParticipant" ADD COLUMN IF NOT EXISTS "lesson3SurveyEmailSentAt" TIMESTAMP(3)`,
+  // 個別レッスンの日程調整依頼(生徒に候補日を提示してもらい、管理者が確定する)
+  `CREATE TABLE IF NOT EXISTS "ScheduleRequest" (
+    "id" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "studentName" TEXT NOT NULL,
+    "studentEmail" TEXT NOT NULL,
+    "instructorName" TEXT,
+    "windowStart" TIMESTAMP(3) NOT NULL,
+    "windowEnd" TIMESTAMP(3) NOT NULL,
+    "note" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "confirmedDatetime" TIMESTAMP(3),
+    "confirmedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "ScheduleRequest_pkey" PRIMARY KEY ("id")
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "ScheduleRequest_token_key" ON "ScheduleRequest"("token")`,
+  `CREATE INDEX IF NOT EXISTS "ScheduleRequest_token_idx" ON "ScheduleRequest"("token")`,
+  `CREATE TABLE IF NOT EXISTS "ScheduleCandidate" (
+    "id" TEXT NOT NULL,
+    "scheduleRequestId" TEXT NOT NULL,
+    "startDatetime" TIMESTAMP(3) NOT NULL,
+    "endDatetime" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "ScheduleCandidate_pkey" PRIMARY KEY ("id")
+  )`,
+  `CREATE INDEX IF NOT EXISTS "ScheduleCandidate_scheduleRequestId_idx" ON "ScheduleCandidate"("scheduleRequestId")`,
+  `DO $$ BEGIN
+    ALTER TABLE "ScheduleCandidate" ADD CONSTRAINT "ScheduleCandidate_scheduleRequestId_fkey"
+      FOREIGN KEY ("scheduleRequestId") REFERENCES "ScheduleRequest"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END $$`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {
