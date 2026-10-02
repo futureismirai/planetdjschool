@@ -761,6 +761,10 @@ Lesson 1-3 + デビュー
 普通 7938647
 佐野 実来（サノ ミライ）
 
+※お振込みの際は、お名前の後にスペースを空けてご希望のプラン名をご記載ください。
+　（例）サトウ　タロウ　ノーマル
+※お振込み手数料はお客様にてご負担くださいますようお願いいたします。
+
 【お振込み期限】
 ${paymentDeadlineText}
 期日までにお振込みが確認できない場合は、キャンセル扱いとさせていただきます。
@@ -804,11 +808,16 @@ function buildMembershipPlanAndPaymentHtml(paymentDeadlineText: string): string 
 
     <div style="margin-top:16px;padding:12px 16px;background:#f8fafc;border-radius:8px;">
       <p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">お振込み先</p>
-      <p style="margin:0;font-size:14px;line-height:1.8;">
+      <p style="margin:0 0 10px;font-size:14px;line-height:1.8;">
         ドコモSMTBネット銀行（金融機関コード0038）<br>
         キウイ支店（支店コード109）<br>
         普通 7938647<br>
         佐野 実来（サノ ミライ）
+      </p>
+      <p style="margin:0;font-size:12.5px;color:#666;line-height:1.7;">
+        ※お振込みの際は、お名前の後にスペースを空けてご希望のプラン名をご記載ください。<br>
+        　（例）サトウ　タロウ　ノーマル<br>
+        ※お振込み手数料はお客様にてご負担くださいますようお願いいたします。
       </p>
     </div>
 
