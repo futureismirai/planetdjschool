@@ -588,21 +588,21 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
                             {participant.note ?? "-"}
                           </td>
                           <td className="px-2 py-2 sm:px-4">
-                            <div className="flex flex-wrap items-center gap-2 whitespace-nowrap">
+                            <div className="flex flex-wrap items-center gap-2">
                               {isPast && !participant.thankYouEmailSentAt && (
                                 <Link
                                   href={`/admin/trial/${participant.id}/message`}
-                                  className="text-xs font-medium text-sky-600 hover:text-sky-700"
+                                  className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700 hover:bg-sky-100"
                                 >
-                                  お礼メールを送信
+                                  お礼
                                 </Link>
                               )}
                               {isPast && !participant.membershipEmailSentAt && (
                                 <Link
                                   href={`/admin/trial/${participant.id}/membership-message`}
-                                  className="text-xs font-medium text-sky-600 hover:text-sky-700"
+                                  className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700 hover:bg-sky-100"
                                 >
-                                  ご入会案内メールを送信
+                                  振込先
                                 </Link>
                               )}
                             </div>
