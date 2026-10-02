@@ -1,4 +1,5 @@
 import { formatLessonDateTime, formatTimeOnly } from "./date";
+import { INDIVIDUAL_LESSON_DURATION_MINUTES } from "./constants";
 
 const SCHOOL_NAME = "Planet DJ School";
 const GATHERING_MINUTES_BEFORE = 10;
@@ -6,7 +7,6 @@ const GATHERING_MINUTES_BEFORE = 10;
 // レッスン種別ごとの所要時間(終了時刻の表示に使用)
 const GROUP_LESSON_DURATION_MINUTES = 90; // 1.5時間
 const TRIAL_DURATION_MINUTES = 60; // 1時間
-const INDIVIDUAL_LESSON_DURATION_MINUTES = 120; // 2時間
 
 /** 開始〜終了の日時表記。例: 2026年8月15日(土) 19:00〜20:30 */
 function formatDateTimeRange(start: Date, durationMinutes: number): string {

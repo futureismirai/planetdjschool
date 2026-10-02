@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatLessonDateTime, formatDateOnly, formatTimeOnly } from "@/lib/date";
-import { INSTRUCTOR_NAME_OPTIONS } from "@/lib/constants";
+import { INSTRUCTOR_NAME_OPTIONS, INDIVIDUAL_LESSON_DURATION_MINUTES } from "@/lib/constants";
 import {
   LessonForm,
   emptyLessonForm,
@@ -30,6 +30,25 @@ export type ScheduleRequestItem = {
   confirmedDatetime: string | null;
   candidates: ScheduleCandidateItem[];
 };
+
+const START_TIME_STEP_MINUTES = 30;
+
+/** 候補の時間帯の中から、レッスン時間(INDIVIDUAL_LESSON_DURATION_MINUTES)が収まる開始時刻の一覧を作る。 */
+function buildStartTimeOptions(candidate: ScheduleCandidateItem): Date[] {
+  const start = new Date(candidate.startDatetime);
+  const end = new Date(candidate.endDatetime);
+  const latestStart = new Date(end.getTime() - INDIVIDUAL_LESSON_DURATION_MINUTES * 60 * 1000);
+
+  if (latestStart < start) {
+    return [start];
+  }
+
+  const options: Date[] = [];
+  for (let t = start.getTime(); t <= latestStart.getTime(); t += START_TIME_STEP_MINUTES * 60 * 1000) {
+    options.push(new Date(t));
+  }
+  return options;
+}
 
 function NewRequestForm({ onDone }: { onDone: () => void }) {
   const router = useRouter();
@@ -132,9 +151,12 @@ function ConfirmCandidateForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const startOptions = buildStartTimeOptions(candidate);
+  const [selectedStart, setSelectedStart] = useState<string>(startOptions[0].toISOString());
+
   const initial: LessonFormValues = {
     ...emptyLessonForm(),
-    datetime: toDatetimeLocalValue(candidate.startDatetime),
+    datetime: toDatetimeLocalValue(selectedStart),
     instructorName: scheduleRequest.instructorName ?? "",
   };
 
@@ -177,7 +199,10 @@ function ConfirmCandidateForm({
       const confirmRes = await fetch(`/api/admin/schedule-requests/${scheduleRequest.id}/confirm`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ candidateId: candidate.id }),
+        body: JSON.stringify({
+          candidateId: candidate.id,
+          confirmedDatetime: new Date(values.datetime).toISOString(),
+        }),
       });
       const confirmData = await confirmRes.json().catch(() => ({}));
       if (!confirmRes.ok) {
@@ -205,7 +230,26 @@ function ConfirmCandidateForm({
           {error}
         </p>
       )}
+      {startOptions.length > 1 && (
+        <div className="mb-3">
+          <label className="block text-xs font-medium text-slate-500">
+            開始時刻(候補の時間帯から選択)
+          </label>
+          <select
+            value={selectedStart}
+            onChange={(e) => setSelectedStart(e.target.value)}
+            className="mt-1 rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          >
+            {startOptions.map((t) => (
+              <option key={t.toISOString()} value={t.toISOString()}>
+                {formatTimeOnly(t)}〜開始
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       <LessonForm
+        key={selectedStart}
         initial={initial}
         submitLabel="この内容で確定する"
         submitting={submitting}

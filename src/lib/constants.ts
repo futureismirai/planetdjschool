@@ -11,3 +11,6 @@ export const INSTRUCTOR_NAME_OPTIONS = [
   "Kuri Vodka",
   "未定",
 ];
+
+/** 個別レッスン1回あたりの所要時間(分)。メールの終了時刻表示や日程調整での候補選択に使用する。 */
+export const INDIVIDUAL_LESSON_DURATION_MINUTES = 120; // 2時間

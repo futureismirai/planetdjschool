@@ -26,9 +26,15 @@ export async function POST(
     return NextResponse.json({ error: "リクエストの形式が正しくありません。" }, { status: 400 });
   }
 
-  const { candidateId } = (body ?? {}) as Record<string, unknown>;
+  const { candidateId, confirmedDatetime } = (body ?? {}) as Record<string, unknown>;
   if (typeof candidateId !== "string" || !candidateId) {
     return NextResponse.json({ error: "候補を選択してください。" }, { status: 400 });
+  }
+  if (
+    confirmedDatetime !== undefined &&
+    (typeof confirmedDatetime !== "string" || Number.isNaN(new Date(confirmedDatetime).getTime()))
+  ) {
+    return NextResponse.json({ error: "確定日時の形式が正しくありません。" }, { status: 400 });
   }
 
   const scheduleRequest = await prisma.scheduleRequest.findUnique({ where: { id } });
@@ -44,11 +50,19 @@ export async function POST(
     return NextResponse.json({ error: "候補が見つかりません。" }, { status: 404 });
   }
 
+  let finalDatetime = candidate.startDatetime;
+  if (typeof confirmedDatetime === "string") {
+    const parsed = new Date(confirmedDatetime);
+    if (parsed >= candidate.startDatetime && parsed <= candidate.endDatetime) {
+      finalDatetime = parsed;
+    }
+  }
+
   const updated = await prisma.scheduleRequest.update({
     where: { id },
     data: {
       status: "confirmed",
-      confirmedDatetime: candidate.startDatetime,
+      confirmedDatetime: finalDatetime,
       confirmedAt: new Date(),
     },
   });
