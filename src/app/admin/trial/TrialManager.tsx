@@ -592,7 +592,7 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
                               {isPast && !participant.thankYouEmailSentAt && (
                                 <Link
                                   href={`/admin/trial/${participant.id}/message`}
-                                  className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700 hover:bg-sky-100"
+                                  className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-sky-700"
                                 >
                                   お礼
                                 </Link>
@@ -600,7 +600,7 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
                               {isPast && !participant.membershipEmailSentAt && (
                                 <Link
                                   href={`/admin/trial/${participant.id}/membership-message`}
-                                  className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700 hover:bg-sky-100"
+                                  className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-sky-700"
                                 >
                                   振込先
                                 </Link>
