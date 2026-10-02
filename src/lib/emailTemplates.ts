@@ -30,6 +30,7 @@ const INSTRUCTOR_INSTAGRAM: Record<string, { handle: string; url: string }> = {
   "Ryuga Nomoto": { handle: "nomoto.r", url: "https://www.instagram.com/nomoto.r/" },
   tuzuRa: { handle: "tuzura_dj", url: "https://www.instagram.com/tuzura_dj/" },
   wargh: { handle: "wargh", url: "https://www.instagram.com/wargh/" },
+  "Kuri Vodka": { handle: "kurivodka", url: "https://www.instagram.com/kurivodka/" },
 };
 
 /** 講師名の横にInstagramアカウント(@ハンドル)を添える。該当が無ければ名前のみ。 */
