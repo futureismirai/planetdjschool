@@ -569,6 +569,7 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
                         <th className="px-2 py-2 font-medium sm:px-4">メールアドレス</th>
                         <th className="hidden px-4 py-2 font-medium sm:table-cell">備考</th>
                         <th className="px-2 py-2 font-medium sm:px-4"></th>
+                        <th className="px-2 py-2 font-medium sm:px-4"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -581,30 +582,30 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
                             >
                               {participant.studentName}
                             </Link>
-                            {isPast && !participant.thankYouEmailSentAt && (
-                              <div className="mt-1">
+                          </td>
+                          <td className="px-2 py-2 sm:px-4">{participant.studentEmail}</td>
+                          <td className="hidden px-4 py-2 text-slate-500 sm:table-cell">
+                            {participant.note ?? "-"}
+                          </td>
+                          <td className="px-2 py-2 sm:px-4">
+                            <div className="flex flex-wrap items-center gap-2 whitespace-nowrap">
+                              {isPast && !participant.thankYouEmailSentAt && (
                                 <Link
                                   href={`/admin/trial/${participant.id}/message`}
                                   className="text-xs font-medium text-sky-600 hover:text-sky-700"
                                 >
                                   お礼メールを送信
                                 </Link>
-                              </div>
-                            )}
-                            {isPast && !participant.membershipEmailSentAt && (
-                              <div className="mt-1">
+                              )}
+                              {isPast && !participant.membershipEmailSentAt && (
                                 <Link
                                   href={`/admin/trial/${participant.id}/membership-message`}
                                   className="text-xs font-medium text-sky-600 hover:text-sky-700"
                                 >
                                   ご入会案内メールを送信
                                 </Link>
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-2 py-2 sm:px-4">{participant.studentEmail}</td>
-                          <td className="hidden px-4 py-2 text-slate-500 sm:table-cell">
-                            {participant.note ?? "-"}
+                              )}
+                            </div>
                           </td>
                           <td className="px-2 py-2 text-right sm:px-4">
                             <DeleteParticipantButton
