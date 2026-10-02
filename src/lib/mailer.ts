@@ -25,7 +25,7 @@ export async function sendMail(options: {
   to: string;
   subject: string;
   text: string;
-  html: string;
+  html?: string;
 }): Promise<void> {
   const user = process.env.GMAIL_USER;
   const fromName = process.env.MAIL_FROM_NAME ?? "Planet DJ School";
@@ -35,6 +35,6 @@ export async function sendMail(options: {
     to: options.to,
     subject: options.subject,
     text: options.text,
-    html: options.html,
+    ...(options.html ? { html: options.html } : {}),
   });
 }
