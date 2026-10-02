@@ -153,6 +153,8 @@ const CREATE_TABLES_SQL = [
       FOREIGN KEY ("scheduleRequestId") REFERENCES "ScheduleRequest"("id") ON DELETE CASCADE ON UPDATE CASCADE;
   EXCEPTION WHEN duplicate_object THEN NULL;
   END $$`,
+  // ご入会案内(お礼とお振込み案内)メールを送信済みかどうかの記録
+  `ALTER TABLE "TrialParticipant" ADD COLUMN IF NOT EXISTS "membershipEmailSentAt" TIMESTAMP(3)`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {

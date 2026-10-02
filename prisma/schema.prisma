@@ -77,6 +77,8 @@ model TrialParticipant {
   reminderSentAt DateTime?
   /// 体験会受講後のお礼メールを送信した日時。送信済みの場合、体験会画面から送信ボタンを非表示にする。
   thankYouEmailSentAt DateTime?
+  /// ご入会案内(お礼とお振込み案内)メールを送信した日時。送信済みの場合、体験会画面から送信ボタンを非表示にする。
+  membershipEmailSentAt DateTime?
   createdAt      DateTime     @default(now())
 
   @@index([trialSessionId])

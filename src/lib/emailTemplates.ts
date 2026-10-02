@@ -703,6 +703,161 @@ export function buildTrialThankYouEmail(text: string): {
   return { subject, text, html };
 }
 
+/**
+ * ご入会案内(お礼とお振込み案内)メールの初期文面(管理者が編集する前提のテンプレート)。
+ * 文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildMembershipInvoiceDefaultText(studentName: string, instructorName: string): string {
+  return `${studentName} 様
+
+この度はPlanet DJ Schoolへのご入会、誠にありがとうございます。講師の${instructorName}です。
+
+
+
+（本文入力のために3行空けておく）
+
+
+
+以下のプランと振込先のご案内です。ご確認のうえ、お振込みをお願いいたします。`;
+}
+
+function buildMembershipPlanAndPaymentText(paymentDeadlineText: string): string {
+  const url = bookingSiteUrl();
+  return `【プラン比較】
+
+■レッスン
+ノーマル: 1.5h×3回　／　プレミアム: 2h×3回
+
+■形式
+ノーマル: グループ（最大3名）　／　プレミアム: マンツーマン
+
+■開催日
+ノーマル: 月2回の開催日に予約
+　　※予約サイト: ${url}
+プレミアム: いつでもOK（講師と都合が合う日程）
+
+■おすすめな人
+ノーマル:
+・最も選ばれています
+・ご自宅で少し練習している方、他のスクールで学んだ学び直しの方に最適
+・初心者の方でも十分デビュー可能です（実績あり）
+
+プレミアム:
+・一対一でしっかり学びたい方
+・お仕事などで週末の都合が合わない方
+
+■内容(共通)
+Lesson 1-3 + デビュー
+
+■料金
+ノーマル: ￥30,000
+　　※1週間以内のキャンセルの場合はレッスン1回分・10,000円を追加請求いたします。
+プレミアム: ￥50,000
+　　※1週間以内のキャンセルの場合はレッスン1回分・15,000円を追加請求いたします。
+
+【お振込み先】
+ドコモSMTBネット銀行（金融機関コード0038）
+キウイ支店（支店コード109）
+普通 7938647
+佐野 実来（サノ ミライ）
+
+【お振込み期限】
+${paymentDeadlineText}
+期日までにお振込みが確認できない場合は、キャンセル扱いとさせていただきます。
+また、一度お振込みいただいた受講料の返金はいたしかねますので、あらかじめご了承ください。`;
+}
+
+function buildMembershipPlanAndPaymentHtml(paymentDeadlineText: string): string {
+  const url = bookingSiteUrl();
+  return `
+    <p style="font-weight:bold;margin:20px 0 10px;color:#0f172a;">プランのご案内</p>
+
+    <details open style="margin-bottom:10px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;">
+      <summary style="font-weight:bold;cursor:pointer;color:#0f172a;">ノーマルプラン</summary>
+      <table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;">
+        <tr><td style="padding:4px 0;color:#666;width:90px;vertical-align:top;">レッスン</td><td style="padding:4px 0;">1.5h×3回</td></tr>
+        <tr><td style="padding:4px 0;color:#666;vertical-align:top;">形式</td><td style="padding:4px 0;">グループ（最大3名）</td></tr>
+        <tr><td style="padding:4px 0;color:#666;vertical-align:top;">開催日</td><td style="padding:4px 0;">月2回の開催日に予約<br><span style="font-size:12px;color:#666;">※予約サイト: <a href="${escapeHtml(url)}">${escapeHtml(url)}</a></span></td></tr>
+        <tr><td style="padding:4px 0;color:#666;vertical-align:top;">おすすめ</td><td style="padding:4px 0;">・最も選ばれています<br>・ご自宅で少し練習している方、他のスクールで学んだ学び直しの方に最適<br>・初心者の方でも十分デビュー可能です（実績あり）</td></tr>
+        <tr><td style="padding:4px 0;color:#666;vertical-align:top;">内容</td><td style="padding:4px 0;">Lesson 1-3 + デビュー</td></tr>
+        <tr><td style="padding:4px 0;color:#666;vertical-align:top;">料金</td><td style="padding:4px 0;">
+          <span style="font-weight:bold;">￥30,000</span><br>
+          <span style="font-size:12px;color:#666;">※1週間以内のキャンセルの場合はレッスン1回分・10,000円を追加請求いたします。</span>
+        </td></tr>
+      </table>
+    </details>
+
+    <details style="margin-bottom:10px;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;">
+      <summary style="font-weight:bold;cursor:pointer;color:#0f172a;">プレミアムプラン</summary>
+      <table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;">
+        <tr><td style="padding:4px 0;color:#666;width:90px;vertical-align:top;">レッスン</td><td style="padding:4px 0;">2h×3回</td></tr>
+        <tr><td style="padding:4px 0;color:#666;vertical-align:top;">形式</td><td style="padding:4px 0;">マンツーマン</td></tr>
+        <tr><td style="padding:4px 0;color:#666;vertical-align:top;">開催日</td><td style="padding:4px 0;">いつでもOK（講師と都合が合う日程）</td></tr>
+        <tr><td style="padding:4px 0;color:#666;vertical-align:top;">おすすめ</td><td style="padding:4px 0;">・一対一でしっかり学びたい方<br>・お仕事などで週末の都合が合わない方</td></tr>
+        <tr><td style="padding:4px 0;color:#666;vertical-align:top;">内容</td><td style="padding:4px 0;">Lesson 1-3 + デビュー</td></tr>
+        <tr><td style="padding:4px 0;color:#666;vertical-align:top;">料金</td><td style="padding:4px 0;">
+          <span style="font-weight:bold;">￥50,000</span><br>
+          <span style="font-size:12px;color:#666;">※1週間以内のキャンセルの場合はレッスン1回分・15,000円を追加請求いたします。</span>
+        </td></tr>
+      </table>
+    </details>
+
+    <div style="margin-top:16px;padding:12px 16px;background:#f8fafc;border-radius:8px;">
+      <p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">お振込み先</p>
+      <p style="margin:0;font-size:14px;line-height:1.8;">
+        ドコモSMTBネット銀行（金融機関コード0038）<br>
+        キウイ支店（支店コード109）<br>
+        普通 7938647<br>
+        佐野 実来（サノ ミライ）
+      </p>
+    </div>
+
+    <div style="margin-top:12px;padding:12px 16px;background:#fff7ed;border-radius:8px;">
+      <p style="font-weight:bold;margin:0 0 4px;color:#9a3412;">お振込み期限</p>
+      <p style="margin:0 0 8px;font-size:14px;">${escapeHtml(paymentDeadlineText)}</p>
+      <p style="margin:0;font-size:12.5px;color:#9a3412;line-height:1.7;">
+        期日までにお振込みが確認できない場合は、キャンセル扱いとさせていただきます。<br>
+        また、一度お振込みいただいた受講料の返金はいたしかねますので、あらかじめご了承ください。
+      </p>
+    </div>`;
+}
+
+/**
+ * ご入会案内(お礼とお振込み案内)メール。管理者が編集した本文(お礼・自由記載部分)の下に、
+ * プラン比較・振込先・振込期限を自動で付与して送信する。
+ * (buildMembershipInvoiceDefaultTextは編集画面の初期表示にのみ使用する)
+ */
+export function buildMembershipInvoiceEmail(
+  text: string,
+  instructorName: string,
+  paymentDeadlineText: string
+): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】ご入会のお礼とお振込みのご案内`;
+  const planAndPaymentText = buildMembershipPlanAndPaymentText(paymentDeadlineText);
+
+  const fullText = `${text}
+
+${planAndPaymentText}
+
+ご不明な点がございましたらお気軽にご返信ください。
+
+${instructorName}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <div style="white-space:pre-wrap;">${escapeHtml(text)}</div>
+    ${buildMembershipPlanAndPaymentHtml(paymentDeadlineText)}
+    <p style="margin-top:20px;">ご不明な点がございましたらお気軽にご返信ください。</p>
+    <p style="color:#666;margin-top:24px;">${escapeHtml(instructorName)}</p>
+  </div>`;
+
+  return { subject, text: fullText, html };
+}
+
 function escapeHtml(input: string): string {
   return input
     .replace(/&/g, "&amp;")

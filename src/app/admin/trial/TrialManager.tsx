@@ -22,6 +22,7 @@ export type TrialParticipantItem = {
   studentEmail: string;
   note: string | null;
   thankYouEmailSentAt: string | null;
+  membershipEmailSentAt: string | null;
   createdAt: string;
 };
 
@@ -587,6 +588,16 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
                                   className="text-xs font-medium text-sky-600 hover:text-sky-700"
                                 >
                                   お礼メールを送信
+                                </Link>
+                              </div>
+                            )}
+                            {isPast && !participant.membershipEmailSentAt && (
+                              <div className="mt-1">
+                                <Link
+                                  href={`/admin/trial/${participant.id}/membership-message`}
+                                  className="text-xs font-medium text-sky-600 hover:text-sky-700"
+                                >
+                                  ご入会案内メールを送信
                                 </Link>
                               </div>
                             )}
