@@ -9,6 +9,13 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 class LessonNotFoundError extends Error {}
 class LessonFullError extends Error {}
+class Lesson1RequiredError extends Error {}
+
+/** Lesson 2以降かどうかを判定する(Lesson 1の事前登録が必須になる対象)。 */
+function requiresLesson1Prerequisite(lessonName: string): boolean {
+  const match = lessonName.match(/^Lesson (\d+)$/);
+  return !!match && Number(match[1]) >= 2;
+}
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -48,6 +55,18 @@ export async function POST(request: NextRequest) {
         throw new LessonNotFoundError();
       }
 
+      if (requiresLesson1Prerequisite(lesson.name)) {
+        const lesson1BookingCount = await tx.booking.count({
+          where: {
+            studentEmail: { equals: studentEmail.trim(), mode: "insensitive" },
+            lesson: { name: "Lesson 1" },
+          },
+        });
+        if (lesson1BookingCount === 0) {
+          throw new Lesson1RequiredError();
+        }
+      }
+
       const bookedCount = await tx.booking.count({ where: { lessonId } });
       if (bookedCount >= lesson.maxSlots) {
         throw new LessonFullError();
@@ -82,6 +101,15 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof LessonNotFoundError) {
       return NextResponse.json({ error: "レッスンが見つかりません。" }, { status: 404 });
+    }
+    if (error instanceof Lesson1RequiredError) {
+      return NextResponse.json(
+        {
+          error:
+            "このレッスンのご予約には、Lesson 1のご登録が必要です。Lesson 1の受講については担当講師までご連絡ください。",
+        },
+        { status: 409 }
+      );
     }
     if (error instanceof LessonFullError) {
       return NextResponse.json(
