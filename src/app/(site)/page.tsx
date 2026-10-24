@@ -124,8 +124,9 @@ export default async function HomePage() {
                   <div className={styles.lessonRows}>
                     {group.lessons.map((lesson) => {
                       const isLesson1 = lesson.name === "Lesson 1";
+                      const isUndetermined = lesson.name === "未定";
                       const isFull = lesson.remainingSlots <= 0;
-                      const isDisabled = isFull && !isLesson1;
+                      const isDisabled = isFull && !isLesson1 && !isUndetermined;
                       const rowClassName = `${styles.lessonRow} ${isDisabled ? styles.lessonRowIsFull : ""}`;
                       const spotsClassName = `${styles.lrSpots} ${
                         isFull

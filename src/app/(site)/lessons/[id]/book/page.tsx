@@ -36,6 +36,7 @@ export default async function BookLessonPage({
 
   const isFull = lesson.remainingSlots <= 0;
   const isLesson1 = lesson.name === "Lesson 1";
+  const isUndetermined = lesson.name === "未定";
 
   return (
     <>
@@ -46,7 +47,7 @@ export default async function BookLessonPage({
 
       <section className={styles.bookHero}>
         <p className={`${styles.monoLabel} ${styles.bookEyebrow}`}>
-          {isLesson1 ? "Lesson 1" : "Booking"}
+          {isLesson1 ? "Lesson 1" : isUndetermined ? "Lesson TBD" : "Booking"}
         </p>
         <h1 className={styles.bookTitle}>{lesson.name}</h1>
 
@@ -59,7 +60,7 @@ export default async function BookLessonPage({
             <span className={`${styles.bookMetaLabel} ${styles.monoLabel}`}>講師</span>
             <span className={styles.bookMetaValue}>{lesson.instructorName}</span>
           </div>
-          {!isLesson1 && (
+          {!isLesson1 && !isUndetermined && (
             <div className={styles.bookMetaRow}>
               <span className={`${styles.bookMetaLabel} ${styles.monoLabel}`}>残り枠</span>
               <span
@@ -80,6 +81,13 @@ export default async function BookLessonPage({
             <p className={`${styles.monoLabel} ${styles.bookSectionHead}`}>ご予約について</p>
             <p className={styles.planNote}>
               Lesson 1は、担当講師が直接ご案内・日程調整のうえご予約を確定しております。このサイトからのオンライン予約は行っておりませんので、受講をご希望の方は担当講師までご連絡ください。
+            </p>
+          </>
+        ) : isUndetermined ? (
+          <>
+            <p className={`${styles.monoLabel} ${styles.bookSectionHead}`}>ご予約について</p>
+            <p className={styles.planNote}>
+              このレッスンの内容はまだ未定です。レッスン内容が決まり次第、改めてご予約をお願いいたします。
             </p>
           </>
         ) : isFull ? (

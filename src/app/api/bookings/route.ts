@@ -10,6 +10,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 class LessonNotFoundError extends Error {}
 class LessonFullError extends Error {}
 class Lesson1RequiredError extends Error {}
+class LessonUndeterminedError extends Error {}
 
 /** Lesson 2以降かどうかを判定する(Lesson 1の事前登録が必須になる対象)。 */
 function requiresLesson1Prerequisite(lessonName: string): boolean {
@@ -53,6 +54,10 @@ export async function POST(request: NextRequest) {
       const lesson = await tx.lesson.findUnique({ where: { id: lessonId } });
       if (!lesson) {
         throw new LessonNotFoundError();
+      }
+
+      if (lesson.name === "未定") {
+        throw new LessonUndeterminedError();
       }
 
       if (requiresLesson1Prerequisite(lesson.name)) {
@@ -101,6 +106,15 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof LessonNotFoundError) {
       return NextResponse.json({ error: "レッスンが見つかりません。" }, { status: 404 });
+    }
+    if (error instanceof LessonUndeterminedError) {
+      return NextResponse.json(
+        {
+          error:
+            "このレッスンの内容はまだ未定です。レッスン内容が決まり次第、改めてご予約をお願いいたします。",
+        },
+        { status: 409 }
+      );
     }
     if (error instanceof Lesson1RequiredError) {
       return NextResponse.json(
