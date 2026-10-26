@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { sendMail } from "@/lib/mailer";
 import {
   buildBookingConfirmationEmail,
+  buildEventInviteDefaultText,
+  buildEventInviteEmail,
   buildLesson3SurveyEmail,
   buildMembershipInvoiceDefaultText,
   buildMembershipInvoiceEmail,
@@ -46,6 +48,13 @@ export async function GET(request: NextRequest) {
     );
     await sendMail({ to, subject, text, html });
     return NextResponse.json({ ok: true, message: `${to} に送信しました(ご入会案内メール)。` });
+  }
+
+  if (template === "event-invite") {
+    const defaultText = buildEventInviteDefaultText(sampleName);
+    const { subject, text, html } = buildEventInviteEmail(defaultText, "12/20(土) 19:00〜 会場名");
+    await sendMail({ to, subject, text, html });
+    return NextResponse.json({ ok: true, message: `${to} に送信しました(イベント出演案内メール)。` });
   }
 
   const email =
