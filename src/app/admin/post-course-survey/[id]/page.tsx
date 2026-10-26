@@ -31,6 +31,8 @@ export default async function SurveyResponseDetailPage({
     wantsMoreLessons: response.wantsMoreLessons,
     improvements: response.improvements ?? "",
     message: response.message ?? "",
+    contactPreference: response.contactPreference ?? "",
+    instagramHandle: response.instagramHandle ?? "",
   };
 
   return (

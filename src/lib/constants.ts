@@ -28,6 +28,10 @@ export function eventParticipationLabel(value: string): string {
   return EVENT_PARTICIPATION_OPTIONS.find((o) => o.value === value)?.label ?? value;
 }
 
+/** 受講後アンケートの連絡方法設問の選択肢文言。フォームの条件分岐表示・入力必須判定の両方で使う。 */
+export const INSTAGRAM_SHARE_LABEL = "Instagramを教える";
+export const INSTAGRAM_DECLINE_LABEL = "引き続きメールでの連絡を希望する";
+
 /**
  * 受講後アンケートの質問一覧。イベント出演案内メールの回答ページ(/event-response/[token])と
  * 管理画面の「受講後アンケート」ページの両方で、この定義を共通の表示元として使用する。
@@ -89,6 +93,22 @@ export const SURVEY_QUESTIONS = [
     type: "textarea" as const,
     required: false,
   },
+  {
+    key: "contactPreference" as const,
+    question:
+      "当日の会場情報の共有や、万が一の日程変更などをリアルタイムでお伝えしたいため、Instagramのアカウントを教えていただくことは可能ですか？",
+    note: "教えたくない方は「引き続きメールでの連絡を希望する」をお選びください。その場合もこれまで通りメールでご連絡します。",
+    type: "choice" as const,
+    required: true,
+    options: [INSTAGRAM_SHARE_LABEL, INSTAGRAM_DECLINE_LABEL],
+  },
+  {
+    key: "instagramHandle" as const,
+    question: "Instagramのアカウントを教えてください",
+    type: "text" as const,
+    // 上の質問で「Instagramを教える」を選んだ場合のみ表示・必須にする(フォーム側で制御)。
+    required: false,
+  },
 ];
 
 export type SurveyAnswers = {
@@ -99,4 +119,6 @@ export type SurveyAnswers = {
   wantsMoreLessons: string;
   improvements: string;
   message: string;
+  contactPreference: string;
+  instagramHandle: string;
 };

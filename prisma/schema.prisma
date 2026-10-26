@@ -173,6 +173,8 @@ model DebutEventParticipant {
   event        DebutEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
   studentName  String
   studentEmail String
+  /// 受講後アンケートで回答されたDJネーム(未回答の場合はnull)。デビューイベントの参加者一覧表示用。
+  djName       String?
   /// "participating"(参加できる) | "declined"(参加できない) | "not_interested"(参加を希望しない) | "pending"(管理者が追加したのみ、未回答)
   status       String     @default("pending")
   /// "admin"(管理者が手動追加) | "response"(回答ページからの反映)
@@ -216,6 +218,9 @@ model SurveyResponse {
   wantsMoreLessons   String
   improvements       String?
   message            String?
+  /// "Instagramを教える" | "引き続きメールでの連絡を希望する"
+  contactPreference  String?
+  instagramHandle    String?
   submittedAt        DateTime @default(now())
 
   @@index([studentEmail])

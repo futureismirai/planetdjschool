@@ -222,6 +222,11 @@ const CREATE_TABLES_SQL = [
     CONSTRAINT "SurveyResponse_pkey" PRIMARY KEY ("id")
   )`,
   `CREATE INDEX IF NOT EXISTS "SurveyResponse_studentEmail_idx" ON "SurveyResponse"("studentEmail")`,
+  // デビューイベント参加者一覧にDJネームを表示するため、アンケート回答時に反映する
+  `ALTER TABLE "DebutEventParticipant" ADD COLUMN IF NOT EXISTS "djName" TEXT`,
+  // 受講後アンケートの連絡方法設問(Instagram共有 or 引き続きメール希望)
+  `ALTER TABLE "SurveyResponse" ADD COLUMN IF NOT EXISTS "contactPreference" TEXT`,
+  `ALTER TABLE "SurveyResponse" ADD COLUMN IF NOT EXISTS "instagramHandle" TEXT`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { EVENT_PARTICIPATION_OPTIONS, SURVEY_QUESTIONS } from "@/lib/constants";
+import { EVENT_PARTICIPATION_OPTIONS, INSTAGRAM_SHARE_LABEL, SURVEY_QUESTIONS } from "@/lib/constants";
 
 const PARTICIPATION_VALUES = EVENT_PARTICIPATION_OPTIONS.map((o) => o.value);
 
@@ -41,6 +41,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
     parsedAnswers[q.key] = value;
   }
+  if (parsedAnswers.contactPreference === INSTAGRAM_SHARE_LABEL && !parsedAnswers.instagramHandle) {
+    return NextResponse.json({ error: "Instagramのアカウントをご入力ください。" }, { status: 400 });
+  }
 
   const inviteResponse = await prisma.eventInviteResponse.findUnique({ where: { token } });
   if (!inviteResponse) {
@@ -64,7 +67,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           studentEmail: inviteResponse.studentEmail,
         },
       },
-      update: { status: participationAnswer, source: "response", respondedAt: now },
+      update: { status: participationAnswer, source: "response", respondedAt: now, djName: parsedAnswers.djName },
       create: {
         eventId: inviteResponse.eventId,
         studentName: inviteResponse.studentName,
@@ -72,6 +75,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         status: participationAnswer,
         source: "response",
         respondedAt: now,
+        djName: parsedAnswers.djName,
       },
     }),
     prisma.surveyResponse.create({
@@ -85,6 +89,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         wantsMoreLessons: parsedAnswers.wantsMoreLessons,
         improvements: parsedAnswers.improvements || null,
         message: parsedAnswers.message || null,
+        contactPreference: parsedAnswers.contactPreference || null,
+        instagramHandle: parsedAnswers.instagramHandle || null,
         submittedAt: now,
       },
     }),

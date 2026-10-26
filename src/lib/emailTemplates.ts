@@ -883,6 +883,7 @@ export function buildEventInviteDefaultText(studentName: string): string {
 function buildEventInviteFixedText(eventDateTimeText: string, venue: string | null, url: string): string {
   return `【イベント詳細】
 日時: ${eventDateTimeText}${venue ? `\n会場: ${venue}` : ""}
+※日時は現時点での予定であり、変更となる場合がございます。
 
 下記のページから、参加可否と受講後アンケートにご回答ください。
 ${url}
@@ -896,6 +897,7 @@ function buildEventInviteFixedHtml(eventDateTimeText: string, venue: string | nu
       <p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">イベント詳細</p>
       <p style="margin:0;font-size:14px;">日時: ${escapeHtml(eventDateTimeText)}</p>
       ${venue ? `<p style="margin:4px 0 0;font-size:14px;">会場: ${escapeHtml(venue)}</p>` : ""}
+      <p style="margin:8px 0 0;font-size:12px;color:#94a3b8;">※日時は現時点での予定であり、変更となる場合がございます。</p>
     </div>
 
     <div style="margin-top:20px;text-align:center;">

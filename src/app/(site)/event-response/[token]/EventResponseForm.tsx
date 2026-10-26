@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import styles from "../../site.module.css";
-import { EVENT_PARTICIPATION_OPTIONS, SURVEY_QUESTIONS, type SurveyAnswers } from "@/lib/constants";
+import {
+  EVENT_PARTICIPATION_OPTIONS,
+  INSTAGRAM_SHARE_LABEL,
+  SURVEY_QUESTIONS,
+  type SurveyAnswers,
+} from "@/lib/constants";
 
 const EMPTY_ANSWERS: SurveyAnswers = {
   djName: "",
@@ -12,6 +17,8 @@ const EMPTY_ANSWERS: SurveyAnswers = {
   wantsMoreLessons: "",
   improvements: "",
   message: "",
+  contactPreference: "",
+  instagramHandle: "",
 };
 
 export function EventResponseForm({ token }: { token: string }) {
@@ -36,6 +43,10 @@ export function EventResponseForm({ token }: { token: string }) {
         setError(`「${q.question}」にご回答ください。`);
         return;
       }
+    }
+    if (answers.contactPreference === INSTAGRAM_SHARE_LABEL && !answers.instagramHandle.trim()) {
+      setError("Instagramのアカウントをご入力ください。");
+      return;
     }
 
     setSubmitting(true);
@@ -80,7 +91,7 @@ export function EventResponseForm({ token }: { token: string }) {
         </p>
         <div className={styles.segmented}>
           {EVENT_PARTICIPATION_OPTIONS.map((o) => (
-            <div key={o.value}>
+            <div key={o.value} className={styles.segmentedOption}>
               <input
                 type="radio"
                 name="participation"
@@ -104,55 +115,62 @@ export function EventResponseForm({ token }: { token: string }) {
         </p>
 
         <div className={styles.qList}>
-          {SURVEY_QUESTIONS.map((q, i) => (
-            <div key={q.key}>
-              <div className={styles.qHead}>
-                <span className={styles.qNum}>Q{i + 1}</span>
-                <span className={styles.qText}>
-                  {q.question}
-                  {q.required && <span className={styles.qRequired}>*</span>}
-                </span>
-              </div>
-              {"note" in q && q.note && <p className={styles.qOptionsNote}>（{q.note}）</p>}
+          {SURVEY_QUESTIONS.map((q, i) => {
+            // Instagramのアカウント入力欄は、直前の設問で「教える」を選んだ場合のみ表示する。
+            if (q.key === "instagramHandle" && answers.contactPreference !== INSTAGRAM_SHARE_LABEL) {
+              return null;
+            }
 
-              {q.type === "text" && (
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  value={answers[q.key]}
-                  onChange={(e) => setAnswer(q.key, e.target.value)}
-                  placeholder="例）DJ TARO"
-                />
-              )}
-
-              {q.type === "choice" && (
-                <div className={styles.segmented}>
-                  {q.options.map((opt) => (
-                    <div key={opt}>
-                      <input
-                        type="radio"
-                        name={q.key}
-                        id={`${q.key}-${opt}`}
-                        checked={answers[q.key] === opt}
-                        onChange={() => setAnswer(q.key, opt)}
-                      />
-                      <label htmlFor={`${q.key}-${opt}`}>{opt}</label>
-                    </div>
-                  ))}
+            return (
+              <div key={q.key}>
+                <div className={styles.qHead}>
+                  <span className={styles.qNum}>Q{i + 1}</span>
+                  <span className={styles.qText}>
+                    {q.question}
+                    {q.required && <span className={styles.qRequired}>*</span>}
+                  </span>
                 </div>
-              )}
+                {"note" in q && q.note && <p className={styles.qOptionsNote}>（{q.note}）</p>}
 
-              {q.type === "textarea" && (
-                <textarea
-                  className={styles.formTextarea}
-                  value={answers[q.key]}
-                  onChange={(e) => setAnswer(q.key, e.target.value)}
-                  placeholder="（任意）"
-                  rows={3}
-                />
-              )}
-            </div>
-          ))}
+                {q.type === "text" && (
+                  <input
+                    type="text"
+                    className={styles.formInput}
+                    value={answers[q.key]}
+                    onChange={(e) => setAnswer(q.key, e.target.value)}
+                    placeholder={q.key === "instagramHandle" ? "例）@planetdjschool" : "例）DJ TARO"}
+                  />
+                )}
+
+                {q.type === "choice" && (
+                  <div className={styles.segmented}>
+                    {q.options.map((opt) => (
+                      <div key={opt} className={styles.segmentedOption}>
+                        <input
+                          type="radio"
+                          name={q.key}
+                          id={`${q.key}-${opt}`}
+                          checked={answers[q.key] === opt}
+                          onChange={() => setAnswer(q.key, opt)}
+                        />
+                        <label htmlFor={`${q.key}-${opt}`}>{opt}</label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {q.type === "textarea" && (
+                  <textarea
+                    className={styles.formTextarea}
+                    value={answers[q.key]}
+                    onChange={(e) => setAnswer(q.key, e.target.value)}
+                    placeholder="（任意）"
+                    rows={3}
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
 

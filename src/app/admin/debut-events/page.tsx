@@ -23,6 +23,7 @@ async function getDebutEventsWithParticipants() {
       id: p.id,
       studentName: p.studentName,
       studentEmail: p.studentEmail,
+      djName: p.djName,
       status: p.status,
       source: p.source,
       createdAt: p.createdAt.toISOString(),

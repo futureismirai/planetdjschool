@@ -672,15 +672,25 @@
   gap: 8px;
   flex-wrap: wrap;
 }
+/* 各選択肢のラッパー。inputをここに対して絶対配置することで、親(.segmented)基準で
+   位置がずれて選択肢同士が重なって見えるのを防ぐ(position:relativeの基点を明示する)。 */
+.segmentedOption {
+  position: relative;
+  max-width: 100%;
+}
 .segmented input {
   position: absolute;
+  inset: 0;
+  margin: 0;
   opacity: 0;
   pointer-events: none;
 }
 .segmented label {
+  display: block;
   font-family: var(--grotesk);
   font-weight: 600;
   font-size: 13.5px;
+  line-height: 1.5;
   padding: 9px 16px;
   border: 1.5px solid var(--line);
   border-radius: 999px;
@@ -696,6 +706,17 @@
 .segmented input:focus-visible + label {
   outline: 2px solid var(--lavender-deep);
   outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .segmented {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .segmented label {
+    border-radius: 10px;
+    text-align: center;
+  }
 }
 
 .segmentedNote {

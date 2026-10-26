@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDateHeading, formatTimeOnly, sortForDateGroupedDisplay, withDateGroupFlags } from "@/lib/date";
 import { toDatetimeLocalValue } from "../individual/IndividualLessonManager";
-import { EVENT_PARTICIPATION_OPTIONS } from "@/lib/constants";
 
 export type DebutEventParticipantItem = {
   id: string;
   studentName: string;
   studentEmail: string;
+  djName: string | null;
   status: string;
   source: string;
   createdAt: string;
@@ -41,13 +41,6 @@ function eventToForm(event: DebutEventItem): EventFormValues {
     venue: event.venue ?? "",
   };
 }
-
-const STATUS_BADGE_CLASS: Record<string, string> = {
-  participating: "bg-sky-100 text-sky-700",
-  declined: "bg-amber-100 text-amber-700",
-  not_interested: "bg-slate-100 text-slate-500",
-  pending: "bg-slate-100 text-slate-500",
-};
 
 function EventForm({
   initial,
@@ -201,50 +194,6 @@ function ParticipantForm({ eventId, onDone }: { eventId: string; onDone: () => v
   );
 }
 
-function ParticipantStatusSelect({ participant }: { participant: DebutEventParticipantItem }) {
-  const router = useRouter();
-  const [updating, setUpdating] = useState(false);
-
-  async function handleChange(status: string) {
-    setUpdating(true);
-    try {
-      const res = await fetch(`/api/admin/debut-event-participants/${participant.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        window.alert(data.error ?? "更新に失敗しました。");
-        return;
-      }
-      router.refresh();
-    } catch {
-      window.alert("通信エラーが発生しました。");
-    } finally {
-      setUpdating(false);
-    }
-  }
-
-  return (
-    <select
-      value={participant.status}
-      disabled={updating}
-      onChange={(e) => handleChange(e.target.value)}
-      className={
-        "rounded-full border-0 px-2.5 py-1 text-xs font-semibold " + (STATUS_BADGE_CLASS[participant.status] ?? "bg-slate-100 text-slate-500")
-      }
-    >
-      <option value="pending">未回答</option>
-      {EVENT_PARTICIPATION_OPTIONS.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
-  );
-}
-
 function DeleteParticipantButton({ participantId, studentName }: { participantId: string; studentName: string }) {
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
@@ -276,6 +225,62 @@ function DeleteParticipantButton({ participantId, studentName }: { participantId
     >
       {deleting ? "削除中..." : "削除"}
     </button>
+  );
+}
+
+function ParticipantList({
+  title,
+  participants,
+  emptyText,
+}: {
+  title: string;
+  participants: DebutEventParticipantItem[];
+  emptyText: string;
+}) {
+  return (
+    <div className="border-t border-slate-100">
+      <p className="px-4 pt-3 text-xs font-semibold text-slate-500">
+        {title}({participants.length}名)
+      </p>
+      {participants.length === 0 ? (
+        <p className="px-4 pb-3 pt-1 text-sm text-slate-400">{emptyText}</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 text-xs text-slate-400">
+                <th className="px-2 py-2 font-medium sm:px-4">名前</th>
+                <th className="px-2 py-2 font-medium sm:px-4">DJネーム</th>
+                <th className="hidden px-4 py-2 font-medium sm:table-cell">メールアドレス</th>
+                <th className="px-2 py-2 font-medium sm:px-4"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {participants.map((participant) => (
+                <tr key={participant.id} className="border-b border-slate-50 last:border-0">
+                  <td className="px-2 py-2 sm:px-4">
+                    <Link
+                      href={`/admin/students/${encodeURIComponent(participant.studentEmail)}`}
+                      className="text-sky-700 underline-offset-2 hover:underline"
+                    >
+                      {participant.studentName}
+                    </Link>
+                  </td>
+                  <td className="px-2 py-2 text-slate-600 sm:px-4">{participant.djName ?? "-"}</td>
+                  <td className="hidden px-4 py-2 text-slate-500 sm:table-cell">{participant.studentEmail}</td>
+                  <td className="px-2 py-2 text-right sm:px-4">
+                    <DeleteParticipantButton
+                      participantId={participant.id}
+                      studentName={participant.studentName}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -430,6 +435,12 @@ export function DebutEventManager({ events }: { events: DebutEventItem[] }) {
             );
           }
 
+          const participating = event.participants.filter(
+            (p) => p.status === "participating" || p.status === "pending"
+          );
+          const declined = event.participants.filter((p) => p.status === "declined");
+          const notInterested = event.participants.filter((p) => p.status === "not_interested");
+
           return (
             <div key={event.id} className={index === 0 ? "" : isNewDate ? "mt-6" : "mt-3"}>
               {dateHeader}
@@ -448,7 +459,7 @@ export function DebutEventManager({ events }: { events: DebutEventItem[] }) {
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
-                      参加者 {event.participants.length}名
+                      参加者 {participating.length}名
                     </span>
                     <button
                       type="button"
@@ -467,52 +478,7 @@ export function DebutEventManager({ events }: { events: DebutEventItem[] }) {
                   </div>
                 </div>
 
-                {event.participants.length === 0 ? (
-                  <p className="p-4 text-sm text-slate-400">生徒はまだ登録されていません。</p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead>
-                        <tr className="border-b border-slate-100 text-xs text-slate-400">
-                          <th className="px-2 py-2 font-medium sm:px-4">生徒名</th>
-                          <th className="hidden px-4 py-2 font-medium sm:table-cell">メールアドレス</th>
-                          <th className="px-2 py-2 font-medium sm:px-4">参加状況</th>
-                          <th className="hidden px-4 py-2 font-medium sm:table-cell">登録方法</th>
-                          <th className="px-2 py-2 font-medium sm:px-4"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {event.participants.map((participant) => (
-                          <tr key={participant.id} className="border-b border-slate-50 last:border-0">
-                            <td className="px-2 py-2 sm:px-4">
-                              <Link
-                                href={`/admin/students/${encodeURIComponent(participant.studentEmail)}`}
-                                className="text-sky-700 underline-offset-2 hover:underline"
-                              >
-                                {participant.studentName}
-                              </Link>
-                            </td>
-                            <td className="hidden px-4 py-2 text-slate-500 sm:table-cell">
-                              {participant.studentEmail}
-                            </td>
-                            <td className="px-2 py-2 sm:px-4">
-                              <ParticipantStatusSelect participant={participant} />
-                            </td>
-                            <td className="hidden px-4 py-2 text-xs text-slate-400 sm:table-cell">
-                              {participant.source === "response" ? "回答ページ" : "管理者が追加"}
-                            </td>
-                            <td className="px-2 py-2 text-right sm:px-4">
-                              <DeleteParticipantButton
-                                participantId={participant.id}
-                                studentName={participant.studentName}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                <ParticipantList title="参加者" participants={participating} emptyText="まだ参加者がいません。" />
 
                 {addingParticipantFor === event.id ? (
                   <ParticipantForm eventId={event.id} onDone={() => setAddingParticipantFor(null)} />
@@ -527,6 +493,17 @@ export function DebutEventManager({ events }: { events: DebutEventItem[] }) {
                     </button>
                   </div>
                 )}
+
+                <ParticipantList
+                  title="参加できない"
+                  participants={declined}
+                  emptyText="対象者はいません。"
+                />
+                <ParticipantList
+                  title="参加を希望しない"
+                  participants={notInterested}
+                  emptyText="対象者はいません。"
+                />
               </section>
             </div>
           );
