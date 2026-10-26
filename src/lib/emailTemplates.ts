@@ -876,8 +876,8 @@ export function buildEventInviteDefaultText(studentName: string): string {
 
 いつもPlanet DJ Schoolをご利用いただきありがとうございます。
 
-このたびイベントを開催することとなりましたので、ご出演いただける方を募集いたします。
-ご検討のうえ、下記の内容にご回答ください。`;
+この度、イベントを開催することとなりました。
+ご出演について下記の内容から回答ください`;
 }
 
 function buildEventInviteFixedText(eventDateTimeText: string, venue: string | null, url: string): string {
