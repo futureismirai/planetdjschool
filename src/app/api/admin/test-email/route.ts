@@ -52,7 +52,12 @@ export async function GET(request: NextRequest) {
 
   if (template === "event-invite") {
     const defaultText = buildEventInviteDefaultText(sampleName);
-    const { subject, text, html } = buildEventInviteEmail(defaultText, "12/20(土) 19:00〜 会場名");
+    const sampleUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://planetdjschool.vercel.app"}/event-response/sample-token`;
+    const { subject, text, html } = buildEventInviteEmail(
+      defaultText,
+      { eventDateTimeText: "2026/12/20(土) 19:00〜21:00", venue: "下北沢SPREAD" },
+      sampleUrl
+    );
     await sendMail({ to, subject, text, html });
     return NextResponse.json({ ok: true, message: `${to} に送信しました(イベント出演案内メール)。` });
   }

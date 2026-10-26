@@ -155,6 +155,73 @@ const CREATE_TABLES_SQL = [
   END $$`,
   // ご入会案内(お礼とお振込み案内)メールを送信済みかどうかの記録
   `ALTER TABLE "TrialParticipant" ADD COLUMN IF NOT EXISTS "membershipEmailSentAt" TIMESTAMP(3)`,
+  // デビューイベント(管理者が作成する開催枠)
+  `CREATE TABLE IF NOT EXISTS "DebutEvent" (
+    "id" TEXT NOT NULL,
+    "startDatetime" TIMESTAMP(3) NOT NULL,
+    "endDatetime" TIMESTAMP(3) NOT NULL,
+    "venue" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "DebutEvent_pkey" PRIMARY KEY ("id")
+  )`,
+  `CREATE INDEX IF NOT EXISTS "DebutEvent_startDatetime_idx" ON "DebutEvent"("startDatetime")`,
+  // デビューイベントの参加者(管理者が手動追加、または回答ページからの自動反映)
+  `CREATE TABLE IF NOT EXISTS "DebutEventParticipant" (
+    "id" TEXT NOT NULL,
+    "eventId" TEXT NOT NULL,
+    "studentName" TEXT NOT NULL,
+    "studentEmail" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "source" TEXT NOT NULL DEFAULT 'admin',
+    "respondedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "DebutEventParticipant_pkey" PRIMARY KEY ("id")
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "DebutEventParticipant_eventId_studentEmail_key" ON "DebutEventParticipant"("eventId", "studentEmail")`,
+  `CREATE INDEX IF NOT EXISTS "DebutEventParticipant_eventId_idx" ON "DebutEventParticipant"("eventId")`,
+  `DO $$ BEGIN
+    ALTER TABLE "DebutEventParticipant" ADD CONSTRAINT "DebutEventParticipant_eventId_fkey"
+      FOREIGN KEY ("eventId") REFERENCES "DebutEvent"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END $$`,
+  // イベント出演案内メールの回答用トークン(公開回答ページ用)
+  `CREATE TABLE IF NOT EXISTS "EventInviteResponse" (
+    "id" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "eventId" TEXT NOT NULL,
+    "studentName" TEXT NOT NULL,
+    "studentEmail" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'pending',
+    "participationAnswer" TEXT,
+    "submittedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "EventInviteResponse_pkey" PRIMARY KEY ("id")
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "EventInviteResponse_token_key" ON "EventInviteResponse"("token")`,
+  `CREATE INDEX IF NOT EXISTS "EventInviteResponse_token_idx" ON "EventInviteResponse"("token")`,
+  `CREATE INDEX IF NOT EXISTS "EventInviteResponse_eventId_idx" ON "EventInviteResponse"("eventId")`,
+  `DO $$ BEGIN
+    ALTER TABLE "EventInviteResponse" ADD CONSTRAINT "EventInviteResponse_eventId_fkey"
+      FOREIGN KEY ("eventId") REFERENCES "DebutEvent"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  EXCEPTION WHEN duplicate_object THEN NULL;
+  END $$`,
+  // 受講後アンケートの回答(管理画面の「受講後アンケート」ページに一覧表示)
+  `CREATE TABLE IF NOT EXISTS "SurveyResponse" (
+    "id" TEXT NOT NULL,
+    "studentName" TEXT NOT NULL,
+    "studentEmail" TEXT NOT NULL,
+    "djName" TEXT NOT NULL,
+    "joinStatus" TEXT NOT NULL,
+    "lessonSufficiency" TEXT NOT NULL,
+    "moreToLearn" TEXT,
+    "wantsMoreLessons" TEXT NOT NULL,
+    "improvements" TEXT,
+    "message" TEXT,
+    "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "SurveyResponse_pkey" PRIMARY KEY ("id")
+  )`,
+  `CREATE INDEX IF NOT EXISTS "SurveyResponse_studentEmail_idx" ON "SurveyResponse"("studentEmail")`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {

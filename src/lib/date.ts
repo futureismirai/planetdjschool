@@ -23,6 +23,11 @@ export function formatTimeOnly(date: Date): string {
   return formatInTimeZone(date, TIME_ZONE, "HH:mm", { locale: ja });
 }
 
+/** 例: 2026年12月20日(日) 19:00〜21:00 - デビューイベントの開催日時表示用 */
+export function formatDateTimeRange(start: Date, end: Date): string {
+  return `${formatDateOnly(start)} ${formatTimeOnly(start)}〜${formatTimeOnly(end)}`;
+}
+
 /** 日本時間での日付キー(yyyy-MM-dd)。同一日のレッスンをグループ化する際に使用する。 */
 export function getJstDateKey(date: Date): string {
   return formatInTimeZone(date, TIME_ZONE, "yyyy-MM-dd");

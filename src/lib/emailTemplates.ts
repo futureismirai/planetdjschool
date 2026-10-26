@@ -880,100 +880,48 @@ export function buildEventInviteDefaultText(studentName: string): string {
 ご検討のうえ、下記の内容にご回答ください。`;
 }
 
-// アンケート部分の質問一覧。(名前を尋ねる質問は、既に分かっているためここには含めていない)
-const EVENT_INVITE_SURVEY_QUESTIONS: { q: string; note?: string }[] = [
-  { q: "デビューする時のDJネームを教えて下さい" },
-  {
-    q: "入会した時の状況を教えてください",
-    note: "全くの初心者／少し機材を触ったことがあった（ミックスはできない）／ミックスはできるが現場に出たことはなかった／現場に出たことがあった",
-  },
-  {
-    q: "レッスン内容は3回で十分でしたか？",
-    note: "自信を持ってDJデビューできそう／自信はあまりないけどなんとかなりそう／自信はまったくないけどがんばります／3回じゃ全然足りませんでした",
-  },
-  { q: "3回のレッスン以外でもっと学びたかった内容はありましたか" },
-  {
-    q: "デビュー後のレッスンを希望しますか？（こちらの選択により、レッスンが確定するわけではございません）",
-    note: "はい／いいえ／検討中",
-  },
-  { q: "レッスン内容や運営に関して改善点や希望する事があれば記入下さい" },
-  { q: "最後に講師やスタッフの方に応援メッセージなどがあればご記入下さい！" },
-];
-
-function buildEventInviteFixedText(eventDateTimeText: string): string {
-  const questionsText = EVENT_INVITE_SURVEY_QUESTIONS.map(
-    (item, i) =>
-      `Q${i + 1}. ${item.q}${item.note ? `\n（${item.note}）` : ""}\n回答：`
-  ).join("\n\n");
-
+function buildEventInviteFixedText(eventDateTimeText: string, venue: string | null, url: string): string {
   return `【イベント詳細】
-日時: ${eventDateTimeText}
+日時: ${eventDateTimeText}${venue ? `\n会場: ${venue}` : ""}
 
-ご出演を希望される方は、「参加の可否」と下記の「アンケート」の両方にご回答のうえ、本メールにご返信ください。
-※アンケートへのご回答がない場合、出演のお申し込みを承ることができませんので、お手数ですが必ずあわせてご回答をお願いいたします。
+下記のページから、参加可否と受講後アンケートにご回答ください。
+${url}
 
-【参加の可否】
-（「参加する」「参加しない」「検討中」のいずれかをご記入ください）
-回答：
-
-
-【アンケート】
-Planet DJ Schoolで3回のレッスンを受講した方へのアンケートです。今後の運営のためにぜひご協力をお願いします。
-
-${questionsText}`;
+※ご回答をもって出演のお申し込みとなります。`;
 }
 
-function buildEventInviteFixedHtml(eventDateTimeText: string): string {
-  const questionsHtml = EVENT_INVITE_SURVEY_QUESTIONS.map(
-    (item, i) => `
-      <div style="margin-bottom:14px;">
-        <p style="margin:0 0 2px;font-weight:bold;">Q${i + 1}. ${escapeHtml(item.q)}</p>
-        ${item.note ? `<p style="margin:0 0 4px;font-size:12px;color:#666;">（${escapeHtml(item.note)}）</p>` : ""}
-        <p style="margin:0;color:#94a3b8;">回答：</p>
-      </div>`
-  ).join("");
-
+function buildEventInviteFixedHtml(eventDateTimeText: string, venue: string | null, url: string): string {
   return `
     <div style="margin-top:16px;padding:12px 16px;background:#f8fafc;border-radius:8px;">
       <p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">イベント詳細</p>
       <p style="margin:0;font-size:14px;">日時: ${escapeHtml(eventDateTimeText)}</p>
+      ${venue ? `<p style="margin:4px 0 0;font-size:14px;">会場: ${escapeHtml(venue)}</p>` : ""}
     </div>
 
-    <div style="margin-top:12px;padding:12px 16px;background:#fff7ed;border-radius:8px;">
-      <p style="margin:0;font-size:13px;color:#9a3412;line-height:1.7;">
-        ご出演を希望される方は、「参加の可否」と下記の「アンケート」の両方にご回答のうえ、本メールにご返信ください。<br>
-        ※アンケートへのご回答がない場合、出演のお申し込みを承ることができませんので、お手数ですが必ずあわせてご回答をお願いいたします。
-      </p>
+    <div style="margin-top:20px;text-align:center;">
+      <a href="${escapeHtml(url)}" style="display:inline-block;background:#61508c;color:#fff;text-decoration:none;font-weight:bold;padding:12px 28px;border-radius:999px;">参加可否・アンケートに回答する</a>
+      <p style="margin:12px 0 0;font-size:12px;color:#94a3b8;word-break:break-all;">${escapeHtml(url)}</p>
     </div>
 
-    <div style="margin-top:20px;">
-      <p style="font-weight:bold;margin:0 0 10px;color:#0f172a;">参加の可否</p>
-      <p style="margin:0 0 4px;font-size:12px;color:#666;">（「参加する」「参加しない」「検討中」のいずれかをご記入ください）</p>
-      <p style="margin:0;color:#94a3b8;">回答：</p>
-    </div>
-
-    <div style="margin-top:20px;">
-      <p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">アンケート</p>
-      <p style="margin:0 0 14px;font-size:13px;color:#666;">Planet DJ Schoolで3回のレッスンを受講した方へのアンケートです。今後の運営のためにぜひご協力をお願いします。</p>
-      ${questionsHtml}
-    </div>`;
+    <p style="margin-top:16px;font-size:13px;color:#9a3412;">※ご回答をもって出演のお申し込みとなります。</p>`;
 }
 
 /**
  * イベント出演案内メール。管理者が編集した本文(挨拶・自由記載部分)の下に、
- * イベント日時(管理者が送信画面で入力)・参加可否の確認・アンケート(テキスト回答形式)を
- * 自動で付与して送信する。(buildEventInviteDefaultTextは編集画面の初期表示にのみ使用する)
+ * イベント詳細と、参加可否・受講後アンケートに回答する公開ページへのリンクを付与して送信する。
+ * (buildEventInviteDefaultTextは編集画面の初期表示にのみ使用する)
  */
 export function buildEventInviteEmail(
   text: string,
-  eventDateTimeText: string
+  event: { eventDateTimeText: string; venue: string | null },
+  url: string
 ): {
   subject: string;
   text: string;
   html: string;
 } {
   const subject = `【${SCHOOL_NAME}】イベント出演のご案内`;
-  const fixedText = buildEventInviteFixedText(eventDateTimeText);
+  const fixedText = buildEventInviteFixedText(event.eventDateTimeText, event.venue, url);
 
   const fullText = `${text}
 
@@ -986,7 +934,7 @@ ${SCHOOL_NAME}`;
   const html = `
   <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
     <div style="white-space:pre-wrap;">${escapeHtml(text)}</div>
-    ${buildEventInviteFixedHtml(eventDateTimeText)}
+    ${buildEventInviteFixedHtml(event.eventDateTimeText, event.venue, url)}
     <p style="margin-top:20px;">ご不明な点がございましたらお気軽にご返信ください。</p>
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;

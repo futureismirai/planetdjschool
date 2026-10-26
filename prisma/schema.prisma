@@ -150,3 +150,73 @@ model ScheduleCandidate {
 
   @@index([scheduleRequestId])
 }
+
+/// デビューイベント(生徒が出演するイベント)の開催枠。管理者が作成する。
+model DebutEvent {
+  id              String                  @id @default(cuid())
+  startDatetime   DateTime
+  endDatetime     DateTime
+  venue           String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  participants    DebutEventParticipant[]
+  inviteResponses EventInviteResponse[]
+
+  @@index([startDatetime])
+}
+
+/// デビューイベントへの参加者。管理者が手動で追加した生徒と、
+/// イベント出演案内メールの回答ページから自動反映された生徒の両方を保持する。
+model DebutEventParticipant {
+  id           String     @id @default(cuid())
+  eventId      String
+  event        DebutEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  studentName  String
+  studentEmail String
+  /// "participating"(参加できる) | "declined"(参加できない) | "not_interested"(参加を希望しない) | "pending"(管理者が追加したのみ、未回答)
+  status       String     @default("pending")
+  /// "admin"(管理者が手動追加) | "response"(回答ページからの反映)
+  source       String     @default("admin")
+  respondedAt  DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@unique([eventId, studentEmail])
+  @@index([eventId])
+}
+
+/// イベント出演案内メールの回答用トークン。公開回答ページ(/event-response/[token])で
+/// 参加可否と受講後アンケートに回答してもらうために使用する。
+model EventInviteResponse {
+  id                  String     @id @default(cuid())
+  token               String     @unique @default(cuid())
+  eventId             String
+  event               DebutEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  studentName         String
+  studentEmail        String
+  /// "pending"(回答待ち) | "answered"(回答済み)
+  status              String     @default("pending")
+  participationAnswer String?
+  submittedAt         DateTime?
+  createdAt           DateTime   @default(now())
+
+  @@index([token])
+  @@index([eventId])
+}
+
+/// 受講後アンケートの回答。イベント出演の参加可否とは別に、管理画面の
+/// 「受講後アンケート」ページに一覧表示するために使用する。
+model SurveyResponse {
+  id                 String   @id @default(cuid())
+  studentName        String
+  studentEmail       String
+  djName             String
+  joinStatus         String
+  lessonSufficiency  String
+  moreToLearn        String?
+  wantsMoreLessons   String
+  improvements       String?
+  message            String?
+  submittedAt        DateTime @default(now())
+
+  @@index([studentEmail])
+}

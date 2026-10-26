@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentAdmin } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { LogoutButton } from "../../../LogoutButton";
 import { getStudents } from "@/lib/students";
 import { buildEventInviteDefaultText } from "@/lib/emailTemplates";
+import { formatDateTimeRange } from "@/lib/date";
 import { EventInviteForm } from "./EventInviteForm";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +18,11 @@ export default async function EventInvitePage({
   const { email } = await params;
   const decodedEmail = decodeURIComponent(email).trim().toLowerCase();
 
-  const [admin, students] = await Promise.all([getCurrentAdmin(), getStudents()]);
+  const [admin, students, events] = await Promise.all([
+    getCurrentAdmin(),
+    getStudents(),
+    prisma.debutEvent.findMany({ orderBy: { startDatetime: "desc" } }),
+  ]);
   const student = students.find((s) => s.email === decodedEmail);
 
   if (!student) {
@@ -24,6 +30,10 @@ export default async function EventInvitePage({
   }
 
   const defaultText = buildEventInviteDefaultText(student.displayName);
+  const eventOptions = events.map((e) => ({
+    id: e.id,
+    label: `${formatDateTimeRange(e.startDatetime, e.endDatetime)}${e.venue ? ` ${e.venue}` : ""}`,
+  }));
 
   return (
     <div className="mx-auto max-w-2xl px-3 py-6 sm:px-4 sm:py-8">
@@ -46,9 +56,19 @@ export default async function EventInvitePage({
         </div>
       </div>
 
-      <div className="mt-6">
-        <EventInviteForm studentEmail={student.email} defaultText={defaultText} />
-      </div>
+      {eventOptions.length === 0 ? (
+        <p className="mt-6 rounded-md bg-amber-50 p-3 text-sm text-amber-700">
+          デビューイベントの枠が登録されていません。先に
+          <Link href="/admin/debut-events" className="font-semibold underline">
+            デビューイベント
+          </Link>
+          で枠を作成してください。
+        </p>
+      ) : (
+        <div className="mt-6">
+          <EventInviteForm studentEmail={student.email} defaultText={defaultText} eventOptions={eventOptions} />
+        </div>
+      )}
     </div>
   );
 }

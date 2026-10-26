@@ -6,19 +6,21 @@ import { useRouter } from "next/navigation";
 export function EventInviteForm({
   studentEmail,
   defaultText,
+  eventOptions,
 }: {
   studentEmail: string;
   defaultText: string;
+  eventOptions: { id: string; label: string }[];
 }) {
   const router = useRouter();
-  const [eventDateTimeText, setEventDateTimeText] = useState("");
+  const [eventId, setEventId] = useState("");
   const [text, setText] = useState(defaultText);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSend() {
-    if (!eventDateTimeText.trim()) {
-      setError("イベント日時を入力してください。");
+    if (!eventId) {
+      setError("イベントを選択してください。");
       return;
     }
     if (!window.confirm(`このメールアドレス(${studentEmail})にこの内容でメールを送信しますか？`)) return;
@@ -31,7 +33,7 @@ export function EventInviteForm({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text, eventDateTimeText }),
+          body: JSON.stringify({ text, eventId }),
         }
       );
       const data = await res.json().catch(() => ({}));
@@ -58,15 +60,22 @@ export function EventInviteForm({
       )}
 
       <label className="block text-xs font-medium text-slate-500">
-        イベント日時<span className="text-rose-500">*</span>
+        イベント<span className="text-rose-500">*</span>
       </label>
-      <input
-        type="text"
-        value={eventDateTimeText}
-        onChange={(e) => setEventDateTimeText(e.target.value)}
-        placeholder="例）12/20(土) 19:00〜 会場名"
+      <select
+        value={eventId}
+        onChange={(e) => setEventId(e.target.value)}
         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
-      />
+      >
+        <option value="" disabled>
+          選択してください
+        </option>
+        {eventOptions.map((o) => (
+          <option key={o.id} value={o.id}>
+            {o.label}
+          </option>
+        ))}
+      </select>
 
       <label className="mt-4 block text-xs font-medium text-slate-500">本文</label>
       <textarea
@@ -76,7 +85,7 @@ export function EventInviteForm({
         className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
       />
       <p className="mt-2 text-xs text-slate-400">
-        この下に、入力したイベント日時・参加可否の確認欄・アンケート(DJネームなどをメール本文上で直接回答できる形式)が自動で付与されて送信されます。アンケートに回答がない場合は出演のお申し込みを受け付けられない旨も明記されます。
+        この下に、選択したイベントの詳細と、参加可否・受講後アンケートに回答する専用ページへのリンクが自動で付与されて送信されます。
       </p>
 
       <div className="mt-3 flex justify-end">

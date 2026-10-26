@@ -644,6 +644,106 @@
   opacity: 0.5;
 }
 
+.formTextarea {
+  font-family: var(--jp);
+  font-size: 15px;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  padding: 8px 2px;
+  border-radius: 0;
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.7;
+}
+.formTextarea::placeholder {
+  color: var(--muted);
+}
+.formTextarea:focus {
+  outline: none;
+  border-bottom-color: var(--lavender-deep);
+}
+
+/* ---- Segmented choice (参加可否・アンケートの選択式回答) ---- */
+
+.segmented {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.segmented input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.segmented label {
+  font-family: var(--grotesk);
+  font-weight: 600;
+  font-size: 13.5px;
+  padding: 9px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  user-select: none;
+}
+.segmented input:checked + label {
+  background: var(--lavender-deep);
+  border-color: var(--lavender-deep);
+  color: var(--bg);
+}
+.segmented input:focus-visible + label {
+  outline: 2px solid var(--lavender-deep);
+  outline-offset: 2px;
+}
+
+.segmentedNote {
+  font-size: 12.5px;
+  color: var(--charcoal);
+  line-height: 1.8;
+  margin: 10px 0 0;
+}
+
+/* ---- 受講後アンケート(デビューイベント回答ページ) ---- */
+
+.qList {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.qHead {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+.qNum {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--lavender-deep);
+  flex: none;
+  padding-top: 2px;
+}
+.qText {
+  font-family: var(--jp);
+  font-weight: 700;
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+.qRequired {
+  color: var(--lavender-deep);
+  font-weight: 700;
+  margin-left: 2px;
+}
+.qOptionsNote {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin: -4px 0 10px 26px;
+}
+
 /* ---- Schedule request (日程調整) ---- */
 
 .bookIntro {
