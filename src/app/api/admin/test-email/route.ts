@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendMail } from "@/lib/mailer";
+import { prisma } from "@/lib/prisma";
 import {
   buildBookingConfirmationEmail,
   buildEventInviteDefaultText,
@@ -8,7 +9,7 @@ import {
   buildMembershipInvoiceDefaultText,
   buildMembershipInvoiceEmail,
 } from "@/lib/emailTemplates";
-import { formatDateOnly } from "@/lib/date";
+import { formatDateOnly, formatDateTimeRange } from "@/lib/date";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -51,12 +52,27 @@ export async function GET(request: NextRequest) {
   }
 
   if (template === "event-invite") {
+    // リンク先が実在するよう、テスト用のデビューイベントと回答トークンを実際にDBへ作成してから送信する。
+    const event =
+      (await prisma.debutEvent.findFirst({ orderBy: { startDatetime: "desc" } })) ??
+      (await prisma.debutEvent.create({
+        data: {
+          startDatetime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          endDatetime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000),
+          venue: "下北沢SPREAD(テスト送信用)",
+        },
+      }));
+
+    const inviteResponse = await prisma.eventInviteResponse.create({
+      data: { eventId: event.id, studentName: sampleName, studentEmail: to },
+    });
+
     const defaultText = buildEventInviteDefaultText(sampleName);
-    const sampleUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://planetdjschool.vercel.app"}/event-response/sample-token`;
+    const url = `${process.env.NEXT_PUBLIC_BASE_URL || "https://planetdjschool.vercel.app"}/event-response/${inviteResponse.token}`;
     const { subject, text, html } = buildEventInviteEmail(
       defaultText,
-      { eventDateTimeText: "2026/12/20(土) 19:00〜21:00", venue: "下北沢SPREAD" },
-      sampleUrl
+      { eventDateTimeText: formatDateTimeRange(event.startDatetime, event.endDatetime), venue: event.venue },
+      url
     );
     await sendMail({ to, subject, text, html });
     return NextResponse.json({ ok: true, message: `${to} に送信しました(イベント出演案内メール)。` });
