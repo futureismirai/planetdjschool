@@ -150,16 +150,16 @@ export default async function AdminCalendarPage({
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Link
-            href="/admin/lessons"
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
-          >
-            グループレッスン
-          </Link>
-          <Link
             href="/admin/trial"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
           >
             体験会
+          </Link>
+          <Link
+            href="/admin/lessons"
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+          >
+            グループレッスン
           </Link>
           <Link
             href="/admin/individual"
@@ -174,16 +174,16 @@ export default async function AdminCalendarPage({
             レッスン進捗
           </Link>
           <Link
-            href="/admin/form-responses"
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
-          >
-            体験会アンケート
-          </Link>
-          <Link
             href="/admin/debut-events"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
           >
             デビューイベント
+          </Link>
+          <Link
+            href="/admin/form-responses"
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+          >
+            体験会アンケート
           </Link>
           <Link
             href="/admin/post-course-survey"

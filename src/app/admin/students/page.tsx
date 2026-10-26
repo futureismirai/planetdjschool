@@ -23,10 +23,20 @@ function lessonBadgeClassName(lessonName: string): string {
   return LESSON_BADGE_COLORS[index];
 }
 
+// 進捗の並び替え用に、完了済みの最新レッスン名から番号を取り出す(Lesson 1, 2, ... 以外は-1扱い)。
+function lessonNumber(lessonName: string | null): number {
+  if (!lessonName) return -1;
+  const match = lessonName.match(/^Lesson (\d+)$/);
+  return match ? Number(match[1]) : -1;
+}
+
 export default async function AdminStudentsPage() {
   const [admin, students] = await Promise.all([getCurrentAdmin(), getStudents()]);
 
   const sorted = [...students].sort((a, b) => {
+    const lessonDiff = lessonNumber(a.latestFinishedLesson) - lessonNumber(b.latestFinishedLesson);
+    if (lessonDiff !== 0) return -lessonDiff;
+
     if (a.lastLessonDatetime && b.lastLessonDatetime) {
       return b.lastLessonDatetime.getTime() - a.lastLessonDatetime.getTime();
     }
@@ -53,16 +63,16 @@ export default async function AdminStudentsPage() {
             カレンダー
           </Link>
           <Link
-            href="/admin/lessons"
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
-          >
-            グループレッスン
-          </Link>
-          <Link
             href="/admin/trial"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
           >
             体験会
+          </Link>
+          <Link
+            href="/admin/lessons"
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+          >
+            グループレッスン
           </Link>
           <Link
             href="/admin/individual"
@@ -71,16 +81,16 @@ export default async function AdminStudentsPage() {
             個別レッスン
           </Link>
           <Link
-            href="/admin/form-responses"
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
-          >
-            体験会アンケート
-          </Link>
-          <Link
             href="/admin/debut-events"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
           >
             デビューイベント
+          </Link>
+          <Link
+            href="/admin/form-responses"
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+          >
+            体験会アンケート
           </Link>
           <Link
             href="/admin/post-course-survey"

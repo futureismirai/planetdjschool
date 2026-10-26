@@ -81,16 +81,16 @@ export default async function AdminFormResponsesPage() {
             カレンダー
           </Link>
           <Link
-            href="/admin/lessons"
-            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
-          >
-            グループレッスン
-          </Link>
-          <Link
             href="/admin/trial"
             className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
           >
             体験会
+          </Link>
+          <Link
+            href="/admin/lessons"
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+          >
+            グループレッスン
           </Link>
           <Link
             href="/admin/individual"
