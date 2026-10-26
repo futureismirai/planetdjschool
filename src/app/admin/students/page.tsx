@@ -3,6 +3,7 @@ import { getCurrentAdmin } from "@/lib/auth";
 import { LogoutButton } from "../LogoutButton";
 import { formatLessonDateTime } from "@/lib/date";
 import { getStudents } from "@/lib/students";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,12 @@ function lessonNumber(lessonName: string | null): number {
 }
 
 export default async function AdminStudentsPage() {
-  const [admin, students] = await Promise.all([getCurrentAdmin(), getStudents()]);
+  const [admin, students, eventInviteResponses] = await Promise.all([
+    getCurrentAdmin(),
+    getStudents(),
+    prisma.eventInviteResponse.findMany({ select: { studentEmail: true } }),
+  ]);
+  const eventInviteSentEmails = new Set(eventInviteResponses.map((r) => r.studentEmail.toLowerCase()));
 
   const sorted = [...students].sort((a, b) => {
     const lessonDiff = lessonNumber(a.latestFinishedLesson) - lessonNumber(b.latestFinishedLesson);
@@ -139,12 +145,14 @@ export default async function AdminStudentsPage() {
                     ? `最新レッスン: ${formatLessonDateTime(student.lastLessonDatetime)}`
                     : ""}
                 </p>
-                <Link
-                  href={`/admin/students/${encodeURIComponent(student.email)}/event-invite`}
-                  className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-sky-700"
-                >
-                  イベント出演メール送信
-                </Link>
+                {!eventInviteSentEmails.has(student.email) && (
+                  <Link
+                    href={`/admin/students/${encodeURIComponent(student.email)}/event-invite`}
+                    className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-sky-700"
+                  >
+                    イベント出演メール送信
+                  </Link>
+                )}
               </div>
             </li>
           ))}
