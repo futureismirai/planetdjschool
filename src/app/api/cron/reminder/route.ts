@@ -12,6 +12,10 @@ import { DEFAULT_LOCATION } from "@/lib/constants";
 
 const REMINDER_DAYS_BEFORE = 3;
 
+// Lesson 3受講後のアンケート依頼メールの自動送信を一時的に停止する場合はfalseにする。
+// (再開する場合はtrueに戻すだけでよい。関連コードは削除していない)
+const LESSON3_SURVEY_ENABLED = false;
+
 function isAuthorized(request: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) return false;
@@ -145,6 +149,10 @@ async function runIndividualLessonReminderBatch() {
  * (グループレッスンの受講者向け)。
  */
 async function runLesson3SurveyBatch() {
+  if (!LESSON3_SURVEY_ENABLED) {
+    return { targetLessons: 0, sent: 0, failed: 0, disabled: true };
+  }
+
   const { start, end } = getJstDayWindow(-1);
 
   const lessons = await prisma.lesson.findMany({
@@ -182,6 +190,10 @@ async function runLesson3SurveyBatch() {
  * Lesson 3(個別レッスン)を受講した翌日に、アンケート依頼メールを自動送信する。
  */
 async function runIndividualLesson3SurveyBatch() {
+  if (!LESSON3_SURVEY_ENABLED) {
+    return { targetIndividualLessons: 0, sent: 0, failed: 0, disabled: true };
+  }
+
   const { start, end } = getJstDayWindow(-1);
 
   const individualLessons = await prisma.individualLesson.findMany({
