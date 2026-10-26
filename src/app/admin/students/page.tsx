@@ -31,6 +31,16 @@ function lessonNumber(lessonName: string | null): number {
   return match ? Number(match[1]) : -1;
 }
 
+// 既に別の方法でイベント出演が決定済みのため、イベント出演メール送信ボタンを個別に非表示にする生徒(2026年11月時点)。
+const EVENT_DECIDED_EMAILS = new Set([
+  "sakura.no.apple@icloud.com",
+  "ai75ri@i.softbank.jp",
+  "hinako.kawai63@gmail.com",
+  "0tonooka@gmail.com",
+  "essocd@gmail.com",
+  "a16suzu@icloud.com",
+]);
+
 export default async function AdminStudentsPage() {
   const [admin, students, eventInviteResponses] = await Promise.all([
     getCurrentAdmin(),
@@ -145,7 +155,7 @@ export default async function AdminStudentsPage() {
                     ? `最新レッスン: ${formatLessonDateTime(student.lastLessonDatetime)}`
                     : ""}
                 </p>
-                {!eventInviteSentEmails.has(student.email) && (
+                {!eventInviteSentEmails.has(student.email) && !EVENT_DECIDED_EMAILS.has(student.email) && (
                   <Link
                     href={`/admin/students/${encodeURIComponent(student.email)}/event-invite`}
                     className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-sky-700"
