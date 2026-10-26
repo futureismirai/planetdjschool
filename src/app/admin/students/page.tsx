@@ -86,38 +86,44 @@ export default async function AdminStudentsPage() {
         )}
         <ul className="divide-y divide-slate-100">
           {sorted.map((student) => (
-            <li key={student.email}>
-              <Link
-                href={`/admin/students/${encodeURIComponent(student.email)}`}
-                className="flex flex-col gap-0.5 px-4 py-3 hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <p className="text-sm font-medium text-slate-900">{student.displayName}</p>
-                    {student.latestFinishedLesson && (
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${lessonBadgeClassName(student.latestFinishedLesson)}`}
-                      >
-                        {student.latestFinishedLesson} 終
-                      </span>
-                    )}
-                    {student.missingCommentInstructors.length > 0 && (
-                      <span
-                        title={`コメント未記入: ${student.missingCommentInstructors.join("、")}`}
-                        className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700"
-                      >
-                        ⚠ 未記入: {student.missingCommentInstructors.join("、")}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-400">{student.email}</p>
+            <li
+              key={student.email}
+              className="flex flex-col gap-2 px-4 py-3 hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <Link href={`/admin/students/${encodeURIComponent(student.email)}`} className="min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <p className="text-sm font-medium text-slate-900">{student.displayName}</p>
+                  {student.latestFinishedLesson && (
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${lessonBadgeClassName(student.latestFinishedLesson)}`}
+                    >
+                      {student.latestFinishedLesson} 終
+                    </span>
+                  )}
+                  {student.missingCommentInstructors.length > 0 && (
+                    <span
+                      title={`コメント未記入: ${student.missingCommentInstructors.join("、")}`}
+                      className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700"
+                    >
+                      ⚠ 未記入: {student.missingCommentInstructors.join("、")}
+                    </span>
+                  )}
                 </div>
+                <p className="text-xs text-slate-400">{student.email}</p>
+              </Link>
+              <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end sm:gap-1.5">
                 <p className="text-xs text-slate-400">
                   {student.lastLessonDatetime
                     ? `最新レッスン: ${formatLessonDateTime(student.lastLessonDatetime)}`
                     : ""}
                 </p>
-              </Link>
+                <Link
+                  href={`/admin/students/${encodeURIComponent(student.email)}/event-invite`}
+                  className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-sky-700"
+                >
+                  イベント出演メール送信
+                </Link>
+              </div>
             </li>
           ))}
         </ul>
