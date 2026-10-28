@@ -43,6 +43,9 @@ const EVENT_DECIDED_EMAILS = new Set([
 
 type DebutStatus = "before" | "done";
 
+// システム上はデビューイベントの登録がない(または未経過)が、実際には既にデビュー済み扱いとする生徒。
+const FORCE_DEBUT_DONE_EMAILS = new Set(["hinako.kawai63@gmail.com"]);
+
 export default async function AdminStudentsPage() {
   const [admin, students, eventInviteResponses, debutParticipations] = await Promise.all([
     getCurrentAdmin(),
@@ -64,6 +67,9 @@ export default async function AdminStudentsPage() {
     const email = p.studentEmail.toLowerCase();
     if (debutStatusByEmail.has(email)) continue;
     debutStatusByEmail.set(email, p.event.endDatetime < now ? "done" : "before");
+  }
+  for (const email of FORCE_DEBUT_DONE_EMAILS) {
+    debutStatusByEmail.set(email, "done");
   }
 
   const sorted = [...students].sort((a, b) => {
