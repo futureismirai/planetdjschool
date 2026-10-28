@@ -23,6 +23,11 @@ export function formatTimeOnly(date: Date): string {
   return formatInTimeZone(date, TIME_ZONE, "HH:mm", { locale: ja });
 }
 
+/** 例: 11/1 - 生徒一覧のデビュー前バッジなど、短く月日だけ示したい箇所で使用する */
+export function formatMonthDaySlash(date: Date): string {
+  return formatInTimeZone(date, TIME_ZONE, "M/d", { locale: ja });
+}
+
 /** 例: 2026年12月20日(日) 19:00〜21:00 - デビューイベントの開催日時表示用 */
 export function formatDateTimeRange(start: Date, end: Date): string {
   return `${formatDateOnly(start)} ${formatTimeOnly(start)}〜${formatTimeOnly(end)}`;

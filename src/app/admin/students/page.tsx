@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getCurrentAdmin } from "@/lib/auth";
 import { AdminNavMenu } from "../AdminNavMenu";
-import { formatLessonDateTime } from "@/lib/date";
+import { formatLessonDateTime, formatMonthDaySlash } from "@/lib/date";
 import { getStudents } from "@/lib/students";
 import { prisma } from "@/lib/prisma";
 
@@ -41,7 +41,7 @@ const EVENT_DECIDED_EMAILS = new Set([
   "a16suzu@icloud.com",
 ]);
 
-type DebutStatus = "before" | "done";
+type DebutInfo = { status: "before" | "done"; eventDate: Date };
 
 // システム上はデビューイベントの登録がない(または未経過)が、実際には既にデビュー済み扱いとする生徒。
 const FORCE_DEBUT_DONE_EMAILS = new Set(["hinako.kawai63@gmail.com"]);
@@ -62,19 +62,23 @@ export default async function AdminStudentsPage() {
   // 生徒ごとに最新(最も開催日時が新しい)デビューイベントの登録を採用し、
   // その開催日時を過ぎていれば「デビュー済み」、まだなら「デビュー前」とする。
   const now = new Date();
-  const debutStatusByEmail = new Map<string, DebutStatus>();
+  const debutInfoByEmail = new Map<string, DebutInfo>();
   for (const p of debutParticipations) {
     const email = p.studentEmail.toLowerCase();
-    if (debutStatusByEmail.has(email)) continue;
-    debutStatusByEmail.set(email, p.event.endDatetime < now ? "done" : "before");
+    if (debutInfoByEmail.has(email)) continue;
+    debutInfoByEmail.set(email, {
+      status: p.event.endDatetime < now ? "done" : "before",
+      eventDate: p.event.startDatetime,
+    });
   }
   for (const email of FORCE_DEBUT_DONE_EMAILS) {
-    debutStatusByEmail.set(email, "done");
+    debutInfoByEmail.set(email, { status: "done", eventDate: now });
   }
 
   const sorted = [...students].sort((a, b) => {
     const debutDiff =
-      Number(debutStatusByEmail.get(a.email) === "done") - Number(debutStatusByEmail.get(b.email) === "done");
+      Number(debutInfoByEmail.get(a.email)?.status === "done") -
+      Number(debutInfoByEmail.get(b.email)?.status === "done");
     if (debutDiff !== 0) return debutDiff;
 
     const lessonDiff = lessonNumber(a.latestFinishedLesson) - lessonNumber(b.latestFinishedLesson);
@@ -121,12 +125,12 @@ export default async function AdminStudentsPage() {
                       {student.latestFinishedLesson} 終
                     </span>
                   )}
-                  {debutStatusByEmail.get(student.email) === "before" && (
+                  {debutInfoByEmail.get(student.email)?.status === "before" && (
                     <span className="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-medium text-indigo-700">
-                      デビュー前
+                      {formatMonthDaySlash(debutInfoByEmail.get(student.email)!.eventDate)} デビュー前
                     </span>
                   )}
-                  {debutStatusByEmail.get(student.email) === "done" && (
+                  {debutInfoByEmail.get(student.email)?.status === "done" && (
                     <span className="inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-medium text-slate-600">
                       デビュー済み
                     </span>
