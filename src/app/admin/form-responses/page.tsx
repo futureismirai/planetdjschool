@@ -10,6 +10,7 @@ import { SurveyPieChart } from "./SurveyPieChart";
 const CHART_QUESTIONS = [
   { title: "DJで扱いたいジャンル", keyword: "ジャンル" },
   { title: "当スクールをどこで知りましたか", keyword: "知りました" },
+  { title: "当スクールのどこに興味を持ったか", keyword: "興味を持った" },
   { title: "デビュー後はどこでDJをしてみたいか", keyword: "デビュー後" },
 ];
 
