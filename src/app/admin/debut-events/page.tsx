@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
+import { getStudents } from "@/lib/students";
 import { AdminNavMenu } from "../AdminNavMenu";
 import { DebutEventManager } from "./DebutEventManager";
 
@@ -31,7 +32,12 @@ async function getDebutEventsWithParticipants() {
 }
 
 export default async function AdminDebutEventsPage() {
-  const [admin, events] = await Promise.all([getCurrentAdmin(), getDebutEventsWithParticipants()]);
+  const [admin, events, students] = await Promise.all([
+    getCurrentAdmin(),
+    getDebutEventsWithParticipants(),
+    getStudents(),
+  ]);
+  const studentOptions = students.map((s) => ({ displayName: s.displayName, email: s.email }));
 
   return (
     <div className="mx-auto max-w-3xl px-3 py-6 sm:px-4 sm:py-8">
@@ -47,7 +53,7 @@ export default async function AdminDebutEventsPage() {
       </div>
 
       <div className="mt-6">
-        <DebutEventManager events={events} />
+        <DebutEventManager events={events} students={studentOptions} />
       </div>
     </div>
   );

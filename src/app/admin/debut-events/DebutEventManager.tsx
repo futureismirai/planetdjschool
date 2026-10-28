@@ -24,6 +24,12 @@ export type DebutEventItem = {
   participants: DebutEventParticipantItem[];
 };
 
+/** グループレッスン・個別レッスンを受講している生徒。手入力フォームの名前予測候補に使用する。 */
+export type StudentOption = {
+  displayName: string;
+  email: string;
+};
+
 type EventFormValues = {
   startDatetime: string; // datetime-local用の文字列
   endDatetime: string;
@@ -117,12 +123,30 @@ function EventForm({
   );
 }
 
-function ParticipantForm({ eventId, onDone }: { eventId: string; onDone: () => void }) {
+function ParticipantForm({
+  eventId,
+  students,
+  onDone,
+}: {
+  eventId: string;
+  students: StudentOption[];
+  onDone: () => void;
+}) {
   const router = useRouter();
   const [studentName, setStudentName] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const datalistId = `student-options-${eventId}`;
+
+  function handleStudentNameChange(value: string) {
+    setStudentName(value);
+    // 候補と名前が一致したら、メールアドレスも自動で入力する(手入力の手間を減らす)。
+    const match = students.find((s) => s.displayName === value);
+    if (match) {
+      setStudentEmail(match.email);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -160,9 +184,16 @@ function ParticipantForm({ eventId, onDone }: { eventId: string; onDone: () => v
         required
         placeholder="生徒名(必須)"
         value={studentName}
-        onChange={(e) => setStudentName(e.target.value)}
+        onChange={(e) => handleStudentNameChange(e.target.value)}
+        list={datalistId}
+        autoComplete="off"
         className="rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
       />
+      <datalist id={datalistId}>
+        {students.map((s) => (
+          <option key={s.email} value={s.displayName} />
+        ))}
+      </datalist>
       <input
         type="email"
         required
@@ -284,7 +315,13 @@ function ParticipantList({
   );
 }
 
-export function DebutEventManager({ events }: { events: DebutEventItem[] }) {
+export function DebutEventManager({
+  events,
+  students,
+}: {
+  events: DebutEventItem[];
+  students: StudentOption[];
+}) {
   const router = useRouter();
   const [showNewForm, setShowNewForm] = useState(false);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
@@ -481,7 +518,11 @@ export function DebutEventManager({ events }: { events: DebutEventItem[] }) {
                 <ParticipantList title="参加者" participants={participating} emptyText="まだ参加者がいません。" />
 
                 {addingParticipantFor === event.id ? (
-                  <ParticipantForm eventId={event.id} onDone={() => setAddingParticipantFor(null)} />
+                  <ParticipantForm
+                    eventId={event.id}
+                    students={students}
+                    onDone={() => setAddingParticipantFor(null)}
+                  />
                 ) : (
                   <div className="border-t border-slate-100 p-3">
                     <button
