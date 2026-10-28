@@ -3,6 +3,15 @@ import { getCurrentAdmin } from "@/lib/auth";
 import { AdminNavMenu } from "../AdminNavMenu";
 import { fetchFormResponses, guessDisplayNameFromFields, type FormResponse } from "@/lib/googleSheet";
 import { getKnownStudentNames } from "@/lib/knownStudentNames";
+import { aggregateChoiceField } from "@/lib/surveyCharts";
+import { SurveyPieChart } from "./SurveyPieChart";
+
+// 円グラフにする設問。質問文の一部(キーワード)で列見出しを探すため、文言が多少変わっても対応できる。
+const CHART_QUESTIONS = [
+  { title: "DJで扱いたいジャンル", keyword: "ジャンル" },
+  { title: "当スクールをどこで知りましたか", keyword: "知りました" },
+  { title: "デビュー後はどこでDJをしてみたいか", keyword: "デビュー後" },
+];
 
 export const dynamic = "force-dynamic";
 
@@ -51,11 +60,13 @@ export default async function AdminFormResponsesPage() {
   let groups: GroupedResponse[] = [];
   let unmatchedCount = 0;
   let error: string | null = null;
+  let responses: FormResponse[] = [];
   try {
-    const [responses, knownNames] = await Promise.all([
+    const [fetchedResponses, knownNames] = await Promise.all([
       fetchFormResponses(),
       getKnownStudentNames(),
     ]);
+    responses = fetchedResponses;
     const result = groupByEmail(responses, knownNames);
     groups = result.groups;
     unmatchedCount = result.unmatchedCount;
@@ -80,6 +91,17 @@ export default async function AdminFormResponsesPage() {
         <p className="mt-6 rounded-md bg-rose-50 p-3 text-sm text-rose-600" role="alert">
           {error}
         </p>
+      )}
+
+      {!error && (
+        <div className="mt-6">
+          <p className="text-sm font-semibold text-slate-700">アンケート集計</p>
+          <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {CHART_QUESTIONS.map((q) => (
+              <SurveyPieChart key={q.title} title={q.title} aggregation={aggregateChoiceField(responses, q.keyword)} />
+            ))}
+          </div>
+        </div>
       )}
 
       {!error && (
