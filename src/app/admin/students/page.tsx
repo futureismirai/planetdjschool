@@ -41,15 +41,36 @@ const EVENT_DECIDED_EMAILS = new Set([
   "a16suzu@icloud.com",
 ]);
 
+type DebutStatus = "before" | "done";
+
 export default async function AdminStudentsPage() {
-  const [admin, students, eventInviteResponses] = await Promise.all([
+  const [admin, students, eventInviteResponses, debutParticipations] = await Promise.all([
     getCurrentAdmin(),
     getStudents(),
     prisma.eventInviteResponse.findMany({ select: { studentEmail: true } }),
+    prisma.debutEventParticipant.findMany({
+      where: { status: "participating" },
+      include: { event: true },
+      orderBy: { event: { startDatetime: "desc" } },
+    }),
   ]);
   const eventInviteSentEmails = new Set(eventInviteResponses.map((r) => r.studentEmail.toLowerCase()));
 
+  // 生徒ごとに最新(最も開催日時が新しい)デビューイベントの登録を採用し、
+  // その開催日時を過ぎていれば「デビュー済み」、まだなら「デビュー前」とする。
+  const now = new Date();
+  const debutStatusByEmail = new Map<string, DebutStatus>();
+  for (const p of debutParticipations) {
+    const email = p.studentEmail.toLowerCase();
+    if (debutStatusByEmail.has(email)) continue;
+    debutStatusByEmail.set(email, p.event.endDatetime < now ? "done" : "before");
+  }
+
   const sorted = [...students].sort((a, b) => {
+    const debutDiff =
+      Number(debutStatusByEmail.get(a.email) === "done") - Number(debutStatusByEmail.get(b.email) === "done");
+    if (debutDiff !== 0) return debutDiff;
+
     const lessonDiff = lessonNumber(a.latestFinishedLesson) - lessonNumber(b.latestFinishedLesson);
     if (lessonDiff !== 0) return -lessonDiff;
 
@@ -92,6 +113,16 @@ export default async function AdminStudentsPage() {
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${lessonBadgeClassName(student.latestFinishedLesson)}`}
                     >
                       {student.latestFinishedLesson} 終
+                    </span>
+                  )}
+                  {debutStatusByEmail.get(student.email) === "before" && (
+                    <span className="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-medium text-indigo-700">
+                      デビュー前
+                    </span>
+                  )}
+                  {debutStatusByEmail.get(student.email) === "done" && (
+                    <span className="inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                      デビュー済み
                     </span>
                   )}
                   {student.missingCommentInstructors.length > 0 && (
