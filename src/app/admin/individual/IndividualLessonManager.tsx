@@ -518,7 +518,7 @@ export function IndividualLessonManager({ lessons }: { lessons: IndividualLesson
                         <tr key={participant.id} className="border-b border-slate-50 last:border-0">
                           <td className="px-2 py-2 sm:px-4">
                             <Link
-                              href={`/admin/students/${encodeURIComponent(participant.studentEmail)}`}
+                              href={`/admin/students/${encodeURIComponent(participant.studentEmail)}?from=individual-${lesson.id}`}
                               className="text-sky-700 underline-offset-2 hover:underline"
                             >
                               {participant.studentName}

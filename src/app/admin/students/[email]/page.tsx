@@ -10,10 +10,13 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminStudentDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ email: string }>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const { email } = await params;
+  const { from } = await searchParams;
   const decodedEmail = decodeURIComponent(email).trim().toLowerCase();
 
   const [admin, students] = await Promise.all([getCurrentAdmin(), getStudents()]);
@@ -25,6 +28,13 @@ export default async function AdminStudentDetailPage({
 
   const hasGroupLesson = student.attendances.some((a) => a.type === "group");
   const hasIndividualLesson = student.attendances.some((a) => a.type === "individual");
+
+  // 「レッスン一覧に戻る」ボタンは、特定のレッスンの生徒名から遷移してきた場合は
+  // ページ先頭ではなく、そのレッスンのセクションまでスクロールした状態で戻るようにする。
+  const groupLessonsHref = from?.startsWith("lesson-") ? `/admin/lessons#${from}` : "/admin/lessons";
+  const individualLessonsHref = from?.startsWith("individual-")
+    ? `/admin/individual#${from}`
+    : "/admin/individual";
 
   return (
     <div className="mx-auto max-w-3xl px-3 py-6 sm:px-4 sm:py-8">
@@ -43,18 +53,18 @@ export default async function AdminStudentDetailPage({
           </Link>
           {hasGroupLesson && (
             <Link
-              href="/admin/lessons"
+              href={groupLessonsHref}
               className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
             >
-              グループレッスン一覧に戻る
+              レッスン一覧に戻る
             </Link>
           )}
           {hasIndividualLesson && (
             <Link
-              href="/admin/individual"
+              href={individualLessonsHref}
               className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
             >
-              個別レッスン一覧に戻る
+              レッスン一覧に戻る
             </Link>
           )}
           <LogoutButton />

@@ -47,6 +47,12 @@ export default async function AdminFormResponseDetailPage({
           >
             一覧に戻る
           </Link>
+          <Link
+            href="/admin/trial"
+            className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+          >
+            体験会一覧に戻る
+          </Link>
           <LogoutButton />
         </div>
       </div>

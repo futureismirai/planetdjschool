@@ -440,7 +440,7 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
                           <td className="px-2 py-2 sm:px-4">
                             {booking.studentEmail ? (
                               <Link
-                                href={`/admin/students/${encodeURIComponent(booking.studentEmail)}`}
+                                href={`/admin/students/${encodeURIComponent(booking.studentEmail)}?from=lesson-${lesson.id}`}
                                 className="text-sky-700 underline-offset-2 hover:underline"
                               >
                                 {booking.studentName}
