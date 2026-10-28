@@ -23,6 +23,9 @@ export default async function AdminStudentDetailPage({
     notFound();
   }
 
+  const hasGroupLesson = student.attendances.some((a) => a.type === "group");
+  const hasIndividualLesson = student.attendances.some((a) => a.type === "individual");
+
   return (
     <div className="mx-auto max-w-3xl px-3 py-6 sm:px-4 sm:py-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -38,6 +41,22 @@ export default async function AdminStudentDetailPage({
           >
             生徒一覧に戻る
           </Link>
+          {hasGroupLesson && (
+            <Link
+              href="/admin/lessons"
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+            >
+              グループレッスン一覧に戻る
+            </Link>
+          )}
+          {hasIndividualLesson && (
+            <Link
+              href="/admin/individual"
+              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+            >
+              個別レッスン一覧に戻る
+            </Link>
+          )}
           <LogoutButton />
         </div>
       </div>
