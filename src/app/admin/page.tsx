@@ -43,19 +43,22 @@ type CalendarEvent = {
   time: string;
   label: string;
   href: string;
-  kind: "lesson" | "trial" | "individual";
+  kind: "lesson" | "trial" | "individual" | "debut";
 };
 
+// デビューイベントは体験会・グループ・個別レッスンと違い生徒個人の予定ではなく特別な開催日のため、
+// パステル系の色チップではなく塗りつぶし+アイコンで視覚的にはっきり区別できるようにする。
 const EVENT_STYLES: Record<CalendarEvent["kind"], string> = {
   lesson: "bg-sky-100 text-sky-700",
   trial: "bg-amber-100 text-amber-700",
   individual: "bg-emerald-100 text-emerald-700",
+  debut: "bg-fuchsia-600 text-white font-semibold",
 };
 
 async function getCalendarEvents(year: number, month: number) {
   const { start, end } = getJstMonthRange(year, month);
 
-  const [lessons, trialSessions, individualLessons] = await Promise.all([
+  const [lessons, trialSessions, individualLessons, debutEvents] = await Promise.all([
     prisma.lesson.findMany({
       where: { datetime: { gte: start, lt: end } },
       orderBy: { datetime: "asc" },
@@ -67,6 +70,10 @@ async function getCalendarEvents(year: number, month: number) {
     prisma.individualLesson.findMany({
       where: { datetime: { gte: start, lt: end } },
       orderBy: { datetime: "asc" },
+    }),
+    prisma.debutEvent.findMany({
+      where: { startDatetime: { gte: start, lt: end } },
+      orderBy: { startDatetime: "asc" },
     }),
   ]);
 
@@ -103,6 +110,15 @@ async function getCalendarEvents(year: number, month: number) {
       label: individualLesson.name,
       href: `/admin/individual#individual-${individualLesson.id}`,
       kind: "individual",
+    });
+  }
+  for (const debutEvent of debutEvents) {
+    push(getJstDateKey(debutEvent.startDatetime), {
+      id: debutEvent.id,
+      time: formatTimeOnly(debutEvent.startDatetime),
+      label: debutEvent.venue ? `★ デビューイベント（${debutEvent.venue}）` : "★ デビューイベント",
+      href: `/admin/debut-events#debut-${debutEvent.id}`,
+      kind: "debut",
     });
   }
 
@@ -268,6 +284,10 @@ export default async function AdminCalendarPage({
         <span className="flex items-center gap-1">
           <span className="inline-block h-3 w-3 rounded bg-emerald-100" />
           個別レッスン
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-3 w-3 rounded bg-fuchsia-600" />
+          デビューイベント
         </span>
       </div>
     </div>
