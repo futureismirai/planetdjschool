@@ -47,16 +47,25 @@ type DebutInfo = { status: "before" | "done"; eventDate: Date };
 const FORCE_DEBUT_DONE_EMAILS = new Set(["hinako.kawai63@gmail.com"]);
 
 export default async function AdminStudentsPage() {
-  const [admin, students, eventInviteResponses, debutParticipations] = await Promise.all([
-    getCurrentAdmin(),
-    getStudents(),
-    prisma.eventInviteResponse.findMany({ select: { studentEmail: true } }),
-    prisma.debutEventParticipant.findMany({
-      where: { status: "participating" },
-      include: { event: true },
-      orderBy: { event: { startDatetime: "desc" } },
-    }),
-  ]);
+  const [admin, students] = await Promise.all([getCurrentAdmin(), getStudents()]);
+
+  // デビューイベント関連のテーブルがまだ存在しない環境(セットアップ未実行など)でも
+  // レッスン進捗の本体機能が止まらないよう、失敗時は空扱いにフォールバックする。
+  let eventInviteResponses: { studentEmail: string }[] = [];
+  let debutParticipations: { studentEmail: string; status: string; event: { startDatetime: Date; endDatetime: Date } }[] =
+    [];
+  try {
+    [eventInviteResponses, debutParticipations] = await Promise.all([
+      prisma.eventInviteResponse.findMany({ select: { studentEmail: true } }),
+      prisma.debutEventParticipant.findMany({
+        where: { status: "participating" },
+        include: { event: true },
+        orderBy: { event: { startDatetime: "desc" } },
+      }),
+    ]);
+  } catch (e) {
+    console.error("デビューイベント関連データの取得に失敗しました:", e);
+  }
   const eventInviteSentEmails = new Set(eventInviteResponses.map((r) => r.studentEmail.toLowerCase()));
 
   // 生徒ごとに最新(最も開催日時が新しい)デビューイベントの登録を採用し、
