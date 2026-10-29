@@ -264,7 +264,6 @@ type ParticipantDraft = {
   studentName: string;
   djName: string;
   instagramHandle: string;
-  studentEmail: string;
 };
 
 function participantToDraft(p: DebutEventParticipantItem): ParticipantDraft {
@@ -272,7 +271,6 @@ function participantToDraft(p: DebutEventParticipantItem): ParticipantDraft {
     studentName: p.studentName,
     djName: p.djName ?? "",
     instagramHandle: p.instagramHandle ?? "",
-    studentEmail: p.studentEmail,
   };
 }
 
@@ -342,14 +340,6 @@ function ParticipantRow({ participant }: { participant: DebutEventParticipantIte
             className={inputClass}
           />
         </td>
-        <td className={cellClass}>
-          <input
-            type="email"
-            value={draft.studentEmail}
-            onChange={(e) => setDraft({ ...draft, studentEmail: e.target.value })}
-            className={inputClass}
-          />
-        </td>
         <td className="px-2 py-2 text-right sm:px-4">
           <div className="flex flex-col items-end gap-1">
             <div className="flex gap-2">
@@ -389,7 +379,6 @@ function ParticipantRow({ participant }: { participant: DebutEventParticipantIte
       </td>
       <td className={`${cellClass} text-slate-600`}>{participant.djName ?? "-"}</td>
       <td className={`${cellClass} text-slate-600`}>{participant.instagramHandle ?? "-"}</td>
-      <td className={`${cellClass} text-slate-500`}>{participant.studentEmail}</td>
       <td className="px-2 py-2 text-right sm:px-4">
         <div className="flex justify-end gap-3">
           <button
@@ -430,7 +419,6 @@ function ParticipantList({
                 <th className="px-2 py-2 font-medium sm:px-4">名前</th>
                 <th className="px-2 py-2 font-medium sm:px-4">DJネーム</th>
                 <th className="px-2 py-2 font-medium sm:px-4">インスタグラムアカウント</th>
-                <th className="px-2 py-2 font-medium sm:px-4">メールアドレス</th>
                 <th className="px-2 py-2 font-medium sm:px-4"></th>
               </tr>
             </thead>
