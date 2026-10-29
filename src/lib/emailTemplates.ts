@@ -880,18 +880,29 @@ export function buildEventInviteDefaultText(studentName: string): string {
 ご出演について下記の内容から回答ください`;
 }
 
-function buildEventInviteFixedText(eventDateTimeText: string, venue: string | null, url: string): string {
+function buildEventInviteFixedText(
+  eventDateTimeText: string,
+  venue: string | null,
+  deadlineText: string,
+  url: string
+): string {
   return `【イベント詳細】
 日時: ${eventDateTimeText}${venue ? `\n会場: ${venue}` : ""}
 ※日時は現時点での予定であり、変更となる場合がございます。
 
 下記のページから、参加可否と受講後アンケートにご回答ください。
+回答期限: ${deadlineText}
 ${url}
 
 ※ご回答をもって出演のお申し込みとなります。`;
 }
 
-function buildEventInviteFixedHtml(eventDateTimeText: string, venue: string | null, url: string): string {
+function buildEventInviteFixedHtml(
+  eventDateTimeText: string,
+  venue: string | null,
+  deadlineText: string,
+  url: string
+): string {
   return `
     <div style="margin-top:16px;padding:12px 16px;background:#f8fafc;border-radius:8px;">
       <p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">イベント詳細</p>
@@ -901,6 +912,7 @@ function buildEventInviteFixedHtml(eventDateTimeText: string, venue: string | nu
     </div>
 
     <div style="margin-top:20px;text-align:center;">
+      <p style="margin:0 0 12px;font-size:14px;font-weight:bold;color:#9a3412;">回答期限: ${escapeHtml(deadlineText)}</p>
       <a href="${escapeHtml(url)}" style="display:inline-block;background:#61508c;color:#fff;text-decoration:none;font-weight:bold;padding:12px 28px;border-radius:999px;">参加可否・アンケートに回答する</a>
       <p style="margin:12px 0 0;font-size:12px;color:#94a3b8;word-break:break-all;">${escapeHtml(url)}</p>
     </div>
@@ -910,12 +922,12 @@ function buildEventInviteFixedHtml(eventDateTimeText: string, venue: string | nu
 
 /**
  * イベント出演案内メール。管理者が編集した本文(挨拶・自由記載部分)の下に、
- * イベント詳細と、参加可否・受講後アンケートに回答する公開ページへのリンクを付与して送信する。
+ * イベント詳細・回答期限と、参加可否・受講後アンケートに回答する公開ページへのリンクを付与して送信する。
  * (buildEventInviteDefaultTextは編集画面の初期表示にのみ使用する)
  */
 export function buildEventInviteEmail(
   text: string,
-  event: { eventDateTimeText: string; venue: string | null },
+  event: { eventDateTimeText: string; venue: string | null; deadlineText: string },
   url: string
 ): {
   subject: string;
@@ -923,7 +935,7 @@ export function buildEventInviteEmail(
   html: string;
 } {
   const subject = `【${SCHOOL_NAME}】イベント出演のご案内`;
-  const fixedText = buildEventInviteFixedText(event.eventDateTimeText, event.venue, url);
+  const fixedText = buildEventInviteFixedText(event.eventDateTimeText, event.venue, event.deadlineText, url);
 
   const fullText = `${text}
 
@@ -936,7 +948,7 @@ ${SCHOOL_NAME}`;
   const html = `
   <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
     <div style="white-space:pre-wrap;">${escapeHtml(text)}</div>
-    ${buildEventInviteFixedHtml(event.eventDateTimeText, event.venue, url)}
+    ${buildEventInviteFixedHtml(event.eventDateTimeText, event.venue, event.deadlineText, url)}
     <p style="margin-top:20px;">ご不明な点がございましたらお気軽にご返信ください。</p>
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;

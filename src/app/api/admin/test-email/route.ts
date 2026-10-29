@@ -69,9 +69,14 @@ export async function GET(request: NextRequest) {
 
     const defaultText = buildEventInviteDefaultText(sampleName);
     const url = `${process.env.NEXT_PUBLIC_BASE_URL || "https://planetdjschool.vercel.app"}/event-response/${inviteResponse.token}`;
+    const sampleDeadlineText = formatDateOnly(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000));
     const { subject, text, html } = buildEventInviteEmail(
       defaultText,
-      { eventDateTimeText: formatDateTimeRange(event.startDatetime, event.endDatetime), venue: event.venue },
+      {
+        eventDateTimeText: formatDateTimeRange(event.startDatetime, event.endDatetime),
+        venue: event.venue,
+        deadlineText: sampleDeadlineText,
+      },
       url
     );
     await sendMail({ to, subject, text, html });

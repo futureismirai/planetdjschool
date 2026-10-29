@@ -4,7 +4,9 @@ import { sendMail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { buildEventInviteEmail } from "@/lib/emailTemplates";
 import { getStudents } from "@/lib/students";
-import { formatDateTimeRange } from "@/lib/date";
+import { combineJstDateAndTime, formatDateOnly, formatDateTimeRange } from "@/lib/date";
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function bookingSiteUrl(): string {
   return process.env.NEXT_PUBLIC_BASE_URL || "https://planetdjschool.vercel.app";
@@ -32,13 +34,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "リクエストの形式が正しくありません。" }, { status: 400 });
   }
 
-  const { text, eventId } = (body ?? {}) as Record<string, unknown>;
+  const { text, eventId, deadline } = (body ?? {}) as Record<string, unknown>;
   if (typeof text !== "string" || !text.trim()) {
     return NextResponse.json({ error: "本文を入力してください。" }, { status: 400 });
   }
   if (typeof eventId !== "string" || !eventId.trim()) {
     return NextResponse.json({ error: "イベントを選択してください。" }, { status: 400 });
   }
+  if (typeof deadline !== "string" || !DATE_RE.test(deadline)) {
+    return NextResponse.json({ error: "回答期限を正しく設定してください。" }, { status: 400 });
+  }
+  const deadlineDate = combineJstDateAndTime(deadline, "23:59");
 
   const [students, event] = await Promise.all([
     getStudents(),
@@ -66,7 +72,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
     const { subject, text: mailText, html } = buildEventInviteEmail(
       text,
-      { eventDateTimeText: formatDateTimeRange(event.startDatetime, event.endDatetime), venue: event.venue },
+      {
+        eventDateTimeText: formatDateTimeRange(event.startDatetime, event.endDatetime),
+        venue: event.venue,
+        deadlineText: formatDateOnly(deadlineDate),
+      },
       url
     );
     await sendMail({ to: student.email, subject, text: mailText, html });
