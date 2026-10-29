@@ -11,6 +11,7 @@ export type DebutEventParticipantItem = {
   studentName: string;
   studentEmail: string;
   djName: string | null;
+  instagramHandle: string | null;
   status: string;
   source: string;
   createdAt: string;
@@ -259,6 +260,152 @@ function DeleteParticipantButton({ participantId, studentName }: { participantId
   );
 }
 
+type ParticipantDraft = {
+  studentName: string;
+  djName: string;
+  instagramHandle: string;
+  studentEmail: string;
+};
+
+function participantToDraft(p: DebutEventParticipantItem): ParticipantDraft {
+  return {
+    studentName: p.studentName,
+    djName: p.djName ?? "",
+    instagramHandle: p.instagramHandle ?? "",
+    studentEmail: p.studentEmail,
+  };
+}
+
+function ParticipantRow({ participant }: { participant: DebutEventParticipantItem }) {
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<ParticipantDraft>(() => participantToDraft(participant));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function startEditing() {
+    setDraft(participantToDraft(participant));
+    setError(null);
+    setEditing(true);
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/debut-event-participants/${participant.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draft),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "更新に失敗しました。");
+        return;
+      }
+      setEditing(false);
+      router.refresh();
+    } catch {
+      setError("通信エラーが発生しました。");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const cellClass = "px-2 py-2 sm:px-4";
+  const inputClass =
+    "w-full min-w-[9em] rounded-md border border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500";
+
+  if (editing) {
+    return (
+      <tr className="border-b border-slate-50 last:border-0 bg-sky-50/40">
+        <td className={cellClass}>
+          <input
+            value={draft.studentName}
+            onChange={(e) => setDraft({ ...draft, studentName: e.target.value })}
+            className={inputClass}
+          />
+        </td>
+        <td className={cellClass}>
+          <input
+            value={draft.djName}
+            onChange={(e) => setDraft({ ...draft, djName: e.target.value })}
+            placeholder="-"
+            className={inputClass}
+          />
+        </td>
+        <td className={cellClass}>
+          <input
+            value={draft.instagramHandle}
+            onChange={(e) => setDraft({ ...draft, instagramHandle: e.target.value })}
+            placeholder="@..."
+            className={inputClass}
+          />
+        </td>
+        <td className={cellClass}>
+          <input
+            type="email"
+            value={draft.studentEmail}
+            onChange={(e) => setDraft({ ...draft, studentEmail: e.target.value })}
+            className={inputClass}
+          />
+        </td>
+        <td className="px-2 py-2 text-right sm:px-4">
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className="rounded-md bg-sky-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {saving ? "保存中..." : "保存"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditing(false)}
+                disabled={saving}
+                className="rounded-md border border-slate-300 px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-50"
+              >
+                キャンセル
+              </button>
+            </div>
+            {error && <span className="text-[11px] text-rose-600">{error}</span>}
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
+  return (
+    <tr className="border-b border-slate-50 last:border-0">
+      <td className={cellClass}>
+        <Link
+          href={`/admin/students/${encodeURIComponent(participant.studentEmail)}`}
+          className="text-sky-700 underline-offset-2 hover:underline"
+        >
+          {participant.studentName}
+        </Link>
+      </td>
+      <td className={`${cellClass} text-slate-600`}>{participant.djName ?? "-"}</td>
+      <td className={`${cellClass} text-slate-600`}>{participant.instagramHandle ?? "-"}</td>
+      <td className={`${cellClass} text-slate-500`}>{participant.studentEmail}</td>
+      <td className="px-2 py-2 text-right sm:px-4">
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={startEditing}
+            className="text-xs font-medium text-sky-600 hover:text-sky-700"
+          >
+            編集
+          </button>
+          <DeleteParticipantButton participantId={participant.id} studentName={participant.studentName} />
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 function ParticipantList({
   title,
   participants,
@@ -282,30 +429,14 @@ function ParticipantList({
               <tr className="border-b border-slate-100 text-xs text-slate-400">
                 <th className="px-2 py-2 font-medium sm:px-4">名前</th>
                 <th className="px-2 py-2 font-medium sm:px-4">DJネーム</th>
-                <th className="hidden px-4 py-2 font-medium sm:table-cell">メールアドレス</th>
+                <th className="px-2 py-2 font-medium sm:px-4">インスタグラムアカウント</th>
+                <th className="px-2 py-2 font-medium sm:px-4">メールアドレス</th>
                 <th className="px-2 py-2 font-medium sm:px-4"></th>
               </tr>
             </thead>
             <tbody>
               {participants.map((participant) => (
-                <tr key={participant.id} className="border-b border-slate-50 last:border-0">
-                  <td className="px-2 py-2 sm:px-4">
-                    <Link
-                      href={`/admin/students/${encodeURIComponent(participant.studentEmail)}`}
-                      className="text-sky-700 underline-offset-2 hover:underline"
-                    >
-                      {participant.studentName}
-                    </Link>
-                  </td>
-                  <td className="px-2 py-2 text-slate-600 sm:px-4">{participant.djName ?? "-"}</td>
-                  <td className="hidden px-4 py-2 text-slate-500 sm:table-cell">{participant.studentEmail}</td>
-                  <td className="px-2 py-2 text-right sm:px-4">
-                    <DeleteParticipantButton
-                      participantId={participant.id}
-                      studentName={participant.studentName}
-                    />
-                  </td>
-                </tr>
+                <ParticipantRow key={participant.id} participant={participant} />
               ))}
             </tbody>
           </table>

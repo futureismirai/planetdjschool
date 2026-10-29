@@ -24,6 +24,7 @@ async function getDebutEventsWithParticipants() {
       studentName: p.studentName,
       studentEmail: p.studentEmail,
       djName: p.djName,
+      instagramHandle: p.instagramHandle,
       status: p.status,
       source: p.source,
       createdAt: p.createdAt.toISOString(),

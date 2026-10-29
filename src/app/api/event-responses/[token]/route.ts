@@ -67,7 +67,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           studentEmail: inviteResponse.studentEmail,
         },
       },
-      update: { status: participationAnswer, source: "response", respondedAt: now, djName: parsedAnswers.djName },
+      update: {
+        status: participationAnswer,
+        source: "response",
+        respondedAt: now,
+        djName: parsedAnswers.djName,
+        instagramHandle: parsedAnswers.instagramHandle || null,
+      },
       create: {
         eventId: inviteResponse.eventId,
         studentName: inviteResponse.studentName,
@@ -76,6 +82,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         source: "response",
         respondedAt: now,
         djName: parsedAnswers.djName,
+        instagramHandle: parsedAnswers.instagramHandle || null,
       },
     }),
     prisma.surveyResponse.create({

@@ -175,6 +175,8 @@ model DebutEventParticipant {
   studentEmail String
   /// 受講後アンケートで回答されたDJネーム(未回答の場合はnull)。デビューイベントの参加者一覧表示用。
   djName       String?
+  /// 受講後アンケートで回答されたInstagramアカウント(未回答・連絡先共有を希望しない場合はnull)。
+  instagramHandle String?
   /// "participating"(参加できる) | "declined"(参加できない) | "not_interested"(参加を希望しない) | "pending"(管理者が追加したのみ、未回答)
   status       String     @default("pending")
   /// "admin"(管理者が手動追加) | "response"(回答ページからの反映)
