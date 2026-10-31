@@ -41,16 +41,19 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
     );
   }
 
-  const nextLesson = await prisma.lesson.findFirst({
+  // 直近の日程が満員の場合は、空きのある最も近い日程を案内する。
+  const candidateLessons = await prisma.lesson.findMany({
     where: { name: nextLessonName, datetime: { gte: new Date() } },
     orderBy: { datetime: "asc" },
     include: { bookings: true },
   });
+  const nextLesson = candidateLessons.find((l) => l.bookings.length < l.maxSlots);
   if (!nextLesson) {
-    return NextResponse.json(
-      { error: `${nextLessonName}の今後の開催日程がまだ登録されていません。先にレッスンを登録してください。` },
-      { status: 404 }
-    );
+    const message =
+      candidateLessons.length === 0
+        ? `${nextLessonName}の今後の開催日程がまだ登録されていません。先にレッスンを登録してください。`
+        : `${nextLessonName}の今後の開催日程はすべて満員です。空きのある日程を登録してください。`;
+    return NextResponse.json({ error: message }, { status: 404 });
   }
 
   const alreadyBookedNextLesson = await prisma.booking.findFirst({
