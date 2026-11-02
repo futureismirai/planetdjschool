@@ -282,6 +282,42 @@ ${SCHOOL_NAME}`;
   return { subject, text, html };
 }
 
+/**
+ * 予約キャンセル通知メール。管理者がグループレッスンの参加者を削除した際に送信する。
+ * 文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildBookingCancellationEmail(info: BookingEmailInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】ご予約キャンセルのお知らせ（${info.lessonName}）`;
+  const groupInfo = groupLessonInfo(info);
+
+  const text = `${info.studentName} 様
+
+以下のご予約がキャンセルされましたのでお知らせいたします。
+
+${groupInfo.text}
+
+またのご参加を心よりお待ちしております。
+ご不明な点がございましたら本メールへご返信ください。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">ご予約がキャンセルされました</h2>
+    <p>${escapeHtml(info.studentName)} 様</p>
+    <p>以下のご予約がキャンセルされましたのでお知らせいたします。</p>
+    ${groupInfo.html}
+    <p style="margin-top:20px;">またのご参加を心よりお待ちしております。ご不明な点がございましたら本メールへご返信ください。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
 export type TrialEmailInfo = {
   datetime: Date;
   instructorName: string;
@@ -373,6 +409,42 @@ ${SCHOOL_NAME}`;
     ${trial.html}
     ${notice.html}
     <p style="margin-top:20px;">当日はお気をつけてお越しください。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
+/**
+ * 体験会キャンセル通知メール。管理者が体験会の参加者を削除した際に送信する。
+ * 文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildTrialCancellationEmail(info: TrialEmailInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】体験会キャンセルのお知らせ`;
+  const trial = trialInfo(info);
+
+  const text = `${info.studentName} 様
+
+以下の体験会のお申し込みがキャンセルされましたのでお知らせいたします。
+
+${trial.text}
+
+またのお申し込みを心よりお待ちしております。
+ご不明な点がございましたら本メールへご返信ください。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">体験会がキャンセルされました</h2>
+    <p>${escapeHtml(info.studentName)} 様</p>
+    <p>以下の体験会のお申し込みがキャンセルされましたのでお知らせいたします。</p>
+    ${trial.html}
+    <p style="margin-top:20px;">またのお申し込みを心よりお待ちしております。ご不明な点がございましたら本メールへご返信ください。</p>
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;
 
@@ -474,6 +546,42 @@ ${SCHOOL_NAME}`;
     ${individual.html}
     ${notice.html}
     <p style="margin-top:20px;">当日はお気をつけてお越しください。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
+/**
+ * 個別レッスン キャンセル通知メール。管理者が個別レッスンの参加者を削除した際に送信する。
+ * 文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildIndividualLessonCancellationEmail(info: IndividualLessonEmailInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】個別レッスンのキャンセルのお知らせ（${info.lessonName}）`;
+  const individual = individualLessonInfo(info);
+
+  const text = `${info.studentName} 様
+
+以下の個別レッスンのご予約がキャンセルされましたのでお知らせいたします。
+
+${individual.text}
+
+またのご参加を心よりお待ちしております。
+ご不明な点がございましたら本メールへご返信ください。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">個別レッスンのご予約がキャンセルされました</h2>
+    <p>${escapeHtml(info.studentName)} 様</p>
+    <p>以下の個別レッスンのご予約がキャンセルされましたのでお知らせいたします。</p>
+    ${individual.html}
+    <p style="margin-top:20px;">またのご参加を心よりお待ちしております。ご不明な点がございましたら本メールへご返信ください。</p>
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;
 
