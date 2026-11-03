@@ -21,12 +21,28 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
 
   if (deleted.studentEmail) {
     try {
+      // 同じレッスン名の今後の日程のうち、満員でないもの(今回キャンセルした回を除く)を案内する。
+      const upcomingLessons = await prisma.lesson.findMany({
+        where: {
+          name: deleted.lesson.name,
+          datetime: { gte: new Date() },
+          id: { not: deleted.lessonId },
+        },
+        orderBy: { datetime: "asc" },
+        include: { bookings: true },
+      });
+      const availableSessions = upcomingLessons
+        .filter((l) => l.bookings.length < l.maxSlots)
+        .slice(0, 5)
+        .map((l) => l.datetime);
+
       const { subject, text, html } = buildBookingCancellationEmail({
         studentName: deleted.studentName,
         lessonName: deleted.lesson.name,
         datetime: deleted.lesson.datetime,
         instructorName: deleted.lesson.instructorName,
         location: deleted.lesson.location,
+        availableSessions,
       });
       await sendMail({ to: deleted.studentEmail, subject, text, html });
     } catch (mailError) {

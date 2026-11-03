@@ -138,6 +138,37 @@ function buildNoticeSection(
 }
 
 /**
+ * キャンセル通知メールに添える「次回以降の空き状況」ブロック。満員でない今後の日程がある場合のみ
+ * 内容を返す(無い場合は空文字列を返し、呼び出し側でそのまま省略できる)。
+ * 文面を変更したい場合はこの関数を編集してください。
+ */
+function buildAvailableSessionsSection(
+  label: string,
+  availableSessions: Date[],
+  durationMinutes: number
+): { text: string; html: string } {
+  if (availableSessions.length === 0) {
+    return { text: "", html: "" };
+  }
+
+  const url = bookingSiteUrl();
+  const dateLines = availableSessions.map((d) => formatDateTimeRange(d, durationMinutes));
+
+  const text = `\n\n【${label}】\n${dateLines.map((d) => `・${d}`).join("\n")}\n\nご都合がよろしければ、以下のページからご予約ください。\n${url}`;
+
+  const html = `
+    <div style="margin-top:16px;padding:12px 16px;background:#f0fdf4;border-radius:8px;">
+      <p style="font-weight:bold;margin:0 0 6px;color:#166534;">${escapeHtml(label)}</p>
+      <ul style="margin:0;padding-left:18px;color:#222;font-size:14px;">
+        ${dateLines.map((d) => `<li style="margin:2px 0;">${escapeHtml(d)}</li>`).join("")}
+      </ul>
+      <p style="margin:10px 0 0;font-size:14px;"><a href="${escapeHtml(url)}" style="color:#61508c;font-weight:bold;">こちらからご予約ください</a></p>
+    </div>`;
+
+  return { text, html };
+}
+
+/**
  * Lesson 1登録時の予約完了メールにのみ追加する資料案内ブロック(3日前リマインドには含めない)。
  * 文面・リンクを変更したい場合はこの関数を編集してください。
  */
@@ -286,19 +317,26 @@ ${SCHOOL_NAME}`;
  * 予約キャンセル通知メール。管理者がグループレッスンの参加者を削除した際に送信する。
  * 文面を変更したい場合はこの関数を編集してください。
  */
-export function buildBookingCancellationEmail(info: BookingEmailInfo): {
+export function buildBookingCancellationEmail(
+  info: BookingEmailInfo & { availableSessions: Date[] }
+): {
   subject: string;
   text: string;
   html: string;
 } {
   const subject = `【${SCHOOL_NAME}】ご予約キャンセルのお知らせ（${info.lessonName}）`;
   const groupInfo = groupLessonInfo(info);
+  const available = buildAvailableSessionsSection(
+    `${info.lessonName} の次回以降の空き状況`,
+    info.availableSessions,
+    GROUP_LESSON_DURATION_MINUTES
+  );
 
   const text = `${info.studentName} 様
 
 以下のご予約がキャンセルされましたのでお知らせいたします。
 
-${groupInfo.text}
+${groupInfo.text}${available.text}
 
 またのご参加を心よりお待ちしております。
 ご不明な点がございましたら本メールへご返信ください。
@@ -311,6 +349,7 @@ ${SCHOOL_NAME}`;
     <p>${escapeHtml(info.studentName)} 様</p>
     <p>以下のご予約がキャンセルされましたのでお知らせいたします。</p>
     ${groupInfo.html}
+    ${available.html}
     <p style="margin-top:20px;">またのご参加を心よりお待ちしております。ご不明な点がございましたら本メールへご返信ください。</p>
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;
@@ -419,19 +458,24 @@ ${SCHOOL_NAME}`;
  * 体験会キャンセル通知メール。管理者が体験会の参加者を削除した際に送信する。
  * 文面を変更したい場合はこの関数を編集してください。
  */
-export function buildTrialCancellationEmail(info: TrialEmailInfo): {
+export function buildTrialCancellationEmail(info: TrialEmailInfo & { availableSessions: Date[] }): {
   subject: string;
   text: string;
   html: string;
 } {
   const subject = `【${SCHOOL_NAME}】体験会キャンセルのお知らせ`;
   const trial = trialInfo(info);
+  const available = buildAvailableSessionsSection(
+    "体験会の次回以降の空き状況",
+    info.availableSessions,
+    TRIAL_DURATION_MINUTES
+  );
 
   const text = `${info.studentName} 様
 
 以下の体験会のお申し込みがキャンセルされましたのでお知らせいたします。
 
-${trial.text}
+${trial.text}${available.text}
 
 またのお申し込みを心よりお待ちしております。
 ご不明な点がございましたら本メールへご返信ください。
@@ -444,6 +488,7 @@ ${SCHOOL_NAME}`;
     <p>${escapeHtml(info.studentName)} 様</p>
     <p>以下の体験会のお申し込みがキャンセルされましたのでお知らせいたします。</p>
     ${trial.html}
+    ${available.html}
     <p style="margin-top:20px;">またのお申し込みを心よりお待ちしております。ご不明な点がございましたら本メールへご返信ください。</p>
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;
