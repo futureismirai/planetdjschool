@@ -173,7 +173,12 @@ function buildAvailableSessionsSection(
  * 文面・リンクを変更したい場合はこの関数を編集してください。
  */
 function buildLesson1MaterialsSection(): { text: string; html: string } {
-  const text = `◯ レッスン資料
+  const text = `◯ オープンチャット「Planet DJ School」
+加入がまだの方は、参加をお願いします。
+（名前は自由に設定して構いません。）
+https://line.me/ti/g2/uq-Hl-TzbM6ifghVWhlPVLjVocrR_OS3yzNpPg?utm_source=invitation&utm_medium=link_copy&utm_campaign=default
+
+◯ レッスン資料
 
 Lesson 1
 https://drive.google.com/drive/folders/1byKYl8QwscqNNb5do5ZRACXuNyjU3DLt
@@ -194,6 +199,9 @@ https://note.com/ginza_member/n/n70d18564b1ef`;
 
   const html = `
     <div style="margin-top:20px;padding:12px 16px;background:#f8fafc;border-radius:8px;">
+      <p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">オープンチャット「Planet DJ School」</p>
+      <p style="margin:0 0 4px;">加入がまだの方は、参加をお願いします。<br>（名前は自由に設定して構いません。）</p>
+      <p style="margin:0 0 16px;"><a href="https://line.me/ti/g2/uq-Hl-TzbM6ifghVWhlPVLjVocrR_OS3yzNpPg?utm_source=invitation&amp;utm_medium=link_copy&amp;utm_campaign=default">https://line.me/ti/g2/uq-Hl-TzbM6ifghVWhlPVLjVocrR_OS3yzNpPg?utm_source=invitation&amp;utm_medium=link_copy&amp;utm_campaign=default</a></p>
       <p style="font-weight:bold;margin:0 0 8px;color:#0f172a;">レッスン資料</p>
       <p style="margin:0 0 8px;">Lesson 1<br><a href="https://drive.google.com/drive/folders/1byKYl8QwscqNNb5do5ZRACXuNyjU3DLt">https://drive.google.com/drive/folders/1byKYl8QwscqNNb5do5ZRACXuNyjU3DLt</a></p>
       <p style="margin:0 0 8px;">Lesson 2<br><a href="https://drive.google.com/drive/folders/1p4ctRcHqAH6dEfH6RbuvNSIGIn3r9reo">https://drive.google.com/drive/folders/1p4ctRcHqAH6dEfH6RbuvNSIGIn3r9reo</a></p>
