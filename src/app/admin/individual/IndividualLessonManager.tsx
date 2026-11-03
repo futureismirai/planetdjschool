@@ -11,6 +11,7 @@ import {
 } from "@/lib/date";
 import { DEFAULT_LOCATION, LESSON_NAME_OPTIONS } from "../LessonBookingManager";
 import { INSTRUCTOR_NAME_OPTIONS } from "@/lib/constants";
+import { DeleteWithEmailButton } from "../DeleteWithEmailButton";
 
 export type IndividualParticipantItem = {
   id: string;
@@ -258,11 +259,10 @@ function DeleteParticipantButton({
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
 
-  async function handleDelete() {
-    if (!window.confirm(`「${studentName}」さんの登録を本当に削除しますか？`)) return;
+  async function handleDelete(sendEmail: boolean) {
     setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/individual-participants/${participantId}`, {
+      const res = await fetch(`/api/admin/individual-participants/${participantId}?notify=${sendEmail}`, {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -279,14 +279,11 @@ function DeleteParticipantButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleDelete}
-      disabled={deleting}
-      className="text-xs font-medium text-rose-600 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
-    >
-      {deleting ? "削除中..." : "削除"}
-    </button>
+    <DeleteWithEmailButton
+      confirmMessage={`「${studentName}」さんの登録を本当に削除しますか？`}
+      deleting={deleting}
+      onConfirm={handleDelete}
+    />
   );
 }
 

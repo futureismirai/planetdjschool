@@ -4,13 +4,14 @@ import { getCurrentAdmin } from "@/lib/auth";
 import { sendMail } from "@/lib/mailer";
 import { buildIndividualLessonCancellationEmail } from "@/lib/emailTemplates";
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await getCurrentAdmin();
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
+  const notify = request.nextUrl.searchParams.get("notify") !== "false";
 
   let deleted;
   try {
@@ -22,7 +23,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
     return NextResponse.json({ error: "参加者が見つかりません。" }, { status: 404 });
   }
 
-  if (deleted.studentEmail) {
+  if (notify && deleted.studentEmail) {
     try {
       const { subject, text, html } = buildIndividualLessonCancellationEmail({
         studentName: deleted.studentName,

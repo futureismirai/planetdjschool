@@ -4,13 +4,14 @@ import { getCurrentAdmin } from "@/lib/auth";
 import { sendMail } from "@/lib/mailer";
 import { buildBookingCancellationEmail } from "@/lib/emailTemplates";
 
-export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await getCurrentAdmin();
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
+  const notify = request.nextUrl.searchParams.get("notify") !== "false";
 
   let deleted;
   try {
@@ -19,7 +20,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: Promis
     return NextResponse.json({ error: "予約が見つかりません。" }, { status: 404 });
   }
 
-  if (deleted.studentEmail) {
+  if (notify && deleted.studentEmail) {
     try {
       // 同じレッスン名の今後の日程のうち、満員でないもの(今回キャンセルした回を除く)を案内する。
       const upcomingLessons = await prisma.lesson.findMany({

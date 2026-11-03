@@ -10,6 +10,7 @@ import {
   sortForDateGroupedDisplay,
   withDateGroupFlags,
 } from "@/lib/date";
+import { DeleteWithEmailButton } from "../DeleteWithEmailButton";
 
 // 体験会は全て1時間で開催される(Instagram投稿用テキストの終了時刻表示に使用)。
 const TRIAL_DURATION_MINUTES = 60;
@@ -281,11 +282,10 @@ function DeleteParticipantButton({
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
 
-  async function handleDelete() {
-    if (!window.confirm(`「${studentName}」さんの参加登録を本当に削除しますか？`)) return;
+  async function handleDelete(sendEmail: boolean) {
     setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/trial-participants/${participantId}`, {
+      const res = await fetch(`/api/admin/trial-participants/${participantId}?notify=${sendEmail}`, {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -302,14 +302,11 @@ function DeleteParticipantButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleDelete}
-      disabled={deleting}
-      className="text-xs font-medium text-rose-600 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
-    >
-      {deleting ? "削除中..." : "削除"}
-    </button>
+    <DeleteWithEmailButton
+      confirmMessage={`「${studentName}」さんの参加登録を本当に削除しますか？`}
+      deleting={deleting}
+      onConfirm={handleDelete}
+    />
   );
 }
 
