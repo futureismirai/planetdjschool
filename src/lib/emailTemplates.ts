@@ -1,4 +1,4 @@
-import { formatLessonDateTime, formatTimeOnly } from "./date";
+import { formatDateOnly, formatLessonDateTime, formatTimeOnly } from "./date";
 import { INDIVIDUAL_LESSON_DURATION_MINUTES } from "./constants";
 
 const SCHOOL_NAME = "Planet DJ School";
@@ -1115,6 +1115,185 @@ ${SCHOOL_NAME}`;
   </div>`;
 
   return { subject, text: fullText, html };
+}
+
+export type InstructorNotifyInfo = {
+  instructorName: string;
+  lessonName?: string | null; // 体験会の場合は指定しない
+  datetime: Date;
+  location: string;
+};
+
+/**
+ * 講師向け通知メールの本文ブロック(レッスン名、日付、時間、スタジオ)。
+ * 「時間」は視認性を高めるため、日付とは分けて大きく強調表示する。
+ */
+function buildInstructorSessionBlock(
+  info: InstructorNotifyInfo,
+  durationMinutes: number
+): { text: string; html: string } {
+  const dateText = formatDateOnly(info.datetime);
+  const startText = formatTimeOnly(info.datetime);
+  const endText = formatTimeOnly(new Date(info.datetime.getTime() + durationMinutes * 60 * 1000));
+
+  const textLines = [
+    ...(info.lessonName ? [`レッスン: ${info.lessonName}`] : []),
+    `日付: ${dateText}`,
+    `時間: ${startText}〜${endText}`,
+    `スタジオ: ${info.location}`,
+  ];
+  const text = textLines.join("\n");
+
+  const html = `
+    <table style="width:100%;border-collapse:collapse;margin:16px 0 0;">
+      ${info.lessonName ? `<tr><td style="padding:4px 0;color:#666;width:80px;">レッスン</td><td style="padding:4px 0;font-weight:bold;">${escapeHtml(info.lessonName)}</td></tr>` : ""}
+      <tr><td style="padding:4px 0;color:#666;width:80px;">日付</td><td style="padding:4px 0;">${escapeHtml(dateText)}</td></tr>
+    </table>
+    <div style="margin:8px 0 16px;padding:14px 16px;background:#fef3c7;border:2px solid #f59e0b;border-radius:10px;text-align:center;">
+      <p style="margin:0;font-size:12px;letter-spacing:0.08em;color:#92400e;font-weight:bold;">時間</p>
+      <p style="margin:4px 0 0;font-size:30px;font-weight:800;color:#78350f;">${escapeHtml(startText)}〜${escapeHtml(endText)}</p>
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin:0 0 16px;">
+      <tr><td style="padding:4px 0;color:#666;width:80px;">スタジオ</td><td style="padding:4px 0;">${escapeHtml(info.location)}</td></tr>
+    </table>`;
+
+  return { text, html };
+}
+
+/**
+ * 講師向け: レッスンが新規登録された際の通知メール。文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildInstructorLessonRegisteredEmail(info: InstructorNotifyInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】新しいレッスンが登録されました（${info.lessonName}）`;
+  const block = buildInstructorSessionBlock(info, GROUP_LESSON_DURATION_MINUTES);
+
+  const text = `${info.instructorName} 様
+
+${SCHOOL_NAME}に新しいレッスンが登録されましたのでお知らせいたします。
+
+${block.text}
+
+よろしくお願いいたします。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">新しいレッスンが登録されました</h2>
+    <p>${escapeHtml(info.instructorName)} 様</p>
+    <p>${SCHOOL_NAME}に新しいレッスンが登録されましたのでお知らせいたします。</p>
+    ${block.html}
+    <p style="margin-top:20px;">よろしくお願いいたします。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
+/**
+ * 講師向け: レッスン開催前日のリマインドメール。文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildInstructorLessonReminderEmail(info: InstructorNotifyInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】レッスン開催前日のリマインド（${info.lessonName}）`;
+  const block = buildInstructorSessionBlock(info, GROUP_LESSON_DURATION_MINUTES);
+
+  const text = `${info.instructorName} 様
+
+ご担当いただいている${SCHOOL_NAME}のレッスンが明日開催ですのでお知らせいたします。
+
+${block.text}
+
+よろしくお願いいたします。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">レッスン開催前日のお知らせ</h2>
+    <p>${escapeHtml(info.instructorName)} 様</p>
+    <p>ご担当いただいている${SCHOOL_NAME}のレッスンが明日開催ですのでお知らせいたします。</p>
+    ${block.html}
+    <p style="margin-top:20px;">よろしくお願いいたします。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
+/**
+ * 講師向け: 体験会が新規登録された際の通知メール。文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildInstructorTrialRegisteredEmail(info: InstructorNotifyInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】新しい体験会が登録されました`;
+  const block = buildInstructorSessionBlock(info, TRIAL_DURATION_MINUTES);
+
+  const text = `${info.instructorName} 様
+
+${SCHOOL_NAME}に新しい体験会が登録されましたのでお知らせいたします。
+
+${block.text}
+
+よろしくお願いいたします。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">新しい体験会が登録されました</h2>
+    <p>${escapeHtml(info.instructorName)} 様</p>
+    <p>${SCHOOL_NAME}に新しい体験会が登録されましたのでお知らせいたします。</p>
+    ${block.html}
+    <p style="margin-top:20px;">よろしくお願いいたします。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
+/**
+ * 講師向け: 体験会開催前日のリマインドメール。文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildInstructorTrialReminderEmail(info: InstructorNotifyInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】体験会開催前日のリマインド`;
+  const block = buildInstructorSessionBlock(info, TRIAL_DURATION_MINUTES);
+
+  const text = `${info.instructorName} 様
+
+ご担当いただいている${SCHOOL_NAME}の体験会が明日開催ですのでお知らせいたします。
+
+${block.text}
+
+よろしくお願いいたします。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">体験会開催前日のお知らせ</h2>
+    <p>${escapeHtml(info.instructorName)} 様</p>
+    <p>ご担当いただいている${SCHOOL_NAME}の体験会が明日開催ですのでお知らせいたします。</p>
+    ${block.html}
+    <p style="margin-top:20px;">よろしくお願いいたします。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
 }
 
 function escapeHtml(input: string): string {

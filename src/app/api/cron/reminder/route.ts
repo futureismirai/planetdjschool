@@ -3,14 +3,18 @@ import { prisma } from "@/lib/prisma";
 import { sendMail } from "@/lib/mailer";
 import {
   buildIndividualLessonReminderEmail,
+  buildInstructorLessonReminderEmail,
+  buildInstructorTrialReminderEmail,
   buildLesson3SurveyEmail,
   buildReminderEmail,
   buildTrialReminderEmail,
 } from "@/lib/emailTemplates";
 import { getJstDayWindow } from "@/lib/date";
 import { DEFAULT_LOCATION } from "@/lib/constants";
+import { getInstructorEmailByName } from "@/lib/instructors";
 
 const REMINDER_DAYS_BEFORE = 3;
+const INSTRUCTOR_REMINDER_DAYS_BEFORE = 1;
 
 // Lesson 3受講後のアンケート依頼メールの自動送信を一時的に停止する場合はfalseにする。
 // (再開する場合はtrueに戻すだけでよい。関連コードは削除していない)
@@ -145,6 +149,94 @@ async function runIndividualLessonReminderBatch() {
 }
 
 /**
+ * 講師向け: 開催前日にレッスンのリマインドメールを自動送信する。
+ * 対象の講師にメールアドレスが登録されていない場合は送信せずスキップする。
+ */
+async function runInstructorLessonReminderBatch() {
+  const { start, end } = getJstDayWindow(INSTRUCTOR_REMINDER_DAYS_BEFORE);
+
+  const lessons = await prisma.lesson.findMany({
+    where: { datetime: { gte: start, lt: end }, instructorReminderSentAt: null },
+  });
+
+  let sent = 0;
+  let failed = 0;
+  let skipped = 0;
+
+  for (const lesson of lessons) {
+    const instructorEmail = await getInstructorEmailByName(lesson.instructorName);
+    if (!instructorEmail) {
+      skipped += 1;
+      continue;
+    }
+    try {
+      const { subject, text, html } = buildInstructorLessonReminderEmail({
+        instructorName: lesson.instructorName,
+        lessonName: lesson.name,
+        datetime: lesson.datetime,
+        location: lesson.location ?? DEFAULT_LOCATION,
+      });
+      await sendMail({ to: instructorEmail, subject, text, html });
+      await prisma.lesson.update({
+        where: { id: lesson.id },
+        data: { instructorReminderSentAt: new Date() },
+      });
+      sent += 1;
+    } catch (error) {
+      console.error(`講師向けレッスンリマインドメール送信に失敗しました (lessonId=${lesson.id}):`, error);
+      failed += 1;
+    }
+  }
+
+  return { targetLessons: lessons.length, sent, failed, skipped };
+}
+
+/**
+ * 講師向け: 開催前日に体験会のリマインドメールを自動送信する。
+ * 対象の講師にメールアドレスが登録されていない場合は送信せずスキップする。
+ */
+async function runInstructorTrialReminderBatch() {
+  const { start, end } = getJstDayWindow(INSTRUCTOR_REMINDER_DAYS_BEFORE);
+
+  const trialSessions = await prisma.trialSession.findMany({
+    where: { datetime: { gte: start, lt: end }, instructorReminderSentAt: null },
+  });
+
+  let sent = 0;
+  let failed = 0;
+  let skipped = 0;
+
+  for (const trialSession of trialSessions) {
+    const instructorEmail = await getInstructorEmailByName(trialSession.instructorName);
+    if (!instructorEmail) {
+      skipped += 1;
+      continue;
+    }
+    try {
+      const { subject, text, html } = buildInstructorTrialReminderEmail({
+        instructorName: trialSession.instructorName,
+        datetime: trialSession.datetime,
+        location: trialSession.location ?? DEFAULT_LOCATION,
+      });
+      await sendMail({ to: instructorEmail, subject, text, html });
+      await prisma.trialSession.update({
+        where: { id: trialSession.id },
+        data: { instructorReminderSentAt: new Date() },
+      });
+      sent += 1;
+    } catch (error) {
+      console.error(
+        `講師向け体験会リマインドメール送信に失敗しました (trialSessionId=${trialSession.id}):`,
+        error
+      );
+      failed += 1;
+    }
+  }
+
+  return { targetTrialSessions: trialSessions.length, sent, failed, skipped };
+}
+
+/**
  * Lesson 3を受講した翌日に、アンケート依頼メールを自動送信する
  * (グループレッスンの受講者向け)。
  */
@@ -234,20 +326,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [lessonResult, trialResult, individualResult, lesson3SurveyResult, individualLesson3SurveyResult] =
-    await Promise.all([
-      runReminderBatch(),
-      runTrialReminderBatch(),
-      runIndividualLessonReminderBatch(),
-      runLesson3SurveyBatch(),
-      runIndividualLesson3SurveyBatch(),
-    ]);
+  const [
+    lessonResult,
+    trialResult,
+    individualResult,
+    lesson3SurveyResult,
+    individualLesson3SurveyResult,
+    instructorLessonReminderResult,
+    instructorTrialReminderResult,
+  ] = await Promise.all([
+    runReminderBatch(),
+    runTrialReminderBatch(),
+    runIndividualLessonReminderBatch(),
+    runLesson3SurveyBatch(),
+    runIndividualLesson3SurveyBatch(),
+    runInstructorLessonReminderBatch(),
+    runInstructorTrialReminderBatch(),
+  ]);
   return NextResponse.json({
     lessons: lessonResult,
     trialSessions: trialResult,
     individualLessons: individualResult,
     lesson3Survey: lesson3SurveyResult,
     individualLesson3Survey: individualLesson3SurveyResult,
+    instructorLessonReminder: instructorLessonReminderResult,
+    instructorTrialReminder: instructorTrialReminderResult,
   });
 }
 

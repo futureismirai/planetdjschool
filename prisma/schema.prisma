@@ -26,6 +26,7 @@ model Lesson {
   instructorName String
   maxSlots       Int       @default(3)
   location       String?
+  instructorReminderSentAt DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   bookings       Booking[]
@@ -69,6 +70,7 @@ model TrialSession {
   instructorName String
   maxSlots       Int               @default(3)
   location       String?
+  instructorReminderSentAt DateTime?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   participants   TrialParticipant[]

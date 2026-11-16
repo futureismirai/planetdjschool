@@ -7,7 +7,10 @@ export const dynamic = "force-dynamic";
 
 async function getInstructors() {
   const instructors = await prisma.instructor.findMany({ orderBy: { createdAt: "asc" } });
-  return instructors.map((i) => ({ id: i.id, name: i.name, email: i.email }));
+  // 「未定」は講師ではないため一覧には表示しない(選択肢には別途残している)
+  return instructors
+    .filter((i) => i.name !== "未定")
+    .map((i) => ({ id: i.id, name: i.name, email: i.email }));
 }
 
 export default async function AdminInstructorsPage() {

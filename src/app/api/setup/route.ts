@@ -238,6 +238,11 @@ const CREATE_TABLES_SQL = [
     CONSTRAINT "Instructor_pkey" PRIMARY KEY ("id")
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "Instructor_name_key" ON "Instructor"("name")`,
+  // 「未定」は講師ではないため、講師一覧テーブルからは削除する(選択肢には別途残している)
+  `DELETE FROM "Instructor" WHERE "name" = '未定'`,
+  // レッスン・体験会の前日に講師へリマインドメールを送るための送信済みフラグ
+  `ALTER TABLE "Lesson" ADD COLUMN IF NOT EXISTS "instructorReminderSentAt" TIMESTAMP(3)`,
+  `ALTER TABLE "TrialSession" ADD COLUMN IF NOT EXISTS "instructorReminderSentAt" TIMESTAMP(3)`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {

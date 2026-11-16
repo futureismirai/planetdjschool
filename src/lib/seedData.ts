@@ -20,7 +20,9 @@ export async function runInitialSeed(prisma: PrismaClient) {
 
   // これまで選択肢として固定で用意していた講師名を、講師一覧テーブルに登録する
   // (既に登録済みの名前はそのまま、新規の名前だけ追加する)。
+  // 「未定」は講師ではないため、講師一覧テーブルには登録しない。
   for (const name of INSTRUCTOR_NAME_OPTIONS) {
+    if (name === "未定") continue;
     await prisma.instructor.upsert({
       where: { name },
       update: {},
