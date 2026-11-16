@@ -15,7 +15,6 @@ import { DeleteWithEmailButton } from "../DeleteWithEmailButton";
 // 体験会は全て1時間で開催される(Instagram投稿用テキストの終了時刻表示に使用)。
 const TRIAL_DURATION_MINUTES = 60;
 import { DEFAULT_LOCATION } from "../LessonBookingManager";
-import { INSTRUCTOR_NAME_OPTIONS } from "@/lib/constants";
 
 export type TrialParticipantItem = {
   id: string;
@@ -92,12 +91,14 @@ function SessionForm({
   onCancel,
   onSubmit,
   submitting,
+  instructorOptions,
 }: {
   initial: SessionFormValues;
   submitLabel: string;
   onCancel?: () => void;
   onSubmit: (values: SessionFormValues) => void;
   submitting: boolean;
+  instructorOptions: string[];
 }) {
   const [values, setValues] = useState(initial);
 
@@ -130,7 +131,7 @@ function SessionForm({
           <option value="" disabled>
             選択してください
           </option>
-          {INSTRUCTOR_NAME_OPTIONS.map((name) => (
+          {instructorOptions.map((name) => (
             <option key={name} value={name}>
               {name}
             </option>
@@ -310,7 +311,13 @@ function DeleteParticipantButton({
   );
 }
 
-export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
+export function TrialManager({
+  sessions,
+  instructorOptions,
+}: {
+  sessions: TrialSessionItem[];
+  instructorOptions: string[];
+}) {
   const router = useRouter();
   const [showNewForm, setShowNewForm] = useState(false);
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
@@ -428,6 +435,7 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
             submitting={submitting}
             onCancel={() => setShowNewForm(false)}
             onSubmit={handleCreateSession}
+            instructorOptions={instructorOptions}
           />
         ) : (
           <div className="flex flex-wrap items-center gap-2">
@@ -502,6 +510,7 @@ export function TrialManager({ sessions }: { sessions: TrialSessionItem[] }) {
                       submitting={submitting}
                       onCancel={() => setEditingSessionId(null)}
                       onSubmit={(values) => handleUpdateSession(session.id, values)}
+                      instructorOptions={instructorOptions}
                     />
                   </div>
                 </div>

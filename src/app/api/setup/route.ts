@@ -228,6 +228,16 @@ const CREATE_TABLES_SQL = [
   // 受講後アンケートの連絡方法設問(Instagram共有 or 引き続きメール希望)
   `ALTER TABLE "SurveyResponse" ADD COLUMN IF NOT EXISTS "contactPreference" TEXT`,
   `ALTER TABLE "SurveyResponse" ADD COLUMN IF NOT EXISTS "instagramHandle" TEXT`,
+  // 講師一覧(レッスン・体験会・個別レッスン作成フォームの講師選択肢を管理する)
+  `CREATE TABLE IF NOT EXISTS "Instructor" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "Instructor_pkey" PRIMARY KEY ("id")
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "Instructor_name_key" ON "Instructor"("name")`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {

@@ -13,7 +13,7 @@ import {
 import { ManualBookingForm } from "./ManualBookingForm";
 import { DeleteBookingButton } from "./DeleteBookingButton";
 import { NextLessonEmailButton } from "./NextLessonEmailButton";
-import { DEFAULT_LOCATION, INSTRUCTOR_NAME_OPTIONS } from "@/lib/constants";
+import { DEFAULT_LOCATION } from "@/lib/constants";
 
 // このレッスンを終了した生徒に、どのレッスンの受講を勧めるかの対応表。
 const NEXT_LESSON_NAME: Record<string, string> = {
@@ -100,12 +100,14 @@ function LessonForm({
   onCancel,
   onSubmit,
   submitting,
+  instructorOptions,
 }: {
   initial: FormValues;
   submitLabel: string;
   onCancel?: () => void;
   onSubmit: (values: FormValues) => void;
   submitting: boolean;
+  instructorOptions: string[];
 }) {
   const [values, setValues] = useState(initial);
 
@@ -156,7 +158,7 @@ function LessonForm({
           <option value="" disabled>
             選択してください
           </option>
-          {INSTRUCTOR_NAME_OPTIONS.map((name) => (
+          {instructorOptions.map((name) => (
             <option key={name} value={name}>
               {name}
             </option>
@@ -206,7 +208,13 @@ function LessonForm({
   );
 }
 
-export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
+export function LessonBookingManager({
+  lessons,
+  instructorOptions,
+}: {
+  lessons: LessonItem[];
+  instructorOptions: string[];
+}) {
   const router = useRouter();
   const [showNewForm, setShowNewForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -312,6 +320,7 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
             submitting={submitting}
             onCancel={() => setShowNewForm(false)}
             onSubmit={handleCreate}
+            instructorOptions={instructorOptions}
           />
         ) : (
           <button
@@ -356,6 +365,7 @@ export function LessonBookingManager({ lessons }: { lessons: LessonItem[] }) {
                       submitting={submitting}
                       onCancel={() => setEditingId(null)}
                       onSubmit={(values) => handleUpdate(lesson.id, values)}
+                      instructorOptions={instructorOptions}
                     />
                   </div>
                 </div>

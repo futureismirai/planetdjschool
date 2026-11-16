@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
+import { getInstructorNames } from "@/lib/instructors";
 import { AdminNavMenu } from "../AdminNavMenu";
 import { LessonBookingManager } from "../LessonBookingManager";
 
@@ -35,7 +36,11 @@ async function getAllLessonsWithBookings() {
 }
 
 export default async function AdminLessonsPage() {
-  const [admin, lessons] = await Promise.all([getCurrentAdmin(), getAllLessonsWithBookings()]);
+  const [admin, lessons, instructorOptions] = await Promise.all([
+    getCurrentAdmin(),
+    getAllLessonsWithBookings(),
+    getInstructorNames(),
+  ]);
 
   return (
     <div className="mx-auto max-w-4xl px-3 py-6 sm:px-4 sm:py-8">
@@ -48,7 +53,7 @@ export default async function AdminLessonsPage() {
       </div>
 
       <div className="mt-6">
-        <LessonBookingManager lessons={lessons} />
+        <LessonBookingManager lessons={lessons} instructorOptions={instructorOptions} />
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
+import { getInstructorNames } from "@/lib/instructors";
 import { AdminNavMenu } from "../AdminNavMenu";
 import { IndividualLessonManager } from "./IndividualLessonManager";
 import { ScheduleRequestPanel } from "./ScheduleRequestPanel";
@@ -56,10 +57,11 @@ async function getScheduleRequests() {
 }
 
 export default async function AdminIndividualPage() {
-  const [admin, lessons, scheduleRequests] = await Promise.all([
+  const [admin, lessons, scheduleRequests, instructorOptions] = await Promise.all([
     getCurrentAdmin(),
     getIndividualLessonsWithParticipants(),
     getScheduleRequests(),
+    getInstructorNames(),
   ]);
 
   return (
@@ -76,11 +78,11 @@ export default async function AdminIndividualPage() {
       </div>
 
       <div className="mt-6">
-        <ScheduleRequestPanel requests={scheduleRequests} />
+        <ScheduleRequestPanel requests={scheduleRequests} instructorOptions={instructorOptions} />
       </div>
 
       <div className="mt-6">
-        <IndividualLessonManager lessons={lessons} />
+        <IndividualLessonManager lessons={lessons} instructorOptions={instructorOptions} />
       </div>
     </div>
   );

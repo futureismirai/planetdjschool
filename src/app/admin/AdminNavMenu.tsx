@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/admin/debut-events", label: "デビューイベント" },
   { href: "/admin/form-responses", label: "体験会アンケート" },
   { href: "/admin/post-course-survey", label: "受講後アンケート" },
+  { href: "/admin/instructors", label: "講師一覧" },
 ];
 
 /** 管理画面トップ階層の各ページ右上に表示する、全メニューをまとめたハンバーガーメニュー。 */

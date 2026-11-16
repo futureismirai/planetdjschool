@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { INSTRUCTOR_NAME_OPTIONS } from "./constants";
 
 /**
  * 初期管理者アカウントとサンプルレッスンを投入する。
@@ -16,6 +17,16 @@ export async function runInitialSeed(prisma: PrismaClient) {
     update: {},
     create: { email: adminEmail, passwordHash },
   });
+
+  // これまで選択肢として固定で用意していた講師名を、講師一覧テーブルに登録する
+  // (既に登録済みの名前はそのまま、新規の名前だけ追加する)。
+  for (const name of INSTRUCTOR_NAME_OPTIONS) {
+    await prisma.instructor.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
 
   const existingLessons = await prisma.lesson.count();
   if (existingLessons === 0) {

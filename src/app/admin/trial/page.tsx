@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
+import { getInstructorNames } from "@/lib/instructors";
 import { AdminNavMenu } from "../AdminNavMenu";
 import { TrialManager } from "./TrialManager";
 
@@ -32,9 +33,10 @@ async function getTrialSessionsWithParticipants() {
 }
 
 export default async function AdminTrialPage() {
-  const [admin, sessions] = await Promise.all([
+  const [admin, sessions, instructorOptions] = await Promise.all([
     getCurrentAdmin(),
     getTrialSessionsWithParticipants(),
+    getInstructorNames(),
   ]);
 
   return (
@@ -51,7 +53,7 @@ export default async function AdminTrialPage() {
       </div>
 
       <div className="mt-6">
-        <TrialManager sessions={sessions} />
+        <TrialManager sessions={sessions} instructorOptions={instructorOptions} />
       </div>
     </div>
   );

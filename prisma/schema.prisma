@@ -10,6 +10,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// 講師一覧。レッスン・体験会・個別レッスンの作成フォームで選べる講師名の選択肢を管理する。
+model Instructor {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Lesson {
   id             String    @id @default(cuid())
   name           String

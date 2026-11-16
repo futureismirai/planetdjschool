@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatLessonDateTime, formatDateOnly, formatTimeOnly } from "@/lib/date";
-import { INSTRUCTOR_NAME_OPTIONS, INDIVIDUAL_LESSON_DURATION_MINUTES } from "@/lib/constants";
+import { INDIVIDUAL_LESSON_DURATION_MINUTES } from "@/lib/constants";
 import {
   LessonForm,
   emptyLessonForm,
@@ -50,7 +50,13 @@ function buildStartTimeOptions(candidate: ScheduleCandidateItem): Date[] {
   return options;
 }
 
-function NewRequestForm({ onDone }: { onDone: () => void }) {
+function NewRequestForm({
+  onDone,
+  instructorOptions,
+}: {
+  onDone: () => void;
+  instructorOptions: string[];
+}) {
   const router = useRouter();
   const [studentName, setStudentName] = useState("");
   const [studentEmail, setStudentEmail] = useState("");
@@ -109,7 +115,7 @@ function NewRequestForm({ onDone }: { onDone: () => void }) {
         className="rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
       >
         <option value="">担当講師(任意)</option>
-        {INSTRUCTOR_NAME_OPTIONS.map((name) => (
+        {instructorOptions.map((name) => (
           <option key={name} value={name}>
             {name}
           </option>
@@ -142,10 +148,12 @@ function ConfirmCandidateForm({
   scheduleRequest,
   candidate,
   onDone,
+  instructorOptions,
 }: {
   scheduleRequest: ScheduleRequestItem;
   candidate: ScheduleCandidateItem;
   onDone: () => void;
+  instructorOptions: string[];
 }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -255,6 +263,7 @@ function ConfirmCandidateForm({
         submitting={submitting}
         onCancel={onDone}
         onSubmit={handleSubmit}
+        instructorOptions={instructorOptions}
       />
     </div>
   );
@@ -294,7 +303,13 @@ function DeleteRequestButton({ requestId, studentName }: { requestId: string; st
   );
 }
 
-export function ScheduleRequestPanel({ requests }: { requests: ScheduleRequestItem[] }) {
+export function ScheduleRequestPanel({
+  requests,
+  instructorOptions,
+}: {
+  requests: ScheduleRequestItem[];
+  instructorOptions: string[];
+}) {
   const [showNewForm, setShowNewForm] = useState(false);
   const [confirmingCandidateId, setConfirmingCandidateId] = useState<string | null>(null);
 
@@ -308,7 +323,7 @@ export function ScheduleRequestPanel({ requests }: { requests: ScheduleRequestIt
       <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
         <h2 className="mb-3 font-bold text-slate-900">日程調整</h2>
         {showNewForm ? (
-          <NewRequestForm onDone={() => setShowNewForm(false)} />
+          <NewRequestForm onDone={() => setShowNewForm(false)} instructorOptions={instructorOptions} />
         ) : (
           <button
             type="button"
@@ -386,6 +401,7 @@ export function ScheduleRequestPanel({ requests }: { requests: ScheduleRequestIt
                           scheduleRequest={req}
                           candidate={c}
                           onDone={() => setConfirmingCandidateId(null)}
+                          instructorOptions={instructorOptions}
                         />
                       )}
                     </li>
