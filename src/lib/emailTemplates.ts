@@ -1399,6 +1399,8 @@ ${cancelRanges.text}
 スタジオ予約はこちらからご確認・キャンセルいただけます。
 ${STUDIO_RESERVATION_URL}
 
+キャンセルが完了しましたら、完了画面のスクリーンショットをグループLINEで共有してください。
+
 お手数をおかけしますがよろしくお願いいたします。
 
 ${SCHOOL_NAME}`;
@@ -1418,6 +1420,7 @@ ${SCHOOL_NAME}`;
       ${cancelRanges.html}
     </div>
     <p><a href="${escapeHtml(STUDIO_RESERVATION_URL)}" target="_blank" rel="noopener noreferrer" style="color:#0369a1;">スタジオ予約サイトはこちら</a></p>
+    <p style="margin-top:12px;">キャンセルが完了しましたら、完了画面のスクリーンショットをグループLINEで共有してください。</p>
     <p style="margin-top:20px;">お手数をおかけしますがよろしくお願いいたします。</p>
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;
@@ -1454,6 +1457,8 @@ ${SCHOOL_NAME}の下記体験会はお申し込みがなく中止とさせてい
 スタジオ予約はこちらからご確認・キャンセルいただけます。
 ${STUDIO_RESERVATION_URL}
 
+キャンセルが完了しましたら、完了画面のスクリーンショットをグループLINEで共有してください。
+
 お手数をおかけしますがよろしくお願いいたします。
 
 ${SCHOOL_NAME}`;
@@ -1468,6 +1473,7 @@ ${SCHOOL_NAME}`;
       <tr><td style="padding:4px 0;color:#666;">時間</td><td style="padding:4px 0;font-weight:bold;">${escapeHtml(formatTimeOnly(info.datetime))}〜${escapeHtml(formatTimeOnly(trialEnd))}</td></tr>
     </table>
     <p><a href="${escapeHtml(STUDIO_RESERVATION_URL)}" target="_blank" rel="noopener noreferrer" style="color:#0369a1;">スタジオ予約サイトはこちら</a></p>
+    <p style="margin-top:12px;">キャンセルが完了しましたら、完了画面のスクリーンショットをグループLINEで共有してください。</p>
     <p style="margin-top:20px;">お手数をおかけしますがよろしくお願いいたします。</p>
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;
