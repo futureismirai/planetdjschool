@@ -18,6 +18,10 @@ export const INDIVIDUAL_LESSON_DURATION_MINUTES = 120; // 2時間
 /** 個別レッスンの日程調整で生徒が候補日を入力した際、通知メールを送る宛先。 */
 export const SCHEDULE_CANDIDATES_NOTIFY_EMAIL = "ginzamember1@gmail.com";
 
+/** スタジオ予約サイトのログインURL。講師へのスタジオキャンセル依頼メールに添付する。 */
+export const STUDIO_RESERVATION_URL =
+  "https://www.reserve1.jp/studio/member/VisitorLogin.php?lc=tlsccmeco&mn=3&gr=8";
+
 /** イベント出演の参加可否の選択肢。公開回答ページ・管理画面(デビューイベント)の両方で使用する。 */
 export const EVENT_PARTICIPATION_OPTIONS = [
   { value: "participating", label: "参加できる" },

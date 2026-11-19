@@ -1,12 +1,12 @@
 import { formatDateOnly, formatLessonDateTime, formatTimeOnly } from "./date";
-import { INDIVIDUAL_LESSON_DURATION_MINUTES } from "./constants";
+import { INDIVIDUAL_LESSON_DURATION_MINUTES, STUDIO_RESERVATION_URL } from "./constants";
 
 const SCHOOL_NAME = "Planet DJ School";
 const GATHERING_MINUTES_BEFORE = 10;
 
 // レッスン種別ごとの所要時間(終了時刻の表示に使用)
-const GROUP_LESSON_DURATION_MINUTES = 90; // 1.5時間
-const TRIAL_DURATION_MINUTES = 60; // 1時間
+export const GROUP_LESSON_DURATION_MINUTES = 90; // 1.5時間
+export const TRIAL_DURATION_MINUTES = 60; // 1時間
 
 /** 開始〜終了の日時表記。例: 2026年8月15日(土) 19:00〜20:30 */
 function formatDateTimeRange(start: Date, durationMinutes: number): string {
@@ -1349,6 +1349,126 @@ ${SCHOOL_NAME}`;
     <ul style="margin:0 0 16px;padding-left:20px;">${candidateHtml}</ul>
     ${info.note ? `<p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">備考</p><p style="margin:0 0 16px;white-space:pre-wrap;">${escapeHtml(info.note)}</p>` : ""}
     <p>管理画面から日程を確定してください。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
+export type InstructorLessonStudioCancelInfo = {
+  instructorName: string;
+  lessonName: string;
+  datetime: Date;
+  cancelRanges: { start: Date; end: Date }[];
+};
+
+function formatCancelRanges(ranges: { start: Date; end: Date }[]): { text: string; html: string } {
+  const lines = ranges.map((r) => `${formatTimeOnly(r.start)}〜${formatTimeOnly(r.end)}`);
+  const text = lines.map((l) => `・${l}`).join("\n");
+  const html = `<ul style="margin:4px 0 0;padding-left:20px;">${lines
+    .map((l) => `<li style="font-weight:bold;">${escapeHtml(l)}</li>`)
+    .join("")}</ul>`;
+  return { text, html };
+}
+
+/**
+ * 講師向け: 応募が定員に達せず中止となるレッスンについて、スタジオのキャンセルを依頼するメール。
+ * 文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildInstructorLessonStudioCancelEmail(info: InstructorLessonStudioCancelInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】スタジオキャンセルのお願い（${info.lessonName}）`;
+  const lessonEnd = new Date(info.datetime.getTime() + GROUP_LESSON_DURATION_MINUTES * 60 * 1000);
+  const cancelRanges = formatCancelRanges(info.cancelRanges);
+
+  const text = `${info.instructorName} 様
+
+${SCHOOL_NAME}の下記レッスンはお申し込みがなく中止とさせていただきます。
+つきましては、スタジオの該当時間帯のキャンセルをお願いいたします。
+
+レッスン: ${info.lessonName}
+日付: ${formatDateOnly(info.datetime)}
+本来のレッスン時間: ${formatTimeOnly(info.datetime)}〜${formatTimeOnly(lessonEnd)}
+
+◯ キャンセルが必要なスタジオ時間
+${cancelRanges.text}
+
+スタジオ予約はこちらからご確認・キャンセルいただけます。
+${STUDIO_RESERVATION_URL}
+
+お手数をおかけしますがよろしくお願いいたします。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">スタジオキャンセルのお願い</h2>
+    <p>${escapeHtml(info.instructorName)} 様</p>
+    <p>${SCHOOL_NAME}の下記レッスンはお申し込みがなく中止とさせていただきます。つきましては、スタジオの該当時間帯のキャンセルをお願いいたします。</p>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0 0;">
+      <tr><td style="padding:4px 0;color:#666;width:140px;">レッスン</td><td style="padding:4px 0;font-weight:bold;">${escapeHtml(info.lessonName)}</td></tr>
+      <tr><td style="padding:4px 0;color:#666;">日付</td><td style="padding:4px 0;">${escapeHtml(formatDateOnly(info.datetime))}</td></tr>
+      <tr><td style="padding:4px 0;color:#666;">本来のレッスン時間</td><td style="padding:4px 0;">${escapeHtml(formatTimeOnly(info.datetime))}〜${escapeHtml(formatTimeOnly(lessonEnd))}</td></tr>
+    </table>
+    <div style="margin:12px 0 16px;padding:14px 16px;background:#fee2e2;border:2px solid #dc2626;border-radius:10px;">
+      <p style="margin:0;font-size:12px;letter-spacing:0.08em;color:#991b1b;font-weight:bold;">キャンセルが必要なスタジオ時間</p>
+      ${cancelRanges.html}
+    </div>
+    <p><a href="${escapeHtml(STUDIO_RESERVATION_URL)}" target="_blank" rel="noopener noreferrer" style="color:#0369a1;">スタジオ予約サイトはこちら</a></p>
+    <p style="margin-top:20px;">お手数をおかけしますがよろしくお願いいたします。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
+export type InstructorTrialStudioCancelInfo = {
+  instructorName: string;
+  datetime: Date;
+};
+
+/**
+ * 講師向け: 応募が定員に達せず中止となる体験会について、スタジオのキャンセルを依頼するメール。
+ * 体験会は1時間のため、時間帯そのものをキャンセルすればよい。
+ * 文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildInstructorTrialStudioCancelEmail(info: InstructorTrialStudioCancelInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】スタジオキャンセルのお願い（体験会）`;
+  const trialEnd = new Date(info.datetime.getTime() + TRIAL_DURATION_MINUTES * 60 * 1000);
+
+  const text = `${info.instructorName} 様
+
+${SCHOOL_NAME}の下記体験会はお申し込みがなく中止とさせていただきます。
+つきましては、スタジオのキャンセルをお願いいたします。
+
+日付: ${formatDateOnly(info.datetime)}
+時間: ${formatTimeOnly(info.datetime)}〜${formatTimeOnly(trialEnd)}
+
+スタジオ予約はこちらからご確認・キャンセルいただけます。
+${STUDIO_RESERVATION_URL}
+
+お手数をおかけしますがよろしくお願いいたします。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">スタジオキャンセルのお願い</h2>
+    <p>${escapeHtml(info.instructorName)} 様</p>
+    <p>${SCHOOL_NAME}の下記体験会はお申し込みがなく中止とさせていただきます。つきましては、スタジオのキャンセルをお願いいたします。</p>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+      <tr><td style="padding:4px 0;color:#666;width:80px;">日付</td><td style="padding:4px 0;">${escapeHtml(formatDateOnly(info.datetime))}</td></tr>
+      <tr><td style="padding:4px 0;color:#666;">時間</td><td style="padding:4px 0;font-weight:bold;">${escapeHtml(formatTimeOnly(info.datetime))}〜${escapeHtml(formatTimeOnly(trialEnd))}</td></tr>
+    </table>
+    <p><a href="${escapeHtml(STUDIO_RESERVATION_URL)}" target="_blank" rel="noopener noreferrer" style="color:#0369a1;">スタジオ予約サイトはこちら</a></p>
+    <p style="margin-top:20px;">お手数をおかけしますがよろしくお願いいたします。</p>
     <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
   </div>`;
 

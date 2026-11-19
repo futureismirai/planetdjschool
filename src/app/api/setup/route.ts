@@ -243,6 +243,10 @@ const CREATE_TABLES_SQL = [
   // レッスン・体験会の前日に講師へリマインドメールを送るための送信済みフラグ
   `ALTER TABLE "Lesson" ADD COLUMN IF NOT EXISTS "instructorReminderSentAt" TIMESTAMP(3)`,
   `ALTER TABLE "TrialSession" ADD COLUMN IF NOT EXISTS "instructorReminderSentAt" TIMESTAMP(3)`,
+  // 空き枠があり中止扱いとなるレッスン・体験会について、講師へスタジオキャンセルを
+  // リマインドした際の送信済みフラグ
+  `ALTER TABLE "Lesson" ADD COLUMN IF NOT EXISTS "studioCancelReminderSentAt" TIMESTAMP(3)`,
+  `ALTER TABLE "TrialSession" ADD COLUMN IF NOT EXISTS "studioCancelReminderSentAt" TIMESTAMP(3)`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {
