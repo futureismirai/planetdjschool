@@ -1296,6 +1296,65 @@ ${SCHOOL_NAME}`;
   return { subject, text, html };
 }
 
+export type ScheduleCandidatesSubmittedInfo = {
+  studentName: string;
+  studentEmail: string;
+  instructorName?: string | null;
+  candidates: { startDatetime: Date; endDatetime: Date }[];
+  note?: string | null;
+};
+
+/**
+ * 管理者向け: 個別レッスンの日程調整で生徒が候補日を入力(送信)した際の通知メール。
+ * 文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildScheduleCandidatesSubmittedEmail(info: ScheduleCandidatesSubmittedInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】個別レッスン日程調整の候補日が入力されました（${info.studentName}様）`;
+
+  const candidateLines = info.candidates.map(
+    (c) => `・${formatDateOnly(c.startDatetime)} ${formatTimeOnly(c.startDatetime)}〜${formatTimeOnly(c.endDatetime)}`
+  );
+  const candidateHtml = info.candidates
+    .map(
+      (c) =>
+        `<li>${escapeHtml(formatDateOnly(c.startDatetime))} ${escapeHtml(formatTimeOnly(c.startDatetime))}〜${escapeHtml(formatTimeOnly(c.endDatetime))}</li>`
+    )
+    .join("");
+
+  const text = `個別レッスンの日程調整で、候補日の入力がありました。
+
+生徒名: ${info.studentName}
+メールアドレス: ${info.studentEmail}
+${info.instructorName ? `講師: ${info.instructorName}\n` : ""}候補日:
+${candidateLines.join("\n")}
+${info.note ? `\n備考: ${info.note}` : ""}
+
+管理画面から日程を確定してください。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">個別レッスン日程調整の候補日が入力されました</h2>
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+      <tr><td style="padding:4px 0;color:#666;width:100px;">生徒名</td><td style="padding:4px 0;font-weight:bold;">${escapeHtml(info.studentName)}</td></tr>
+      <tr><td style="padding:4px 0;color:#666;">メールアドレス</td><td style="padding:4px 0;">${escapeHtml(info.studentEmail)}</td></tr>
+      ${info.instructorName ? `<tr><td style="padding:4px 0;color:#666;">講師</td><td style="padding:4px 0;">${escapeHtml(info.instructorName)}</td></tr>` : ""}
+    </table>
+    <p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">候補日</p>
+    <ul style="margin:0 0 16px;padding-left:20px;">${candidateHtml}</ul>
+    ${info.note ? `<p style="font-weight:bold;margin:0 0 4px;color:#0f172a;">備考</p><p style="margin:0 0 16px;white-space:pre-wrap;">${escapeHtml(info.note)}</p>` : ""}
+    <p>管理画面から日程を確定してください。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
 function escapeHtml(input: string): string {
   return input
     .replace(/&/g, "&amp;")

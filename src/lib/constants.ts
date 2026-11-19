@@ -15,6 +15,9 @@ export const INSTRUCTOR_NAME_OPTIONS = [
 /** 個別レッスン1回あたりの所要時間(分)。メールの終了時刻表示や日程調整での候補選択に使用する。 */
 export const INDIVIDUAL_LESSON_DURATION_MINUTES = 120; // 2時間
 
+/** 個別レッスンの日程調整で生徒が候補日を入力した際、通知メールを送る宛先。 */
+export const SCHEDULE_CANDIDATES_NOTIFY_EMAIL = "ginzamember1@gmail.com";
+
 /** イベント出演の参加可否の選択肢。公開回答ページ・管理画面(デビューイベント)の両方で使用する。 */
 export const EVENT_PARTICIPATION_OPTIONS = [
   { value: "participating", label: "参加できる" },

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { combineJstDateAndTime } from "@/lib/date";
+import { sendMail } from "@/lib/mailer";
+import { buildScheduleCandidatesSubmittedEmail } from "@/lib/emailTemplates";
+import { SCHEDULE_CANDIDATES_NOTIFY_EMAIL } from "@/lib/constants";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -83,6 +86,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       data: { note: typeof note === "string" && note.trim() ? note.trim() : null },
     }),
   ]);
+
+  try {
+    const { subject, text, html } = buildScheduleCandidatesSubmittedEmail({
+      studentName: scheduleRequest.studentName,
+      studentEmail: scheduleRequest.studentEmail,
+      instructorName: scheduleRequest.instructorName,
+      candidates: parsed,
+      note: typeof note === "string" && note.trim() ? note.trim() : null,
+    });
+    await sendMail({ to: SCHEDULE_CANDIDATES_NOTIFY_EMAIL, subject, text, html });
+  } catch (mailError) {
+    console.error("候補日入力の通知メールの送信に失敗しました:", mailError);
+  }
 
   return NextResponse.json({ ok: true });
 }
