@@ -19,6 +19,7 @@ import { DEFAULT_LOCATION } from "@/lib/constants";
 const NEXT_LESSON_NAME: Record<string, string> = {
   "Lesson 1": "Lesson 2",
   "Lesson 2": "Lesson 3",
+  "Lesson 4": "Lesson 5",
 };
 
 /** 指定したメールアドレスの生徒が、指定した名前のレッスンにすでに予約済みかどうか。 */
