@@ -18,7 +18,7 @@ import { getInstructorEmailByName } from "@/lib/instructors";
 
 const REMINDER_DAYS_BEFORE = 3;
 const INSTRUCTOR_REMINDER_DAYS_BEFORE = 1;
-// 学生のキャンセル期限(レッスン当日の8日前)の時点で定員に達していないレッスン・体験会は
+// 学生のキャンセル期限(レッスン当日の8日前)の時点で予約が1件もないレッスン・体験会は
 // 中止扱いとなるため、担当講師へスタジオキャンセルをリマインドする。
 const STUDIO_CANCEL_CHECK_DAYS_BEFORE = 8;
 const HOUR_MS = 60 * 60 * 1000;
@@ -280,7 +280,7 @@ function mergeConsecutiveHourSlots(slotsMs: number[]): { start: Date; end: Date 
 }
 
 /**
- * 講師向け: レッスン当日の8日前(生徒のキャンセル期限)の時点で定員に達していない
+ * 講師向け: レッスン当日の8日前(生徒のキャンセル期限)の時点で予約が1件もない
  * (=中止扱いとなる)レッスンについて、担当講師にスタジオキャンセルをリマインドする。
  * スタジオは1時間刻みで予約されているため、同じ日・同じ場所のレッスンのうち
  * 中止とならないレッスンが使う時間枠を除いた、キャンセルすべき時間枠を計算して知らせる。
@@ -311,7 +311,7 @@ async function runLessonStudioCancelReminderBatch() {
   let skipped = 0;
 
   for (const groupLessons of groups.values()) {
-    const isCancelled = (l: (typeof groupLessons)[number]) => l.bookings.length < l.maxSlots;
+    const isCancelled = (l: (typeof groupLessons)[number]) => l.bookings.length === 0;
     const cancelledLessons = groupLessons.filter(isCancelled);
     if (cancelledLessons.length === 0) continue;
 
@@ -369,7 +369,7 @@ async function runLessonStudioCancelReminderBatch() {
 }
 
 /**
- * 講師向け: 体験会当日の8日前の時点で定員に達していない(=中止扱いとなる)体験会について、
+ * 講師向け: 体験会当日の8日前の時点で予約が1件もない(=中止扱いとなる)体験会について、
  * 担当講師にスタジオキャンセルをリマインドする。体験会は1時間のため、
  * 時間帯そのものをキャンセルすればよい(他の体験会との時間枠の調整は不要)。
  */
@@ -384,7 +384,7 @@ async function runTrialStudioCancelReminderBatch() {
   let sent = 0;
   let failed = 0;
   let skipped = 0;
-  const cancelledTrialSessions = trialSessions.filter((t) => t.participants.length < t.maxSlots);
+  const cancelledTrialSessions = trialSessions.filter((t) => t.participants.length === 0);
 
   for (const trialSession of cancelledTrialSessions) {
     if (trialSession.studioCancelReminderSentAt) {
