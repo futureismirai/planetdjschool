@@ -247,6 +247,8 @@ const CREATE_TABLES_SQL = [
   // リマインドした際の送信済みフラグ
   `ALTER TABLE "Lesson" ADD COLUMN IF NOT EXISTS "studioCancelReminderSentAt" TIMESTAMP(3)`,
   `ALTER TABLE "TrialSession" ADD COLUMN IF NOT EXISTS "studioCancelReminderSentAt" TIMESTAMP(3)`,
+  // 個別レッスンにも、講師向けの登録時通知・前日リマインドを追加する
+  `ALTER TABLE "IndividualLesson" ADD COLUMN IF NOT EXISTS "instructorReminderSentAt" TIMESTAMP(3)`,
 ];
 
 function isAuthorized(request: NextRequest): boolean {

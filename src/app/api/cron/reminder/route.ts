@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { sendMail } from "@/lib/mailer";
 import {
   buildIndividualLessonReminderEmail,
+  buildInstructorIndividualLessonReminderEmail,
   buildInstructorLessonReminderEmail,
   buildInstructorLessonStudioCancelEmail,
   buildInstructorTrialReminderEmail,
@@ -241,6 +242,52 @@ async function runInstructorTrialReminderBatch() {
   }
 
   return { targetTrialSessions: trialSessions.length, sent, failed, skipped };
+}
+
+/**
+ * 講師向け: 開催前日に個別レッスンのリマインドメールを自動送信する。
+ * 対象の講師にメールアドレスが登録されていない場合は送信せずスキップする。
+ */
+async function runInstructorIndividualLessonReminderBatch() {
+  const { start, end } = getJstDayWindow(INSTRUCTOR_REMINDER_DAYS_BEFORE);
+
+  const individualLessons = await prisma.individualLesson.findMany({
+    where: { datetime: { gte: start, lt: end }, instructorReminderSentAt: null },
+  });
+
+  let sent = 0;
+  let failed = 0;
+  let skipped = 0;
+
+  for (const individualLesson of individualLessons) {
+    const instructorEmail = await getInstructorEmailByName(individualLesson.instructorName);
+    if (!instructorEmail) {
+      skipped += 1;
+      continue;
+    }
+    try {
+      const { subject, text, html } = buildInstructorIndividualLessonReminderEmail({
+        instructorName: individualLesson.instructorName,
+        lessonName: individualLesson.name,
+        datetime: individualLesson.datetime,
+        location: individualLesson.location ?? DEFAULT_LOCATION,
+      });
+      await sendMail({ to: instructorEmail, subject, text, html });
+      await prisma.individualLesson.update({
+        where: { id: individualLesson.id },
+        data: { instructorReminderSentAt: new Date() },
+      });
+      sent += 1;
+    } catch (error) {
+      console.error(
+        `講師向け個別レッスンリマインドメール送信に失敗しました (individualLessonId=${individualLesson.id}):`,
+        error
+      );
+      failed += 1;
+    }
+  }
+
+  return { targetIndividualLessons: individualLessons.length, sent, failed, skipped };
 }
 
 /** 指定時刻が含まれる「時」の開始時刻(切り捨て)。JSTはUTC+9の固定オフセットなのでUTCのまま計算してよい。 */
@@ -519,6 +566,7 @@ export async function GET(request: NextRequest) {
     individualLesson3SurveyResult,
     instructorLessonReminderResult,
     instructorTrialReminderResult,
+    instructorIndividualLessonReminderResult,
     instructorLessonStudioCancelResult,
     instructorTrialStudioCancelResult,
   ] = await Promise.all([
@@ -529,6 +577,7 @@ export async function GET(request: NextRequest) {
     runIndividualLesson3SurveyBatch(),
     runInstructorLessonReminderBatch(),
     runInstructorTrialReminderBatch(),
+    runInstructorIndividualLessonReminderBatch(),
     runLessonStudioCancelReminderBatch(),
     runTrialStudioCancelReminderBatch(),
   ]);
@@ -540,6 +589,7 @@ export async function GET(request: NextRequest) {
     individualLesson3Survey: individualLesson3SurveyResult,
     instructorLessonReminder: instructorLessonReminderResult,
     instructorTrialReminder: instructorTrialReminderResult,
+    instructorIndividualLessonReminder: instructorIndividualLessonReminderResult,
     instructorLessonStudioCancel: instructorLessonStudioCancelResult,
     instructorTrialStudioCancel: instructorTrialStudioCancelResult,
   });

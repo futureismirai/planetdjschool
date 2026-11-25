@@ -1296,6 +1296,74 @@ ${SCHOOL_NAME}`;
   return { subject, text, html };
 }
 
+/**
+ * 講師向け: 個別レッスンが新規登録された際の通知メール。文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildInstructorIndividualLessonRegisteredEmail(info: InstructorNotifyInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】新しい個別レッスンが登録されました（${info.lessonName}）`;
+  const block = buildInstructorSessionBlock(info, INDIVIDUAL_LESSON_DURATION_MINUTES);
+
+  const text = `${info.instructorName} 様
+
+${SCHOOL_NAME}に新しい個別レッスンが登録されましたのでお知らせいたします。
+
+${block.text}
+
+よろしくお願いいたします。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">新しい個別レッスンが登録されました</h2>
+    <p>${escapeHtml(info.instructorName)} 様</p>
+    <p>${SCHOOL_NAME}に新しい個別レッスンが登録されましたのでお知らせいたします。</p>
+    ${block.html}
+    <p style="margin-top:20px;">よろしくお願いいたします。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
+/**
+ * 講師向け: 個別レッスン開催前日のリマインドメール。文面を変更したい場合はこの関数を編集してください。
+ */
+export function buildInstructorIndividualLessonReminderEmail(info: InstructorNotifyInfo): {
+  subject: string;
+  text: string;
+  html: string;
+} {
+  const subject = `【${SCHOOL_NAME}】個別レッスン開催前日のリマインド（${info.lessonName}）`;
+  const block = buildInstructorSessionBlock(info, INDIVIDUAL_LESSON_DURATION_MINUTES);
+
+  const text = `${info.instructorName} 様
+
+ご担当いただいている${SCHOOL_NAME}の個別レッスンが明日開催ですのでお知らせいたします。
+
+${block.text}
+
+よろしくお願いいたします。
+
+${SCHOOL_NAME}`;
+
+  const html = `
+  <div style="font-family:'Hiragino Sans','Yu Gothic',sans-serif;max-width:480px;margin:0 auto;color:#222;">
+    <h2 style="color:#0f172a;">個別レッスン開催前日のお知らせ</h2>
+    <p>${escapeHtml(info.instructorName)} 様</p>
+    <p>ご担当いただいている${SCHOOL_NAME}の個別レッスンが明日開催ですのでお知らせいたします。</p>
+    ${block.html}
+    <p style="margin-top:20px;">よろしくお願いいたします。</p>
+    <p style="color:#666;margin-top:24px;">${SCHOOL_NAME}</p>
+  </div>`;
+
+  return { subject, text, html };
+}
+
 export type ScheduleCandidatesSubmittedInfo = {
   studentName: string;
   studentEmail: string;

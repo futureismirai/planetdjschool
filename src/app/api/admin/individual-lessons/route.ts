@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentAdmin } from "@/lib/auth";
 import { parseIndividualLessonInput } from "@/lib/individualLessonInput";
+import { sendMail } from "@/lib/mailer";
+import { buildInstructorIndividualLessonRegisteredEmail } from "@/lib/emailTemplates";
+import { getInstructorEmailByName } from "@/lib/instructors";
+import { DEFAULT_LOCATION } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
   const admin = await getCurrentAdmin();
@@ -22,5 +26,21 @@ export async function POST(request: NextRequest) {
   }
 
   const individualLesson = await prisma.individualLesson.create({ data: parsed.data });
+
+  try {
+    const instructorEmail = await getInstructorEmailByName(individualLesson.instructorName);
+    if (instructorEmail) {
+      const { subject, text, html } = buildInstructorIndividualLessonRegisteredEmail({
+        instructorName: individualLesson.instructorName,
+        lessonName: individualLesson.name,
+        datetime: individualLesson.datetime,
+        location: individualLesson.location ?? DEFAULT_LOCATION,
+      });
+      await sendMail({ to: instructorEmail, subject, text, html });
+    }
+  } catch (mailError) {
+    console.error("講師への新規個別レッスン登録通知メールの送信に失敗しました:", mailError);
+  }
+
   return NextResponse.json({ individualLesson }, { status: 201 });
 }

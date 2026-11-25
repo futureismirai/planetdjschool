@@ -104,6 +104,7 @@ model IndividualLesson {
   datetime       DateTime
   instructorName String
   location       String?
+  instructorReminderSentAt DateTime?
   createdAt      DateTime                @default(now())
   updatedAt      DateTime                @updatedAt
   participants   IndividualParticipant[]
