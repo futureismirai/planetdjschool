@@ -120,7 +120,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "このレッスンのご予約には、Lesson 1のご登録が必要です。Lesson 1の受講については担当講師までご連絡ください。",
+            "このレッスンのご予約には、Lesson 1のご登録が必要です。",
+          code: "lesson1_required",
         },
         { status: 409 }
       );

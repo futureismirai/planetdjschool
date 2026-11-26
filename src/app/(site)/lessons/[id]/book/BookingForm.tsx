@@ -12,6 +12,7 @@ export function BookingForm({ lessonId }: { lessonId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [lesson1Required, setLesson1Required] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,6 +29,10 @@ export function BookingForm({ lessonId }: { lessonId: string }) {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
+        if (data.code === "lesson1_required") {
+          setLesson1Required(true);
+          return;
+        }
         setError(data.error ?? "予約に失敗しました。もう一度お試しください。");
         if (res.status === 409) {
           router.refresh();
@@ -48,6 +53,23 @@ export function BookingForm({ lessonId }: { lessonId: string }) {
       <div className={styles.bookSuccess}>
         <p className={styles.bookSuccessTitle}>ご予約ありがとうございました。</p>
         <p className={styles.bookSuccessBody}>確認メールをお送りしましたのでご確認ください。</p>
+      </div>
+    );
+  }
+
+  if (lesson1Required) {
+    return (
+      <div className={styles.bookSuccess}>
+        <p className={styles.bookSuccessTitle}>このレッスンはご予約いただけません。</p>
+        <p className={styles.bookSuccessBody}>
+          このレッスンのご予約には、Lesson 1のご登録が必要です。
+          <br />
+          <br />
+          Lesson 1をご予約済みの場合は、そのとき登録されたメールアドレスと、今回入力されたメールアドレス（{studentEmail}）に相違がないかご確認ください。
+          <br />
+          <br />
+          ご確認のうえもご予約いただけない場合は、ginzamember1@gmail.com までご連絡ください。
+        </p>
       </div>
     );
   }
